@@ -27,6 +27,10 @@ export const useAuthStore = create(
         } catch (e) {
           // Ignore logout API errors, clear local state anyway
         }
+        // Clear all auth data from localStorage first
+        const storageKeys = Object.keys(localStorage).filter(k => k.includes('kitchenmate') || k.includes('auth'));
+        storageKeys.forEach(k => localStorage.removeItem(k));
+        // Clear the persisted state immediately
         set({
           user: null,
           accessToken: null,
