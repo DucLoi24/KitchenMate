@@ -38,7 +38,7 @@ export const useAuthStore = create(
       refreshAccessToken: async () => {
         const refreshToken = get().refreshToken;
         if (!refreshToken) {
-          get().logout();
+          set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
           return false;
         }
         try {
