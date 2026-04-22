@@ -47,6 +47,7 @@ export default function BottomNav() {
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
           const active = isActive(item.path);
+          const Icon = item.icon;
 
           if (item.protected) {
             return (

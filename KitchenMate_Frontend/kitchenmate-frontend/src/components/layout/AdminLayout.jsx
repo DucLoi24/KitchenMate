@@ -26,7 +26,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="p-4 space-y-1">
-          {adminNavItems.map(({ path, label, iconClass }) => {
+          {adminNavItems.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path;
             return (
               <Link
