@@ -24,4 +24,20 @@ export const recipeApi = {
     );
     return response.data;
   },
+
+  uploadStepMedia: async (recipeId, stepId, file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await axiosInstance.post(
+      `/recipes/${recipeId}/steps/${stepId}/media/`,
+      formData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+    return response.data;
+  },
+
+  contributeIngredient: async (name, category) => {
+    const response = await axiosInstance.post('/ingredients/', { name, category });
+    return response.data;
+  },
 };
