@@ -1,7 +1,8 @@
-# Phase 6.1: Create Recipe Page — Design Spec
+# Phase 6.1: Create Recipe Page — Design Spec (Updated)
 
 **Date:** 2026-04-22
-**Status:** Approved → Implementation
+**Status:** In Progress — Adding missing features
+**Updated:** 2026-04-23
 
 ## Overview
 
@@ -28,6 +29,11 @@ Tạo trang `/recipes/create` cho phép user tạo công thức nấu ăn mới.
 | description | textarea | No | - |
 | difficulty | select | Yes | EASY / MEDIUM / HARD |
 | prep_time | number | Yes | min 1 (minutes) |
+| visibility | select | Yes | PRIVATE (default) / PUBLIC |
+
+**Visibility options:**
+- `PRIVATE` — "Riêng tư (chỉ tôi)"
+- `PUBLIC` — "Công khai (mọi người)" — requires all ingredients APPROVED
 
 ### B. Ingredients
 
@@ -38,7 +44,25 @@ Tạo trang `/recipes/create` cho phép user tạo công thức nấu ăn mới.
   - **Unit** (select: gram, kg, ml, l, cái, quả, ...)
   - **Remove button** (🗑️)
 - Button "+ Thêm nguyên liệu" để thêm row mới
-- Nếu search không có kết quả → "Không tìm thấy nguyên liệu"
+
+**Ingredient search empty state (khi không có kết quả):**
+- Text: "Không tìm thấy nguyên liệu nào"
+- Button: "Đóng góp nguyên liệu mới"
+
+**Contribute ingredient inline form:**
+- Fields: name (text), category (select: PROTEIN/CARB/VEG/SPICE/STAPLE/OTHER)
+- Submit: `POST /api/ingredients/`
+- Success: toast "Đã gửi nguyên liệu để duyệt. Cảm ơn bạn!" + form đóng
+- Cancel button để đóng form
+
+**Ingredient status badges:**
+- APPROVED: không badge đặc biệt
+- PENDING: `bg-yellow-100 text-yellow-700` + "⏳ Chờ duyệt"
+- REJECTED: ẩn luôn không cho chọn
+
+**PENDING ingredient validation:**
+- Nếu có PENDING ingredient VÀ visibility = PUBLIC → error: "Công thức có nguyên liệu chờ duyệt, không thể gửi công khai"
+- PRIVATE recipe vẫn cho phép PENDING ingredients
 
 ### C. Steps
 
@@ -46,39 +70,27 @@ Tạo trang `/recipes/create` cho phép user tạo công thức nấu ăn mới.
 - Mỗi row chứa:
   - **Step number** (auto: 1, 2, 3...)
   - **Instruction** (textarea)
+  - **Media toggle** (checkbox): "Thêm ảnh/video minh họa"
+  - **Media input** (conditional): ThumbnailUpload nhỏ
   - **Remove button** (🗑️)
 - Button "+ Thêm bước" để thêm row mới
+
+**Step media handling:**
+- Media file lưu vào temporary state (chưa upload)
+- Khi submit: Tạo recipe → Lấy recipeId + stepIds → Upload media cho từng step
+- Upload: `POST /api/recipes/{recipeId}/steps/{stepId}/media/`
+- Nếu upload fail → toast warning + tiếp tục, user edit sau
 
 ### D. Thumbnail
 
 - File input (accept: jpg/png/webp, max 5MB)
 - Preview ảnh sau khi chọn
 - Drag & drop support
-- **Lưu ý:** Upload thumbnail là bước riêng sau khi tạo recipe thành công (hoặc bỏ qua)
+- Upload sau khi recipe tạo thành công: `POST /api/recipes/{id}/thumbnail/`
 
 ---
 
-## 3. Ingredient Search UX
-
-```
-[___Tìm nguyên liệu...___]
-  ↓ gõ ≥ 2 ký tự → debounce 300ms → gọi API
-  ↓
-[Dropdown results]
-  - Icon + Tên + Category badge
-  - Click → thêm ingredient vào list → clear search
-  ↓
-[Row đã thêm: Tên | [_qty__] [unit ▼] | 🗑️]
-```
-
-- Debounce 300ms
-- `q` rỗng → dropdown ẩn
-- Chỉ hiện APPROVED ingredients (theo API)
-- Nếu chưa login → redirect /login
-
----
-
-## 4. Submission Flow
+## 3. Submission Flow
 
 ### Payload `POST /api/recipes/`
 
@@ -88,40 +100,55 @@ Tạo trang `/recipes/create` cho phép user tạo công thức nấu ăn mới.
   "description": "Công thức phở bò chuẩn Hà Nội",
   "difficulty": "MEDIUM",
   "prep_time": 180,
+  "visibility": "PRIVATE",
   "ingredients": [
-    { "ingredient": 1, "quantity": 500, "unit": "gram" },
-    { "ingredient": 2, "quantity": 200, "unit": "gram" }
+    { "ingredient": 1, "quantity": 500, "unit": "gram" }
   ],
   "steps": [
-    { "step_number": 1, "instruction": "Ninh xương bò trong 4 tiếng" },
-    { "step_number": 2, "instruction": "Thêm gia vị vào nồi nước dùng" }
+    { "step_number": 1, "instruction": "Ninh xương bò trong 4 tiếng" }
   ]
 }
 ```
+
+**Lưu ý:** steps trong payload KHÔNG có media_url — media upload sau khi có recipeId.
 
 ### Response Handling
 
 | Status | Action |
 |--------|--------|
-| 201 | Toast "Tạo công thức thành công!" → redirect `/recipes/{id}` |
+| 201 | Tạo recipe → Upload step media → Toast "Tạo công thức thành công!" → redirect `/recipes/{id}` |
 | 400 | Hiện validation errors inline |
 | 401 | Redirect `/login` |
-| Network Error | Toast error + retry |
+| Network Error | Toast error + form giữ nguyên |
+
+### Step Media Upload Flow
+
+```
+1. recipeApi.createRecipe(payload) → success → { id: recipeId }
+2. Với mỗi step có mediaFile:
+   - recipeApi.uploadStepMedia(recipeId, stepId, mediaFile)
+   - Nếu fail → warning, continue next step
+3. Redirect /recipes/{recipeId}
+```
+
+**Error handling:**
+- Recipe creation FAIL → KHÔNG upload media gì cả, form giữ nguyên
+- Step media FAIL → warning toast, tiếp tục steps khác, recipe vẫn tạo OK
 
 ---
 
-## 5. File Structure
+## 4. File Structure
 
 ```
 src/
 ├── api/
-│   └── recipeApi.js           # createRecipe, searchIngredients
+│   └── recipeApi.js           # createRecipe, searchIngredients, uploadThumbnail, uploadStepMedia, contributeIngredient
 ├── components/
 │   └── recipe/
 │       ├── CreateRecipeForm.jsx   # Main form container
 │       ├── IngredientInput.jsx    # Single ingredient row
-│       ├── IngredientSearch.jsx   # Search dropdown
-│       ├── StepInput.jsx          # Single step row
+│       ├── IngredientSearch.jsx   # Search dropdown + contribute inline form
+│       ├── StepInput.jsx          # Single step row + optional media
 │       └── ThumbnailUpload.jsx    # File input + preview
 ├── hooks/
 │   └── useIngredientSearch.js    # Debounced search hook
@@ -131,37 +158,32 @@ src/
 
 ---
 
-## 6. Component Inventory
+## 5. Component Changes
 
-### CreateRecipeForm
-- State: fields + ingredients[] + steps[]
-- Handles submit → calls recipeApi.createRecipe()
-- Validation before submit
-
-### IngredientSearch
+### IngredientSearch (updated)
 - Props: `onSelect(ingredient)`
-- State: query, results, isLoading, showDropdown
-- Debounce 300ms on query change
-- Dropdown positioned below input
+- Thêm: contribute inline form khi empty results
+- Thêm: status badge cho PENDING ingredients
 
-### IngredientInput
-- Props: `ingredient`, `onUpdate`, `onRemove`
-- Renders: name (read-only) + quantity input + unit select + remove btn
+### StepInput (updated)
+- Props: `step`, `onUpdate`, `onRemove`, `stepNumber`
+- Thêm: media toggle checkbox + conditional ThumbnailUpload nhỏ
+- Media file stored in step state → parent passes to handleSubmit
 
-### StepInput
-- Props: `step`, `onUpdate`, `onRemove`
-- Renders: step_number badge + textarea + remove btn
+### CreateRecipeForm (updated)
+- Thêm: visibility select field
+- Thêm: step media upload sau khi recipe creation success
+- Thêm: validation check PENDING ingredients khi visibility=PUBLIC
 
-### ThumbnailUpload
-- Props: `onFileSelect`
-- Preview URL via FileReader
-- Drag & drop handlers (onDragOver, onDrop)
+---
 
-### useIngredientSearch
-- Input: query string
-- Output: { results, isLoading, error }
-- Debounce 300ms
-- Calls `GET /api/ingredients/search/?q={q}`
+## 6. recipeApi Changes
+
+```javascript
+// Thêm methods:
+uploadStepMedia: async (recipeId, stepId, file) => { ... }
+contributeIngredient: async (name, category) => { ... }
+```
 
 ---
 
@@ -172,6 +194,8 @@ src/
 | title | Required, max 200 |
 | difficulty | Required, one of EASY/MEDIUM/HARD |
 | prep_time | Required, min 1 |
+| visibility | Required, PRIVATE or PUBLIC |
+| visibility + PENDING | PUBLIC và có PENDING ingredient → error |
 | ingredients | Array, min length 1 |
 | steps | Array, min length 1 |
 
@@ -181,23 +205,15 @@ src/
 
 - **Form validation:** Inline error messages below each field
 - **API 400:** Parse error details → show inline
-- **Network error:** Toast notification with retry option
+- **Network error:** Toast notification
+- **Step media upload fail:** Toast warning (non-blocking)
 - **Unauthorized:** Redirect to `/login?from=/recipes/create`
 
 ---
 
-## 9. Dependencies
-
-- Existing: axiosInstance (JWT interceptor), authStore (Zustand persist)
-- New: `react-hot-toast` (already in stack for notifications)
-- No new UI library needed — use existing Tailwind components
-
----
-
-## 10. Out of Scope (Phase 6.2)
+## 9. Out of Scope (Phase 6.2)
 
 - Recipe detail page
 - Publish recipe flow (AI moderation)
-- Step media upload (POST /recipes/{id}/steps/{step_id}/media/)
 - Edit recipe
 - Delete recipe
