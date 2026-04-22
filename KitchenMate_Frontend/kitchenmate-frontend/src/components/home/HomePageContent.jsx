@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { ChevronDown } from 'react-bootstrap-icons';
 import NewestSection from './NewestSection';
 import PopularSection from './PopularSection';
 
@@ -30,7 +29,7 @@ export default function HomePageContent() {
                   <option value="newest">Mới nhất</option>
                   <option value="popular">Phổ biến</option>
                 </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+                <i className="bi bi-chevron-down absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none"></i>
               </div>
             </div>
           </div>

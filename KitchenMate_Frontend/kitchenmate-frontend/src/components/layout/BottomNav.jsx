@@ -1,24 +1,23 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { House, Compass, Lightbulb, Snow, Person } from 'react-bootstrap-icons';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
-// Tabs cho guest (chua dang nhap)
+// Icon class names for bootstrap-icons CSS approach
 const guestNavItems = [
-  { path: '/home', label: 'Trang chủ', icon: House },
-  { path: '/explore', label: 'Khám phá', icon: Compass },
-  { path: null, label: 'Gợi ý', icon: Lightbulb, protected: true },
-  { path: null, label: 'Tủ lạnh', icon: Snow, protected: true },
-  { path: null, label: 'Hồ sơ', icon: Person, protected: true },
+  { path: '/home', label: 'Trang chủ', iconClass: 'house' },
+  { path: '/explore', label: 'Khám phá', iconClass: 'compass' },
+  { path: null, label: 'Gợi ý', iconClass: 'lightbulb', protected: true },
+  { path: null, label: 'Tủ lạnh', iconClass: 'snow', protected: true },
+  { path: null, label: 'Hồ sơ', iconClass: 'person', protected: true },
 ];
 
 // Tabs cho logged in
 const loggedInNavItems = [
-  { path: '/home', label: 'Trang chủ', icon: House },
-  { path: '/explore', label: 'Khám phá', icon: Compass },
-  { path: '/suggestions', label: 'Gợi ý', icon: Lightbulb },
-  { path: '/pantry', label: 'Tủ lạnh', icon: Snow },
-  { path: '/profile', label: 'Hồ sơ', icon: Person, hasBadge: true },
+  { path: '/home', label: 'Trang chủ', iconClass: 'house' },
+  { path: '/explore', label: 'Khám phá', iconClass: 'compass' },
+  { path: '/suggestions', label: 'Gợi ý', iconClass: 'lightbulb' },
+  { path: '/pantry', label: 'Tủ lạnh', iconClass: 'snow' },
+  { path: '/profile', label: 'Hồ sơ', iconClass: 'person', hasBadge: true },
 ];
 
 export default function BottomNav() {
@@ -26,7 +25,6 @@ export default function BottomNav() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuthStore();
 
-  // Placeholder notification count - will come from API later
   const notificationCount = user?.notification_count || 0;
 
   const navItems = isAuthenticated ? loggedInNavItems : guestNavItems;
@@ -49,7 +47,6 @@ export default function BottomNav() {
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 md:hidden z-50">
       <div className="flex items-center justify-around h-16 px-2">
         {navItems.map((item) => {
-          const Icon = item.icon;
           const active = isActive(item.path);
 
           if (item.protected) {
@@ -60,7 +57,7 @@ export default function BottomNav() {
                 className="flex flex-col items-center justify-center w-16 h-14 rounded-xl text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <div className="relative">
-                  <Icon className="text-lg mb-0.5" />
+                  <i className={`bi bi-${item.iconClass} text-lg mb-0.5`}></i>
                 </div>
                 <span className="text-xs font-medium">{item.label}</span>
               </button>
@@ -78,7 +75,7 @@ export default function BottomNav() {
               }`}
             >
               <div className="relative">
-                <Icon className="text-lg mb-0.5" />
+                <i className={`bi bi-${item.iconClass} text-lg mb-0.5`}></i>
                 {item.hasBadge && notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                     {notificationCount > 99 ? '99+' : notificationCount}

@@ -1,12 +1,11 @@
 import { Outlet } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
-import { House, ForkKnife, Leaf, People, Gear } from 'react-bootstrap-icons';
 
 const adminNavItems = [
-  { path: '/admin', label: 'Dashboard', icon: House },
-  { path: '/admin/recipes/pending', label: 'Duyệt công thức', icon: ForkKnife },
-  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', icon: Leaf },
-  { path: '/admin/users', label: 'Quản lý người dùng', icon: People },
+  { path: '/admin', label: 'Dashboard', iconClass: 'house' },
+  { path: '/admin/recipes/pending', label: 'Duyệt công thức', iconClass: 'fork-knife' },
+  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', iconClass: 'leaf' },
+  { path: '/admin/users', label: 'Quản lý người dùng', iconClass: 'people' },
 ];
 
 export default function AdminLayout() {
@@ -26,7 +25,7 @@ export default function AdminLayout() {
         </div>
 
         <nav className="p-4 space-y-1">
-          {adminNavItems.map(({ path, label, icon: Icon }) => {
+          {adminNavItems.map(({ path, label, iconClass }) => {
             const isActive = location.pathname === path;
             return (
               <Link
@@ -38,7 +37,7 @@ export default function AdminLayout() {
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <Icon className="text-base" />
+                <i className={`bi bi-${iconClass} text-base`}></i>
                 {label}
               </Link>
             );
@@ -50,7 +49,7 @@ export default function AdminLayout() {
             to="/home"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
           >
-            <Gear />
+            <i className="bi bi-gear"></i>
             Quay về trang chủ
           </Link>
         </div>

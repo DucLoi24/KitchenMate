@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useState, useRef, useEffect } from 'react';
-import { Search, Person, Book, BoxArrowRight, ChevronDown } from 'react-bootstrap-icons';
 
 export default function Navbar() {
   const location = useLocation();
@@ -50,7 +49,7 @@ export default function Navbar() {
           onSubmit={handleSearch}
           className="hidden md:flex flex-1 max-w-xl items-center bg-gray-100 rounded-full px-4 py-2"
         >
-          <Search className="text-gray-400 mr-2" />
+          <i className="bi bi-search text-gray-400 mr-2"></i>
           <input
             type="text"
             placeholder="Tìm kiếm công thức..."
@@ -83,7 +82,7 @@ export default function Navbar() {
                       {user?.username?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <ChevronDown className="text-gray-400 text-xs hidden sm:block" />
+                  <i className="bi bi-chevron-down text-gray-400 text-xs hidden sm:block"></i>
                 </button>
 
                 {showDropdown && (
@@ -97,7 +96,7 @@ export default function Navbar() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       onClick={() => setShowDropdown(false)}
                     >
-                      <Person className="text-gray-400" />
+                      <i className="bi bi-person text-gray-400"></i>
                       Hồ sơ
                     </Link>
                     <Link
@@ -105,14 +104,14 @@ export default function Navbar() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       onClick={() => setShowDropdown(false)}
                     >
-                      <Book className="text-gray-400" />
+                      <i className="bi bi-book text-gray-400"></i>
                       Bộ sưu tập
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 w-full text-left"
                     >
-                      <BoxArrowRight className="text-red-400" />
+                      <i className="bi bi-box-arrow-right text-red-400"></i>
                       Đăng xuất
                     </button>
                   </div>
@@ -144,7 +143,7 @@ export default function Navbar() {
         className="md:hidden px-4 pb-3"
       >
         <div className="flex items-center bg-gray-100 rounded-full px-4 py-2">
-          <Search className="text-gray-400 mr-2" />
+          <i className="bi bi-search text-gray-400 mr-2"></i>
           <input
             type="text"
             placeholder="Tìm kiếm công thức..."

@@ -1,5 +1,4 @@
 import { forwardRef, useState } from 'react';
-import { Eye, EyeSlash } from 'react-bootstrap-icons';
 import InputField from './InputField';
 
 const PasswordField = forwardRef(({ label, error, ...props }, ref) => {
@@ -25,7 +24,7 @@ const PasswordField = forwardRef(({ label, error, ...props }, ref) => {
           onClick={() => setVisible(!visible)}
           className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
         >
-          {visible ? <EyeSlash size={18} /> : <Eye size={18} />}
+          {visible ? <i className="bi bi-eye-slash"></i> : <i className="bi bi-eye"></i>}
         </button>
       </div>
       {error && (
