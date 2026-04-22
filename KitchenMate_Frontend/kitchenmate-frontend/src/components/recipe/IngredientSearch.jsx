@@ -2,7 +2,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
 import { useIngredientSearch } from '../../hooks/useIngredientSearch';
-import { recipeApi } from '../api/recipeApi';
+import { recipeApi } from '../../api/recipeApi';
 
 const categoryColors = {
   PROTEIN: 'bg-red-100 text-red-700',
