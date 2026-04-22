@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { forwardRef, useState } from 'react';
 import { PiEye, PiEyeSlash } from 'react-icons/pi';
 import InputField from './InputField';
 
-const PasswordField = ({ label, error, ...props }, ref) => {
+const PasswordField = forwardRef(({ label, error, ...props }, ref) => {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -33,6 +33,7 @@ const PasswordField = ({ label, error, ...props }, ref) => {
       )}
     </div>
   );
-};
+});
 
+PasswordField.displayName = 'PasswordField';
 export default PasswordField;
