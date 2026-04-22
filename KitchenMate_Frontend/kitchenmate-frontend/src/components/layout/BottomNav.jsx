@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BiHome, BiCompass, BiLightbulb, BiSnow, BiUser } from 'bootstrap-icons';
+import { BiHome, BiCompass, BiLightbulb, BiSnow, BiUser } from 'react-bootstrap-icons';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 

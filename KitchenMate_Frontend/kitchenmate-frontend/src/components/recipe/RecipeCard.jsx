@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { BiClock, BiStar } from 'bootstrap-icons';
+import { BiClock, BiStar } from 'react-bootstrap-icons';
 
 export default function RecipeCard({ recipe }) {
   const {

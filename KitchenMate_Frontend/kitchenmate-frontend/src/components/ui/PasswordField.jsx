@@ -1,5 +1,5 @@
 import { forwardRef, useState } from 'react';
-import { BiEye, BiEyeSlash } from 'bootstrap-icons';
+import { BiEye, BiEyeSlash } from 'react-bootstrap-icons';
 import InputField from './InputField';
 
 const PasswordField = forwardRef(({ label, error, ...props }, ref) => {

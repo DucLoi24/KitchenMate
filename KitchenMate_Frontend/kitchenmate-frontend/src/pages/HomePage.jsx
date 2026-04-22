@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore';
 import { Link } from 'react-router-dom';
-import { BiUtensils, BiHeart, BiClock } from 'bootstrap-icons';
+import { BiUtensils, BiHeart, BiClock } from 'react-bootstrap-icons';
 import HomePageContent from '../components/home/HomePageContent';
 
 export default function HomePage() {

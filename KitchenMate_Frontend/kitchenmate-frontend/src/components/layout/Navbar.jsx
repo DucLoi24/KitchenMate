@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useState, useRef, useEffect } from 'react';
-import { BiSearch, BiUser, BiBookAlt, BiLogOut, BiChevronDown } from 'bootstrap-icons';
+import { BiSearch, BiUser, BiBookAlt, BiLogOut, BiChevronDown } from 'react-bootstrap-icons';
 
 export default function Navbar() {
   const location = useLocation();

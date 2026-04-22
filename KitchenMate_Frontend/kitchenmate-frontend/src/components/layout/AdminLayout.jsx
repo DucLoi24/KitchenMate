@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
-import { BiHome, BiRestaurant, BiLeaf, BiPeople, BiGear } from 'bootstrap-icons';
+import { BiHome, BiRestaurant, BiLeaf, BiPeople, BiGear } from 'react-bootstrap-icons';
 
 const adminNavItems = [
   { path: '/admin', label: 'Dashboard', icon: BiHome },

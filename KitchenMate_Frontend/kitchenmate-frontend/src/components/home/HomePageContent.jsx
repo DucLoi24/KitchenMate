@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BiChevronDown } from 'bootstrap-icons';
+import { BiChevronDown } from 'react-bootstrap-icons';
 import NewestSection from './NewestSection';
 import PopularSection from './PopularSection';
 
