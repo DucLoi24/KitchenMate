@@ -38,7 +38,8 @@ export default function ResetPasswordPage() {
 
   const onSubmit = async (data) => {
     try {
-      await authApi.resetPassword(token, data.newPassword, data.newPasswordConfirm);
+      const uid = searchParams.get('uid');
+      await authApi.resetPassword(uid, token, data.newPassword, data.newPasswordConfirm);
       toast.success('Đặt lại mật khẩu thành công!');
       navigate('/login');
     } catch (error) {
@@ -48,10 +49,10 @@ export default function ResetPasswordPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-[--color-text-primary] mb-2">
+      <h2 className="text-2xl font-bold text-slate-800 mb-2">
         Đặt lại mật khẩu
       </h2>
-      <p className="text-[--color-text-secondary] mb-6">
+      <p className="text-slate-500 mb-6">
         Nhập mật khẩu mới cho tài khoản của bạn
       </p>
 
@@ -73,8 +74,8 @@ export default function ResetPasswordPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-2.5 bg-[--color-primary] text-white font-semibold
-            rounded-lg hover:bg-[--color-primary-dark] transition-colors
+          className="w-full py-2.5 bg-orange-500 text-white font-semibold
+            rounded-lg hover:bg-orange-600 transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Đang xử lý...' : 'Đặt lại mật khẩu'}

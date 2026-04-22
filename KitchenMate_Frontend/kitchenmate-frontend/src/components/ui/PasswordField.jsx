@@ -8,7 +8,7 @@ const PasswordField = forwardRef(({ label, error, ...props }, ref) => {
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label className="text-sm font-medium text-[--color-text-primary]">
+        <label className="text-sm font-medium text-slate-800">
           {label}
         </label>
       )}
@@ -23,7 +23,7 @@ const PasswordField = forwardRef(({ label, error, ...props }, ref) => {
         <button
           type="button"
           onClick={() => setVisible(!visible)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-[--color-text-muted] hover:text-[--color-text-primary] transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
         >
           {visible ? <PiEyeSlash size={18} /> : <PiEye size={18} />}
         </button>

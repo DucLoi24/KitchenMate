@@ -42,10 +42,10 @@ export default function LoginPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-[--color-text-primary] mb-2">
+      <h2 className="text-2xl font-bold text-slate-800 mb-2">
         Chào mừng trở lại
       </h2>
-      <p className="text-[--color-text-secondary] mb-6">
+      <p className="text-slate-500 mb-6">
         Đăng nhập để tiếp tục hành trình ẩm thực của bạn
       </p>
 
@@ -68,7 +68,7 @@ export default function LoginPage() {
         <div className="flex justify-end">
           <Link
             to="/forgot-password"
-            className="text-sm text-[--color-primary] hover:underline"
+            className="text-sm text-orange-500 hover:underline"
           >
             Quên mật khẩu?
           </Link>
@@ -77,17 +77,17 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-2.5 bg-[--color-primary] text-white font-semibold
-            rounded-lg hover:bg-[--color-primary-dark] transition-colors
+          className="w-full py-2.5 bg-orange-500 text-white font-semibold
+            rounded-lg hover:bg-orange-600 transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Đang xử lý...' : 'Đăng nhập'}
         </button>
       </form>
 
-      <p className="text-center mt-4 text-sm text-[--color-text-secondary]">
+      <p className="text-center mt-4 text-sm text-slate-500">
         Chưa có tài khoản?{' '}
-        <Link to="/register" className="text-[--color-primary] font-medium hover:underline">
+        <Link to="/register" className="text-orange-500 font-medium hover:underline">
           Đăng ký ngay
         </Link>
       </p>

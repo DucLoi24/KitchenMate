@@ -30,10 +30,10 @@ export default function ForgotPasswordPage() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold text-[--color-text-primary] mb-2">
+      <h2 className="text-2xl font-bold text-slate-800 mb-2">
         Quên mật khẩu
       </h2>
-      <p className="text-[--color-text-secondary] mb-6">
+      <p className="text-slate-500 mb-6">
         Nhập email để nhận hướng dẫn đặt lại mật khẩu
       </p>
 
@@ -49,17 +49,17 @@ export default function ForgotPasswordPage() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="w-full py-2.5 bg-[--color-primary] text-white font-semibold
-            rounded-lg hover:bg-[--color-primary-dark] transition-colors
+          className="w-full py-2.5 bg-orange-500 text-white font-semibold
+            rounded-lg hover:bg-orange-600 transition-colors
             disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting ? 'Đang gửi...' : 'Gửi email đặt lại'}
         </button>
       </form>
 
-      <p className="text-center mt-4 text-sm text-[--color-text-secondary]">
+      <p className="text-center mt-4 text-sm text-slate-500">
         Nhớ mật khẩu rồi?{' '}
-        <Link to="/login" className="text-[--color-primary] font-medium hover:underline">
+        <Link to="/login" className="text-orange-500 font-medium hover:underline">
           Đăng nhập ngay
         </Link>
       </p>
