@@ -29,7 +29,10 @@ export default function ThumbnailUpload({ onFileSelect }) {
     }
     setError('');
     const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result);
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      reader.onloadend = null; // cleanup reference
+    };
     reader.readAsDataURL(file);
     onFileSelect(file);
   };
