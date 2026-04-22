@@ -1,12 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
-import { FaHome, FaUtensils, FaLeaf, FaUsers, FaCog } from 'react-icons/fa';
+import { House, ForkKnife, Leaf, People, Gear } from 'react-bootstrap-icons';
 
 const adminNavItems = [
-  { path: '/admin', label: 'Dashboard', icon: FaHome },
-  { path: '/admin/recipes/pending', label: 'Duyệt công thức', icon: FaUtensils },
-  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', icon: FaLeaf },
-  { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
+  { path: '/admin', label: 'Dashboard', icon: House },
+  { path: '/admin/recipes/pending', label: 'Duyệt công thức', icon: ForkKnife },
+  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', icon: Leaf },
+  { path: '/admin/users', label: 'Quản lý người dùng', icon: People },
 ];
 
 export default function AdminLayout() {
@@ -50,7 +50,7 @@ export default function AdminLayout() {
             to="/home"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
           >
-            <FaCog />
+            <Gear />
             Quay về trang chủ
           </Link>
         </div>

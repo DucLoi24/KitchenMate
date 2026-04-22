@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { FaClock, FaStar } from 'react-icons/fa';
+import { Clock, Star } from 'react-bootstrap-icons';
 
 export default function RecipeCard({ recipe }) {
   const {
@@ -42,11 +42,11 @@ export default function RecipeCard({ recipe }) {
         </p>
         <div className="flex items-center justify-between text-sm">
           <span className="flex items-center gap-1 text-gray-600">
-            <FaClock className="text-orange-500" />
+            <Clock className="text-orange-500" />
             {cookingTime || 30}p
           </span>
           <span className="flex items-center gap-1 text-gray-600">
-            <FaStar className="text-yellow-400" />
+            <Star className="text-yellow-400" />
             {avgRating ? avgRating.toFixed(1) : 'N/A'}
           </span>
         </div>

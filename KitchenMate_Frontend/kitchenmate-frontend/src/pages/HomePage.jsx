@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore';
 import { Link } from 'react-router-dom';
-import { FaUtensils, FaHeart, FaClock } from 'react-icons/fa';
+import { Star, Heart, Clock, ForkKnife, PencilSquare, Collection, Snow } from 'react-bootstrap-icons';
 import HomePageContent from '../components/home/HomePageContent';
 
 export default function HomePage() {
@@ -81,21 +81,21 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaUtensils className="text-orange-500 text-xl" />
+                <ForkKnife className="text-orange-500 text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Công thức đa dạng</h3>
               <p className="text-gray-500 text-sm">Hàng ngàn công thức từ món Việt đến món quốc tế</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaHeart className="text-green-500 text-xl" />
+                <Heart className="text-green-500 text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Gợi ý thông minh</h3>
               <p className="text-gray-500 text-sm">Tìm món ăn phù hợp với nguyên liệu trong tủ lạnh</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaClock className="text-blue-500 text-xl" />
+                <Clock className="text-blue-500 text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Tiết kiệm thời gian</h3>
               <p className="text-gray-500 text-sm">Lên kế hoạch, đi chợ và nấu ăn hiệu quả</p>
@@ -119,7 +119,7 @@ export default function HomePage() {
                   to="/recipes/create"
                   className="flex items-center gap-3 p-4 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
                 >
-                  <span className="text-2xl">📝</span>
+                  <PencilSquare className="text-2xl" />
                   <div>
                     <p className="font-semibold">Tạo công thức</p>
                     <p className="text-sm text-orange-100">Chia sẻ món của bạn</p>
@@ -129,7 +129,7 @@ export default function HomePage() {
                   to="/collections"
                   className="flex items-center gap-3 p-4 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
                 >
-                  <span className="text-2xl">📚</span>
+                  <Collection className="text-2xl" />
                   <div>
                     <p className="font-semibold">Bộ sưu tập</p>
                     <p className="text-sm text-orange-100">Lưu công thức yêu thích</p>
@@ -139,7 +139,7 @@ export default function HomePage() {
                   to="/pantry"
                   className="flex items-center gap-3 p-4 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
                 >
-                  <span className="text-2xl">🧊</span>
+                  <Snow className="text-2xl" />
                   <div>
                     <p className="font-semibold">Tủ lạnh số</p>
                     <p className="text-sm text-orange-100">Quản lý nguyên liệu</p>
