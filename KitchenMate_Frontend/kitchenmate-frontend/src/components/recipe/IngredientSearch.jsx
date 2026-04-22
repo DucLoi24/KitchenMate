@@ -1,6 +1,8 @@
 // KitchenMate_Frontend/kitchenmate-frontend/src/components/recipe/IngredientSearch.jsx
 import { useState, useRef, useEffect } from 'react';
 import { FaSearch } from 'react-icons/fa';
+import { useIngredientSearch } from '../../hooks/useIngredientSearch';
+import { recipeApi } from '../api/recipeApi';
 
 const categoryColors = {
   PROTEIN: 'bg-red-100 text-red-700',
@@ -12,35 +14,9 @@ const categoryColors = {
 };
 
 export default function IngredientSearch({ onSelect }) {
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const { query, setQuery, results, isLoading } = useIngredientSearch();
   const [showDropdown, setShowDropdown] = useState(false);
   const wrapperRef = useRef(null);
-
-  useEffect(() => {
-    if (query.length < 2) {
-      setResults([]);
-      setShowDropdown(false);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const { recipeApi } = await import('../api/recipeApi');
-        const data = await recipeApi.searchIngredients(query);
-        setResults(data);
-        setShowDropdown(true);
-      } catch (err) {
-        setResults([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [query]);
 
   useEffect(() => {
     function handleClickOutside(e) {
