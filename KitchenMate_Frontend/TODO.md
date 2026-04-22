@@ -117,10 +117,10 @@ Xây dựng Frontend cho KitchenMate sử dụng ReactJS + Tailwind CSS, kết n
 **API sử dụng**: `GET /api/recipes/`
 
 ### 4.1 Trang chủ (`/`)
-- [ ] Banner/Hero section (ảnh đẹp + tagline)
-- [ ] Section "Công thức mới nhất" — danh sách RecipeCard (pagination/infinite scroll)
-- [ ] Section "Công thức phổ biến" (sort theo rating hoặc save_count)
-- [ ] Skeleton loading khi đang fetch data
+- [x] Banner/Hero section (ảnh đẹp + tagline)
+- [x] Section "Công thức mới nhất" — danh sách RecipeCard (pagination/infinite scroll)
+- [x] Section "Công thức phổ biến" (sort theo rating hoặc save_count)
+- [x] Skeleton loading khi đang fetch data
 
 ### 4.2 Component `RecipeCard`
 - [ ] Ảnh thumbnail (lazy loading)
