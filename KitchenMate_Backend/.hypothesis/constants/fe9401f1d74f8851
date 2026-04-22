@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\recipes\migrations\0001_initial.py
+# hypothesis_version: 6.131.18
+
+[200, '-created_at', '0001_initial', 'Bước thực hiện', 'Chờ duyệt', 'Công khai', 'Công thức', 'Dễ', 'EASY', 'HARD', 'ID', 'Khó', 'MEDIUM', 'PENDING', 'PRIVATE', 'PUBLIC', 'Recipe', 'RecipeIngredient', 'RecipeStep', 'Riêng tư', 'Trung bình', 'created_at', 'db_table', 'description', 'difficulty', 'id', 'ingredient', 'ingredients', 'instruction', 'media_url', 'ordering', 'prep_time', 'quantity', 'recipe', 'recipe_ingredients', 'recipe_steps', 'recipes', 'recipes.recipe', 'step_number', 'steps', 'thumbnail_url', 'title', 'unit', 'updated_at', 'used_in_recipes', 'user', 'verbose_name', 'verbose_name_plural', 'visibility']

@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\urls.py
+# hypothesis_version: 6.131.18
+
+['accounts', 'forgot-password', 'forgot-password/', 'login', 'login/', 'logout', 'logout/', 'refresh/', 'register', 'register/', 'reset-password', 'reset-password/', 'token-refresh']

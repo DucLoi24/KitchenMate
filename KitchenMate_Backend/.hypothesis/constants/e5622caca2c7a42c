@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\models.py
+# hypothesis_version: 6.131.18
+
+[100, '-created_at', 'Bộ sưu tập', 'collection', 'collection_recipes', 'collections', 'recipe', 'recipes.Recipe', 'reviews', 'saved_in_collections', 'user', 'Đánh giá']

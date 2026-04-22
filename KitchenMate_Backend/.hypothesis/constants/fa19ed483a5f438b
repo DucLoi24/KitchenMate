@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\admin_panel\views.py
+# hypothesis_version: 6.131.18
+
+['-created_at', '-date_joined', 'APPROVED', 'PENDING', 'PRIVATE', 'PUBLIC', 'REJECTED', 'created_at', 'data', 'get', 'is_active', 'list', 'message', 'pending', 'post', 'status', 'success', 'user', 'visibility']

@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\recipes\models.py
+# hypothesis_version: 6.131.18
+
+[200, '-created_at', 'Bước thực hiện', 'Chờ duyệt', 'Công khai', 'Công thức', 'Dễ', 'EASY', 'HARD', 'Khó', 'MEDIUM', 'PENDING', 'PRIVATE', 'PUBLIC', 'Riêng tư', 'Trung bình', 'recipe_ingredients', 'recipe_steps', 'recipes', 'step_number', 'steps', 'used_in_recipes']

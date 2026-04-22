@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\kitchen\views.py
+# hypothesis_version: 6.131.18
+
+['ADD_MORE', 'COOK_NOW', 'Cap nhat thanh cong.', 'data', 'destroy', 'details', 'error', 'exclude_ingredients', 'ingredient', 'is_purchased', 'mark-purchased', 'mark_purchased', 'message', 'missing_ingredients', 'mode', 'partial', 'partial_update', 'post', 'quantity', 'recipe', 'retrieve', 'score', 'success', 'unit', 'update', 'updated_at']

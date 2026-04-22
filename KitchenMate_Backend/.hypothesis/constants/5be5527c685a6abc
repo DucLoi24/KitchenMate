@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\recipes\filters.py
+# hypothesis_version: 6.131.18
+
+['difficulty', 'filter_by_ingredient', 'gte', 'icontains', 'ingredient', 'lte', 'prep_time', 'prep_time_max', 'prep_time_min', 'title']

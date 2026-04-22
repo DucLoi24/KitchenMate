@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\serializers.py
+# hypothesis_version: 6.131.18
+
+['avatar_url', 'bio', 'created_at', 'email', 'full_name', 'id', 'new_password', 'new_password_confirm', 'password', 'password_confirm', 'request']

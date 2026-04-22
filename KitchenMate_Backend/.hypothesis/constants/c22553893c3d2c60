@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\models.py
+# hypothesis_version: 6.131.18
+
+[100, 'Người dùng', 'email', 'full_name', 'username', 'users']

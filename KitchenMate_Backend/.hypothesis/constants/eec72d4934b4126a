@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\kitchen\services\recommendation_engine.py
+# hypothesis_version: 6.131.18
+
+[-100, 'ADD_MORE', 'CARB', 'COOK_NOW', 'OTHER', 'PROTEIN', 'PUBLIC', 'SPICE', 'STAPLE', 'VEG', 'category', 'id', 'ingredient_id', 'missing_ingredients', 'name', 'recipe', 'recipe_id', 'score', 'user']

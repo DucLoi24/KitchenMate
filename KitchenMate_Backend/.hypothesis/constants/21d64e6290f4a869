@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\tests_general.py
+# hypothesis_version: 6.131.18
+
+[200, 201, '/api/accounts/me/', '/api/ingredients/', '/api/kitchen/pantry/', '/api/recipes/', 'APPROVED', 'OTHER', 'PUBLIC', 'Test', 'Test Recipe', 'count', 'data', 'next', 'pass123', 'previous', 'results', 'success']

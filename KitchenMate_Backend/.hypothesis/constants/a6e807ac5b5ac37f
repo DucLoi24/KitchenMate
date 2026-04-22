@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\tests.py
+# hypothesis_version: 6.131.18
+
+[200, 400, 'PUBLIC', 'Test', 'data', 'json', 'pass123', 'rating', 'recipe', 'results']

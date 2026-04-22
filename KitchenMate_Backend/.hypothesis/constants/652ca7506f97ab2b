@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\recipes\serializers.py
+# hypothesis_version: 6.131.18
+
+['avg', 'avg_rating', 'created_at', 'description', 'difficulty', 'id', 'ingredient', 'ingredient.category', 'ingredient.name', 'ingredient_category', 'ingredient_name', 'ingredients', 'instruction', 'media_url', 'prep_time', 'quantity', 'rating', 'recipe_ingredients', 'step_number', 'steps', 'thumbnail_url', 'title', 'unit', 'updated_at', 'user', 'user.full_name', 'user_name', 'visibility']

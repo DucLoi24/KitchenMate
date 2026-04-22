@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\profile_urls.py
+# hypothesis_version: 6.131.18
+
+['<uuid:pk>/', '<uuid:pk>/recipes/', '<uuid:pk>/stats/', 'accounts_profile', 'change-password', 'me', 'me/', 'me/change-password/', 'public-profile', 'user-recipes', 'user-stats']

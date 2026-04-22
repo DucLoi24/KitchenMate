@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\core\services\ai_moderator.py
+# hypothesis_version: 6.131.18
+
+[200, 'NO', 'OLLAMA_BASE_URL', 'OLLAMA_MODEL', 'OLLAMA_TIMEOUT', 'SUSPECT', 'YES', 'gemma4:e2b', 'model', 'prompt', 'response', 'stream']

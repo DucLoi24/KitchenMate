@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\ingredients\models.py
+# hypothesis_version: 6.131.18
+
+[100, 'APPROVED', 'CARB', 'Chờ duyệt', 'Khác', 'Nguyên liệu', 'OTHER', 'PENDING', 'PROTEIN', 'REJECTED', 'Rau củ', 'SPICE', 'STAPLE', 'VEG', 'ingredients', 'name', 'Đã duyệt', 'Đã từ chối']

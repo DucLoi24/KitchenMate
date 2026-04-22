@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\kitchen\models.py
+# hypothesis_version: 6.131.18
+
+['-created_at', 'Danh sách đi chợ', 'Tủ lạnh số', 'in_pantries', 'in_shopping_lists', 'ingredient', 'ingredient__name', 'pantries', 'pantry_items', 'shopping_items', 'shopping_lists', 'user', '○', '✓']

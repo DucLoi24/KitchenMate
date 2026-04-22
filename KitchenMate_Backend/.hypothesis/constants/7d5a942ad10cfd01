@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\core\utils\file_validator.py
+# hypothesis_version: 6.131.18
+
+[1024, '.', 'JPEG', 'PNG', 'WEBP', 'image/jpeg', 'image/png', 'image/webp', 'jpeg', 'jpg', 'png', 'webp']

@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\core\urls.py
+# hypothesis_version: 6.131.18
+
+['admin/', 'api/accounts/', 'api/admin/', 'api/auth/', 'api/docs/', 'api/ingredients/', 'api/kitchen/', 'api/recipes/', 'api/recommendations/', 'api/schema/', 'api/social/', 'apps.accounts.urls', 'apps.kitchen.urls', 'apps.recipes.urls', 'apps.social.urls', 'schema', 'swagger-ui']

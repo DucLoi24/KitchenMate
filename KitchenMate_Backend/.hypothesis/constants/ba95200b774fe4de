@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\kitchen\serializers.py
+# hypothesis_version: 6.131.18
+
+['created_at', 'id', 'ingredient', 'ingredient.category', 'ingredient.name', 'ingredient_category', 'ingredient_name', 'is_purchased', 'quantity', 'unit', 'updated_at']

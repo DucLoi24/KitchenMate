@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\kitchen\migrations\0002_add_ordering_to_pantry_shoppinglist.py
+# hypothesis_version: 6.131.18
+
+['-created_at', '0001_initial', 'Danh sách đi chợ', 'Tủ lạnh số', 'ingredient__name', 'kitchen', 'ordering', 'pantry', 'shoppinglist', 'verbose_name', 'verbose_name_plural']

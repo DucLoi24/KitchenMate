@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\ingredients\migrations\0001_initial.py
+# hypothesis_version: 6.131.18
+
+[100, 'APPROVED', 'CARB', 'Chờ duyệt', 'ID', 'Ingredient', 'Khác', 'Nguyên liệu', 'OTHER', 'PENDING', 'PROTEIN', 'REJECTED', 'Rau củ', 'SPICE', 'STAPLE', 'VEG', 'category', 'created_at', 'created_by', 'db_table', 'id', 'ingredients', 'name', 'ordering', 'status', 'verbose_name', 'verbose_name_plural', 'Đã duyệt', 'Đã từ chối']

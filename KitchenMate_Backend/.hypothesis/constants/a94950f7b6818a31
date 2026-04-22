@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\core\utils\media_upload_service.py
+# hypothesis_version: 6.131.18
+
+['/media/', 'avatar', 'avatar_url', 'cooksnap', 'cooksnap_url', 'jpg', 'max_height', 'max_width', 'media_url', 'quality', 'step', 'thumbnail', 'thumbnail_url', 'wb']

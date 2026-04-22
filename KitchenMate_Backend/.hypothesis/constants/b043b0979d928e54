@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\upload_views.py
+# hypothesis_version: 6.131.18
+
+[200, 'Accounts', 'Upload avatar', 'binary', 'error', 'file', 'format', 'message', 'multipart/form-data', 'object', 'properties', 'required', 'string', 'type', 'url']

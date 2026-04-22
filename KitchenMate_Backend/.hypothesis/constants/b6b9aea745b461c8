@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\ingredients\tests.py
+# hypothesis_version: 6.131.18
+
+[200, 201, '/api/ingredients/', 'APPROVED', 'CARB', 'OTHER', 'PENDING', 'PROTEIN', 'REJECTED', 'SPICE', 'Test', 'VEG', 'category', 'created_by', 'data', 'json', 'name', 'pass123', 'results', 'status', 'success']

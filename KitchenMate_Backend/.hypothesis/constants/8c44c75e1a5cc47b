@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\urls.py
+# hypothesis_version: 6.131.18
+
+['collection', 'collections', 'delete', 'destroy', 'partial_update', 'patch', 'put', 'review', 'review-delete', 'review-update', 'reviews', 'update']

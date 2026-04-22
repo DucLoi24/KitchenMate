@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\migrations\0001_initial.py
+# hypothesis_version: 6.131.18
+
+[100, '-created_at', '0001_initial', 'Bộ sưu tập', 'Collection', 'CollectionRecipe', 'ID', 'Review', 'added_at', 'collection', 'collection_recipes', 'collections', 'comment', 'cooksnap_url', 'created_at', 'db_table', 'id', 'name', 'ordering', 'rating', 'recipe', 'recipes', 'recipes.recipe', 'reviews', 'saved_in_collections', 'social.collection', 'unique_together', 'user', 'verbose_name', 'verbose_name_plural', 'Đánh giá']

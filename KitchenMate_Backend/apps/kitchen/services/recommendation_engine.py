@@ -1,0 +1,107 @@
+"""
+Recommendation Engine — Tier-3 Scoring Algorithm cho KitchenMate.
+
+Scoring:
+  +20  moi ingredient non-STAPLE co trong pantry
+  penalty theo category cua ingredient thieu:
+    PROTEIN: -100, CARB: -80, VEG: -50, OTHER: -25, SPICE: -10
+  +50  Affinity Bonus neu recipe da duoc luu trong Collection cua user
+
+Mode:
+  COOK_NOW  — chi tra ve recipe co missing_count == 0
+  ADD_MORE  — tra ve recipe co missing_count <= 2 VA score >= 0
+"""
+
+PENALTY = {
+    'PROTEIN': -100,
+    'CARB': -80,
+    'VEG': -50,
+    'OTHER': -25,
+    'SPICE': -10,
+}
+
+
+def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids):
+    """
+    Tinh diem goi y cho mot cong thuc dua tren pantry cua user.
+    Bo qua nguyen lieu STAPLE.
+
+    Args:
+        recipe: Recipe instance (da prefetch recipe_ingredients__ingredient)
+        pantry_ingredient_ids: set cac ingredient_id co trong pantry
+        saved_recipe_ids: set cac recipe_id da luu trong Collection
+
+    Returns:
+        (score: int, missing_ingredients: list)
+    """
+    score = 0
+    missing = []
+
+    for ri in recipe.recipe_ingredients.all():
+        if ri.ingredient.category == 'STAPLE':
+            continue
+        if ri.ingredient_id in pantry_ingredient_ids:
+            score += 20
+        else:
+            score += PENALTY.get(ri.ingredient.category, -25)
+            missing.append({
+                'id': ri.ingredient_id,
+                'name': ri.ingredient.name,
+                'category': ri.ingredient.category,
+            })
+
+    if recipe.id in saved_recipe_ids:
+        score += 50
+
+    return score, missing
+
+
+def get_recommendations(user, mode, exclude_ingredient_ids=None):
+    """
+    Lay danh sach cong thuc goi y theo mode COOK_NOW hoac ADD_MORE.
+
+    Args:
+        user: User instance
+        mode: 'COOK_NOW' hoac 'ADD_MORE'
+        exclude_ingredient_ids: list cac ingredient_id can loai tru (optional)
+
+    Returns:
+        list of dict: [{'recipe': Recipe, 'score': int, 'missing_ingredients': list}]
+        Da sap xep theo score giam dan.
+    """
+    from apps.recipes.models import Recipe
+    from apps.social.models import CollectionRecipe
+
+    pantry_ingredient_ids = set(
+        user.pantry_items.values_list('ingredient_id', flat=True)
+    )
+    saved_recipe_ids = set(
+        CollectionRecipe.objects.filter(
+            collection__user=user
+        ).values_list('recipe_id', flat=True)
+    )
+
+    recipes = Recipe.objects.filter(
+        visibility='PUBLIC'
+    ).select_related('user').prefetch_related('recipe_ingredients__ingredient')
+
+    if exclude_ingredient_ids:
+        recipes = recipes.exclude(
+            recipe_ingredients__ingredient_id__in=exclude_ingredient_ids
+        ).distinct()
+
+    # Evaluate queryset thành list để đảm bảo prefetch_related hoạt động đúng
+    recipes_list = list(recipes)
+
+    results = []
+    for recipe in recipes_list:
+        score, missing = calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids)
+        missing_count = len(missing)
+
+        if mode == 'COOK_NOW' and missing_count == 0:
+            results.append({'recipe': recipe, 'score': score, 'missing_ingredients': missing})
+        elif mode == 'ADD_MORE' and missing_count <= 2 and score >= 0:
+            results.append({'recipe': recipe, 'score': score, 'missing_ingredients': missing})
+
+    results.sort(key=lambda x: x['score'], reverse=True)
+    return results

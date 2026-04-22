@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\core\permissions.py
+# hypothesis_version: 6.131.18
+
+['owner', 'user']

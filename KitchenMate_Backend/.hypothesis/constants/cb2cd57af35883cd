@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\kitchen\migrations\0001_initial.py
+# hypothesis_version: 6.131.18
+
+['0001_initial', 'Danh sách đi chợ', 'ID', 'Pantry', 'ShoppingList', 'Tủ lạnh số', 'created_at', 'db_table', 'id', 'in_pantries', 'in_shopping_lists', 'ingredient', 'ingredients', 'is_purchased', 'pantries', 'pantry_items', 'quantity', 'shopping_items', 'shopping_lists', 'unique_together', 'unit', 'updated_at', 'user', 'verbose_name', 'verbose_name_plural']

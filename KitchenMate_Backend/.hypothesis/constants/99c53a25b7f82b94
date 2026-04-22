@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\accounts\migrations\0001_initial.py
+# hypothesis_version: 6.131.18
+
+[100, 128, 150, 254, 'Người dùng', 'User', 'active', 'auth', 'auth.group', 'auth.permission', 'avatar_url', 'bio', 'created_at', 'date joined', 'date_joined', 'db_table', 'email', 'first name', 'first_name', 'full_name', 'groups', 'id', 'is_active', 'is_staff', 'is_superuser', 'last login', 'last name', 'last_login', 'last_name', 'objects', 'password', 'staff status', 'superuser status', 'unique', 'user', 'user permissions', 'user_permissions', 'user_set', 'username', 'users', 'verbose_name', 'verbose_name_plural']

@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\upload_views.py
+# hypothesis_version: 6.131.18
+
+[200, 'Social', 'Upload cooksnap', 'binary', 'error', 'file', 'format', 'message', 'multipart/form-data', 'object', 'properties', 'required', 'string', 'type', 'url']

@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\serializers.py
+# hypothesis_version: 6.131.18
+
+['added_at', 'collection_recipes', 'comment', 'cooksnap_url', 'created_at', 'id', 'name', 'rating', 'recipe', 'recipe_count', 'user', 'user.full_name', 'user_name']

@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\social\views.py
+# hypothesis_version: 6.131.18
+
+['Danh gia thanh cong.', 'add-recipe', 'add_recipe', 'collection_recipes', 'create', 'data', 'delete', 'destroy', 'details', 'error', 'message', 'partial', 'partial_update', 'post', 'recipe_id', 'recipe_pk', 'remove-recipe', 'remove_recipe', 'success', 'update', 'user']

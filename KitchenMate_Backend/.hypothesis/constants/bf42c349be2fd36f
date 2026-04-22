@@ -1,0 +1,4 @@
+# file: F:\VSCode\KitchenMate\KitchenMate_Backend\apps\recipes\views.py
+# hypothesis_version: 6.131.18
+
+['Ban can dang nhap.', 'NO', 'PENDING', 'PRIVATE', 'PUBLIC', 'YES', 'create', 'data', 'details', 'error', 'get', 'message', 'my-recipes', 'post', 'publish', 'retrieve', 'step_number', 'steps', 'success', 'user', 'visibility']
