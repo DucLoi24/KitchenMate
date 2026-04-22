@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BiChevronDown } from 'react-bootstrap-icons';
+import { FaChevronDown } from 'react-icons/fa';
 import NewestSection from './NewestSection';
 import PopularSection from './PopularSection';
 
@@ -30,7 +30,7 @@ export default function HomePageContent() {
                   <option value="newest">Mới nhất</option>
                   <option value="popular">Phổ biến</option>
                 </select>
-                <BiChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
+                <FaChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 text-xs pointer-events-none" />
               </div>
             </div>
           </div>

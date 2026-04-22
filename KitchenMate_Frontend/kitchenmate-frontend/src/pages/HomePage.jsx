@@ -1,6 +1,6 @@
 import { useAuthStore } from '../stores/authStore';
 import { Link } from 'react-router-dom';
-import { BiUtensils, BiHeart, BiClock } from 'react-bootstrap-icons';
+import { FaUtensils, FaHeart, FaClock } from 'react-icons/fa';
 import HomePageContent from '../components/home/HomePageContent';
 
 export default function HomePage() {
@@ -81,21 +81,21 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
               <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BiUtensils className="text-orange-500 text-xl" />
+                <FaUtensils className="text-orange-500 text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Công thức đa dạng</h3>
               <p className="text-gray-500 text-sm">Hàng ngàn công thức từ món Việt đến món quốc tế</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
               <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BiHeart className="text-green-500 text-xl" />
+                <FaHeart className="text-green-500 text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Gợi ý thông minh</h3>
               <p className="text-gray-500 text-sm">Tìm món ăn phù hợp với nguyên liệu trong tủ lạnh</p>
             </div>
             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 text-center">
               <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <BiClock className="text-blue-500 text-xl" />
+                <FaClock className="text-blue-500 text-xl" />
               </div>
               <h3 className="font-semibold text-gray-900 mb-2">Tiết kiệm thời gian</h3>
               <p className="text-gray-500 text-sm">Lên kế hoạch, đi chợ và nấu ăn hiệu quả</p>

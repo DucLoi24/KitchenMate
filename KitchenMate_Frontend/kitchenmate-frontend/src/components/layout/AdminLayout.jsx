@@ -1,12 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
-import { BiHome, BiRestaurant, BiLeaf, BiPeople, BiGear } from 'react-bootstrap-icons';
+import { FaHome, FaUtensils, FaLeaf, FaUsers, FaCog } from 'react-icons/fa';
 
 const adminNavItems = [
-  { path: '/admin', label: 'Dashboard', icon: BiHome },
-  { path: '/admin/recipes/pending', label: 'Duyệt công thức', icon: BiRestaurant },
-  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', icon: BiLeaf },
-  { path: '/admin/users', label: 'Quản lý người dùng', icon: BiPeople },
+  { path: '/admin', label: 'Dashboard', icon: FaHome },
+  { path: '/admin/recipes/pending', label: 'Duyệt công thức', icon: FaUtensils },
+  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', icon: FaLeaf },
+  { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
 ];
 
 export default function AdminLayout() {
@@ -50,7 +50,7 @@ export default function AdminLayout() {
             to="/home"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
           >
-            <BiGear />
+            <FaCog />
             Quay về trang chủ
           </Link>
         </div>

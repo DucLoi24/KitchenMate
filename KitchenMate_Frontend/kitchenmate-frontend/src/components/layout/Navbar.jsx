@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../stores/authStore';
 import { useState, useRef, useEffect } from 'react';
-import { BiSearch, BiUser, BiBookAlt, BiLogOut, BiChevronDown } from 'react-bootstrap-icons';
+import { FaSearch, FaUser, FaBook, FaSignOutAlt, FaChevronDown } from 'react-icons/fa';
 
 export default function Navbar() {
   const location = useLocation();
@@ -50,7 +50,7 @@ export default function Navbar() {
           onSubmit={handleSearch}
           className="hidden md:flex flex-1 max-w-xl items-center bg-gray-100 rounded-full px-4 py-2"
         >
-          <BiSearch className="text-gray-400 mr-2" />
+          <FaSearch className="text-gray-400 mr-2" />
           <input
             type="text"
             placeholder="Tìm kiếm công thức..."
@@ -83,7 +83,7 @@ export default function Navbar() {
                       {user?.username?.[0]?.toUpperCase() || 'U'}
                     </span>
                   </div>
-                  <BiChevronDown className="text-gray-400 text-xs hidden sm:block" />
+                  <FaChevronDown className="text-gray-400 text-xs hidden sm:block" />
                 </button>
 
                 {showDropdown && (
@@ -97,7 +97,7 @@ export default function Navbar() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       onClick={() => setShowDropdown(false)}
                     >
-                      <BiUser className="text-gray-400" />
+                      <FaUser className="text-gray-400" />
                       Hồ sơ
                     </Link>
                     <Link
@@ -105,14 +105,14 @@ export default function Navbar() {
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50"
                       onClick={() => setShowDropdown(false)}
                     >
-                      <BiBookAlt className="text-gray-400" />
+                      <FaBook className="text-gray-400" />
                       Bộ sưu tập
                     </Link>
                     <button
                       onClick={handleLogout}
                       className="flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 w-full text-left"
                     >
-                      <BiLogOut className="text-red-400" />
+                      <FaSignOutAlt className="text-red-400" />
                       Đăng xuất
                     </button>
                   </div>
@@ -144,7 +144,7 @@ export default function Navbar() {
         className="md:hidden px-4 pb-3"
       >
         <div className="flex items-center bg-gray-100 rounded-full px-4 py-2">
-          <BiSearch className="text-gray-400 mr-2" />
+          <FaSearch className="text-gray-400 mr-2" />
           <input
             type="text"
             placeholder="Tìm kiếm công thức..."

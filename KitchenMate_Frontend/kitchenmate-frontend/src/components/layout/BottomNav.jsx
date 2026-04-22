@@ -1,24 +1,24 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BiHome, BiCompass, BiLightbulb, BiSnow, BiUser } from 'react-bootstrap-icons';
+import { FaHome, FaCompass, FaLightbulb, FaSnowflake, FaUser } from 'react-icons/fa';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
 // Tabs cho guest (chua dang nhap)
 const guestNavItems = [
-  { path: '/home', label: 'Trang chủ', icon: BiHome },
-  { path: '/explore', label: 'Khám phá', icon: BiCompass },
-  { path: null, label: 'Gợi ý', icon: BiLightbulb, protected: true },
-  { path: null, label: 'Tủ lạnh', icon: BiSnow, protected: true },
-  { path: null, label: 'Hồ sơ', icon: BiUser, protected: true },
+  { path: '/home', label: 'Trang chủ', icon: FaHome },
+  { path: '/explore', label: 'Khám phá', icon: FaCompass },
+  { path: null, label: 'Gợi ý', icon: FaLightbulb, protected: true },
+  { path: null, label: 'Tủ lạnh', icon: FaSnowflake, protected: true },
+  { path: null, label: 'Hồ sơ', icon: FaUser, protected: true },
 ];
 
 // Tabs cho logged in
 const loggedInNavItems = [
-  { path: '/home', label: 'Trang chủ', icon: BiHome },
-  { path: '/explore', label: 'Khám phá', icon: BiCompass },
-  { path: '/suggestions', label: 'Gợi ý', icon: BiLightbulb },
-  { path: '/pantry', label: 'Tủ lạnh', icon: BiSnow },
-  { path: '/profile', label: 'Hồ sơ', icon: BiUser, hasBadge: true },
+  { path: '/home', label: 'Trang chủ', icon: FaHome },
+  { path: '/explore', label: 'Khám phá', icon: FaCompass },
+  { path: '/suggestions', label: 'Gợi ý', icon: FaLightbulb },
+  { path: '/pantry', label: 'Tủ lạnh', icon: FaSnowflake },
+  { path: '/profile', label: 'Hồ sơ', icon: FaUser, hasBadge: true },
 ];
 
 export default function BottomNav() {
