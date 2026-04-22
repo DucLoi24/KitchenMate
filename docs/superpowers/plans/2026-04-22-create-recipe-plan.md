@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Tạo trang `/recipes/create` cho phép user tạo công thức nấu ăn mới với form đầy đủ: title, description, difficulty, prep_time, ingredients (search dropdown), steps, thumbnail upload.
+**Goal:** Tạo trang `/recipes/create` cho phép user tạo công thức nấu ăn mới với form đầy đủ: title, description, difficulty, prep_time, visibility, ingredients (search + contribute), steps (với optional media), thumbnail upload.
 
-**Architecture:** React functional components với controlled state. Ingredient search dùng debounced custom hook. Form submission qua `recipeApi.createRecipe()`. Thumbnail upload riêng sau khi tạo recipe thành công.
+**Architecture:** React functional components với controlled state. Ingredient search dùng debounced custom hook. Form submission qua `recipeApi.createRecipe()`. Step media upload sau khi recipe tạo thành công.
 
 **Tech Stack:** React 19, Tailwind CSS v4, Zustand, React Router DOM v7, Axios, React Query (TanStack Query v5), react-hot-toast, react-icons
 
@@ -15,21 +15,28 @@
 ```
 src/
 ├── api/
-│   └── recipeApi.js              # CREATE: recipe CRUD + searchIngredients
+│   └── recipeApi.js              # recipe CRUD + searchIngredients + uploadStepMedia + contributeIngredient
 ├── hooks/
-│   └── useIngredientSearch.js    # CREATE: debounced search hook
+│   └── useIngredientSearch.js    # debounced search hook
 ├── components/recipe/
-│   ├── IngredientSearch.jsx      # CREATE: search dropdown component
-│   ├── IngredientInput.jsx       # CREATE: single ingredient row
-│   ├── StepInput.jsx             # CREATE: single step row
-│   ├── ThumbnailUpload.jsx       # CREATE: file input + preview
-│   └── CreateRecipeForm.jsx      # CREATE: main form container
+│   ├── IngredientSearch.jsx      # search dropdown + contribute inline form + status badges
+│   ├── IngredientInput.jsx       # single ingredient row
+│   ├── StepInput.jsx             # single step row + optional media toggle
+│   ├── ThumbnailUpload.jsx       # file input + preview
+│   └── CreateRecipeForm.jsx      # main form container + visibility + step media upload
 └── pages/
-    └── CreateRecipePage.jsx      # CREATE: route page
+    └── CreateRecipePage.jsx      # route page
 ```
 
-**Modify:**
-- `src/routes/index.jsx:39-47` — thay placeholder bằng `<CreateRecipePage />`
+**Modify (from Phase 6.1 v1):**
+- `src/routes/index.jsx` — `/recipes/create` route đã wire với `<CreateRecipePage />`
+- `src/api/recipeApi.js` — đã có createRecipe, searchIngredients, uploadThumbnail
+- `src/hooks/useIngredientSearch.js` — đã tạo
+- `src/components/recipe/IngredientSearch.jsx` — đã tạo, cần update
+- `src/components/recipe/IngredientInput.jsx` — đã tạo
+- `src/components/recipe/StepInput.jsx` — đã tạo, cần update
+- `src/components/recipe/ThumbnailUpload.jsx` — đã tạo
+- `src/components/recipe/CreateRecipeForm.jsx` — đã tạo, cần update
 
 ---
 
