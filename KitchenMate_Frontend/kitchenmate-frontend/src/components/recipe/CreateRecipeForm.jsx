@@ -15,8 +15,13 @@ const DIFFICULTIES = [
   { value: 'HARD', label: 'Khó' },
 ];
 
-const emptyIngredient = () => ({ id: null, name: '', quantity: '', unit: 'gram' });
-const emptyStep = (num) => ({ step_number: num, instruction: '' });
+const VISIBILITY_OPTIONS = [
+  { value: 'PRIVATE', label: 'Riêng tư (chỉ tôi)' },
+  { value: 'PUBLIC', label: 'Công khai (mọi người)' },
+];
+
+const emptyIngredient = () => ({ id: null, name: '', quantity: '', unit: 'gram', status: 'APPROVED' });
+const emptyStep = (num) => ({ step_number: num, instruction: '', mediaFile: null });
 
 export default function CreateRecipeForm() {
   const navigate = useNavigate();
@@ -27,6 +32,7 @@ export default function CreateRecipeForm() {
   const [description, setDescription] = useState('');
   const [difficulty, setDifficulty] = useState('EASY');
   const [prepTime, setPrepTime] = useState('');
+  const [visibility, setVisibility] = useState('PRIVATE');
 
   const [ingredients, setIngredients] = useState([emptyIngredient()]);
   const [steps, setSteps] = useState([emptyStep(1)]);
@@ -43,7 +49,13 @@ export default function CreateRecipeForm() {
     setIngredients(next);
   };
   const handleIngredientSelect = (ing) => {
-    setIngredients([...ingredients, { id: ing.id, name: ing.name, quantity: '', unit: 'gram' }]);
+    setIngredients([...ingredients, {
+      id: ing.id,
+      name: ing.name,
+      quantity: '',
+      unit: 'gram',
+      status: ing.status || 'APPROVED',
+    }]);
   };
 
   const addStep = () => setSteps([...steps, emptyStep(steps.length + 1)]);
@@ -63,6 +75,13 @@ export default function CreateRecipeForm() {
     if (title.length > 200) errs.title = 'Tiêu đề tối đa 200 ký tự';
     if (!prepTime || prepTime < 1) errs.prepTime = 'Thời gian chuẩn bị phải >= 1 phút';
     if (ingredients.filter(i => i.id).length === 0) errs.ingredients = 'Cần ít nhất 1 nguyên liệu';
+
+    // Check PENDING ingredients for PUBLIC visibility
+    const pendingIngredients = ingredients.filter(i => i.id && i.status === 'PENDING');
+    if (pendingIngredients.length > 0 && visibility === 'PUBLIC') {
+      errs.visibility = 'Công thức có nguyên liệu chờ duyệt, không thể gửi công khai';
+    }
+
     if (steps.filter(s => s.instruction.trim()).length === 0) errs.steps = 'Cần ít nhất 1 bước';
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -79,6 +98,7 @@ export default function CreateRecipeForm() {
         description: description.trim(),
         difficulty,
         prep_time: Number(prepTime),
+        visibility,
         ingredients: ingredients
           .filter(i => i.id && i.quantity)
           .map(i => ({ ingredient: i.id, quantity: Number(i.quantity), unit: i.unit })),
@@ -93,11 +113,28 @@ export default function CreateRecipeForm() {
         const recipeId = res.data?.id;
         toast.success('Tạo công thức thành công!');
 
+        // Upload thumbnail
         if (thumbnailFile && recipeId) {
           try {
             await recipeApi.uploadThumbnail(recipeId, thumbnailFile);
           } catch (uploadErr) {
             console.warn('Thumbnail upload failed:', uploadErr);
+          }
+        }
+
+        // Upload step media (only after recipe is successfully created)
+        const stepsWithMedia = steps.filter(s => s.mediaFile && s.instruction.trim());
+        const createdSteps = res.data?.steps || [];
+
+        for (const step of stepsWithMedia) {
+          const stepIndex = steps.indexOf(step);
+          const createdStep = createdSteps[stepIndex];
+          if (createdStep?.id && recipeId) {
+            try {
+              await recipeApi.uploadStepMedia(recipeId, createdStep.id, step.mediaFile);
+            } catch (uploadErr) {
+              console.warn(`Step media upload failed for step ${step.step_number}:`, uploadErr);
+            }
           }
         }
 
@@ -183,6 +220,22 @@ export default function CreateRecipeForm() {
             />
           </div>
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">👁️ Hiển thị</label>
+          <select
+            value={visibility}
+            onChange={(e) => setVisibility(e.target.value)}
+            className={`w-full px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/50 ${
+              errors.visibility ? 'border-red-500' : 'border-gray-300'
+            }`}
+          >
+            {VISIBILITY_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+          {errors.visibility && <p className="mt-1 text-sm text-red-500">{errors.visibility}</p>}
+        </div>
       </div>
 
       {/* Ingredients */}
@@ -241,6 +294,7 @@ export default function CreateRecipeForm() {
             <StepInput
               key={idx}
               step={step}
+              stepNumber={idx + 1}
               onUpdate={(updated) => updateStep(idx, updated)}
               onRemove={() => removeStep(idx)}
             />
