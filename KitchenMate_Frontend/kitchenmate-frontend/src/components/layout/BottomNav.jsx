@@ -1,23 +1,22 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { FaHome, FaCompass, FaLightbulb, FaSnowflake, FaUser } from 'react-icons/fa';
 import { useAuthStore } from '../../stores/authStore';
 import toast from 'react-hot-toast';
 
-// Icon class names for bootstrap-icons CSS approach
 const guestNavItems = [
-  { path: '/home', label: 'Trang chủ', iconClass: 'house' },
-  { path: '/explore', label: 'Khám phá', iconClass: 'compass' },
-  { path: null, label: 'Gợi ý', iconClass: 'lightbulb', protected: true },
-  { path: null, label: 'Tủ lạnh', iconClass: 'snow', protected: true },
-  { path: null, label: 'Hồ sơ', iconClass: 'person', protected: true },
+  { path: '/home', label: 'Trang chủ', icon: FaHome },
+  { path: '/explore', label: 'Khám phá', icon: FaCompass },
+  { path: null, label: 'Gợi ý', icon: FaLightbulb, protected: true },
+  { path: null, label: 'Tủ lạnh', icon: FaSnowflake, protected: true },
+  { path: null, label: 'Hồ sơ', icon: FaUser, protected: true },
 ];
 
-// Tabs cho logged in
 const loggedInNavItems = [
-  { path: '/home', label: 'Trang chủ', iconClass: 'house' },
-  { path: '/explore', label: 'Khám phá', iconClass: 'compass' },
-  { path: '/suggestions', label: 'Gợi ý', iconClass: 'lightbulb' },
-  { path: '/pantry', label: 'Tủ lạnh', iconClass: 'snow' },
-  { path: '/profile', label: 'Hồ sơ', iconClass: 'person', hasBadge: true },
+  { path: '/home', label: 'Trang chủ', icon: FaHome },
+  { path: '/explore', label: 'Khám phá', icon: FaCompass },
+  { path: '/suggestions', label: 'Gợi ý', icon: FaLightbulb },
+  { path: '/pantry', label: 'Tủ lạnh', icon: FaSnowflake },
+  { path: '/profile', label: 'Hồ sơ', icon: FaUser, hasBadge: true },
 ];
 
 export default function BottomNav() {
@@ -57,7 +56,7 @@ export default function BottomNav() {
                 className="flex flex-col items-center justify-center w-16 h-14 rounded-xl text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <div className="relative">
-                  <i className={`bi bi-${item.iconClass} text-lg mb-0.5`}></i>
+                  <Icon className="text-lg mb-0.5" />
                 </div>
                 <span className="text-xs font-medium">{item.label}</span>
               </button>
@@ -75,7 +74,7 @@ export default function BottomNav() {
               }`}
             >
               <div className="relative">
-                <i className={`bi bi-${item.iconClass} text-lg mb-0.5`}></i>
+                <Icon className="text-lg mb-0.5" />
                 {item.hasBadge && notificationCount > 0 && (
                   <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
                     {notificationCount > 99 ? '99+' : notificationCount}

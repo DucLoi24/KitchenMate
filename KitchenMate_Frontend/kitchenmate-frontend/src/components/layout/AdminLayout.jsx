@@ -1,11 +1,12 @@
 import { Outlet } from 'react-router-dom';
 import { Link, useLocation } from 'react-router-dom';
+import { FaHome, FaUtensils, FaLeaf, FaUsers, FaCog } from 'react-icons/fa';
 
 const adminNavItems = [
-  { path: '/admin', label: 'Dashboard', iconClass: 'house' },
-  { path: '/admin/recipes/pending', label: 'Duyệt công thức', iconClass: 'fork-knife' },
-  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', iconClass: 'leaf' },
-  { path: '/admin/users', label: 'Quản lý người dùng', iconClass: 'people' },
+  { path: '/admin', label: 'Dashboard', icon: FaHome },
+  { path: '/admin/recipes/pending', label: 'Duyệt công thức', icon: FaUtensils },
+  { path: '/admin/ingredients/pending', label: 'Duyệt nguyên liệu', icon: FaLeaf },
+  { path: '/admin/users', label: 'Quản lý người dùng', icon: FaUsers },
 ];
 
 export default function AdminLayout() {
@@ -37,7 +38,7 @@ export default function AdminLayout() {
                     : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                 }`}
               >
-                <i className={`bi bi-${iconClass} text-base`}></i>
+                <Icon className="text-base" />
                 {label}
               </Link>
             );
@@ -49,7 +50,7 @@ export default function AdminLayout() {
             to="/home"
             className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700"
           >
-            <i className="bi bi-gear"></i>
+            <FaCog />
             Quay về trang chủ
           </Link>
         </div>
