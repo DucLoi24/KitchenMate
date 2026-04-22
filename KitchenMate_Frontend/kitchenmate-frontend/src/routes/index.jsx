@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import App from '../App';
 import AuthLayout from '../components/ui/AuthLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
@@ -12,6 +12,10 @@ export const router = createBrowserRouter([
     path: '/',
     element: <App />,
     children: [
+      {
+        index: true,
+        element: <Navigate to="/home" replace />,
+      },
       {
         element: <AuthLayout />,
         children: [
