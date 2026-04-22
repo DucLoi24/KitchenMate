@@ -1,16 +1,29 @@
 // KitchenMate_Frontend/kitchenmate-frontend/src/components/recipe/StepInput.jsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FaTrash, FaImage } from 'react-icons/fa';
 
 function StepMediaUpload({ onFileSelect, currentFile }) {
-  const [preview, setPreview] = useState(currentFile ? URL.createObjectURL(currentFile) : null);
+  const [preview, setPreview] = useState(null);
+
+  useEffect(() => {
+    if (currentFile) {
+      const url = URL.createObjectURL(currentFile);
+      setPreview(url);
+      return () => URL.revokeObjectURL(url);
+    } else {
+      setPreview(null);
+    }
+  }, [currentFile]);
 
   const handleFile = (e) => {
     const file = e.target.files[0];
     if (!file) return;
     onFileSelect(file);
     const reader = new FileReader();
-    reader.onloadend = () => setPreview(reader.result);
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      reader.onloadend = null;
+    };
     reader.readAsDataURL(file);
   };
 
