@@ -16,12 +16,12 @@ export default function IngredientInput({ ingredient, onUpdate, onRemove }) {
     <div className="flex items-center gap-2">
       <div className="flex-1 min-w-0">
         <span className="text-sm font-medium text-gray-700 truncate block">
-          {ingredient.name}
+          {ingredient?.name || ''}
         </span>
       </div>
       <input
         type="number"
-        value={ingredient.quantity}
+        value={ingredient.quantity ?? ''}
         onChange={handleQuantityChange}
         min="0"
         step="any"
@@ -40,6 +40,7 @@ export default function IngredientInput({ ingredient, onUpdate, onRemove }) {
       <button
         type="button"
         onClick={onRemove}
+        aria-label="Xóa nguyên liệu"
         className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
       >
         <FaTrash size={14} />
