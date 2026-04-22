@@ -12,7 +12,7 @@ Xây dựng Frontend cho KitchenMate sử dụng ReactJS + Tailwind CSS, kết n
 
 ### 1.1 Khởi tạo dự án
 - [x] Tạo dự án React với Vite: `npm create vite@latest kitchenmate-frontend -- --template react`
-- [x] Cài đặt Tailwind CSS v3
+- [x] Cài đặt Tailwind CSS v3 (v4)
 - [x] Cài đặt React Router DOM v6
 - [x] Cài đặt Axios (HTTP client)
 - [x] Cài đặt React Query (TanStack Query v5) — cache & fetch API data

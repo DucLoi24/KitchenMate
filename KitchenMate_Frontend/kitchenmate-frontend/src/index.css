@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  /* KitchenMate Brand Colors - Cam & Xanh lá */
+  --color-primary: #f97316;
+  --color-primary-light: #fb923c;
+  --color-primary-dark: #ea580c;
+
+  --color-secondary: #22c55e;
+  --color-secondary-light: #4ade80;
+  --color-secondary-dark: #16a34a;
+
+  /* Neutral colors */
+  --color-background: #fefefe;
+  --color-surface: #f8fafc;
+  --color-border: #e2e8f0;
+
+  /* Text colors */
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+  --color-text-muted: #94a3b8;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}

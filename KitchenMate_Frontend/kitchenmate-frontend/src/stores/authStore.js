@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { authApi } from '../api/authApi';
-import { axiosInstance } from '../api/axiosInstance';
+import axiosInstance from '../api/axiosInstance';
 
 export const useAuthStore = create(
   persist(
