@@ -1,35 +1,36 @@
-import { Link } from 'react-router-dom';
-import { FaUtensils, FaHeart, FaClock, FaBook, FaPlus } from 'react-icons/fa';
 import { useAuthStore } from '../stores/authStore';
+import { Link } from 'react-router-dom';
+import { FaUtensils, FaHeart, FaClock } from 'react-icons/fa';
+import HomePageContent from '../components/home/HomePageContent';
 
 export default function HomePage() {
   const { isAuthenticated, user } = useAuthStore();
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section - khác nhau cho guest vs logged in */}
-      <section className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-12 px-4">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-orange-500 to-orange-600 text-white py-8 md:py-12 px-4">
         <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
             <div className="flex-1 text-center md:text-left">
               {isAuthenticated ? (
                 <>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                  <h1 className="text-2xl md:text-4xl font-bold mb-3">
                     Chào {user?.username || 'bạn'}! 👋
                   </h1>
-                  <p className="text-orange-100 text-lg mb-6">
+                  <p className="text-orange-100 text-base md:text-lg mb-4">
                     Hôm nay bạn muốn nấu món gì? Chúng tôi sẽ gợi ý cho bạn!
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-start">
                     <Link
                       to="/suggestions"
-                      className="px-6 py-3 bg-white text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-colors"
+                      className="px-5 py-2 bg-white text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-colors"
                     >
                       Gợi ý món ăn
                     </Link>
                     <Link
                       to="/pantry"
-                      className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg border border-orange-400 hover:bg-orange-500 transition-colors"
+                      className="px-5 py-2 bg-orange-600 text-white font-semibold rounded-lg border border-orange-400 hover:bg-orange-500 transition-colors"
                     >
                       Quản lý tủ lạnh
                     </Link>
@@ -37,22 +38,22 @@ export default function HomePage() {
                 </>
               ) : (
                 <>
-                  <h1 className="text-3xl md:text-4xl font-bold mb-4">
+                  <h1 className="text-2xl md:text-4xl font-bold mb-3">
                     Nấu ăn thông minh,<br />sống khỏe mỗi ngày
                   </h1>
-                  <p className="text-orange-100 text-lg mb-6">
+                  <p className="text-orange-100 text-base md:text-lg mb-4">
                     Khám phá hàng ngàn công thức nấu ăn ngon, gợi ý món ăn từ nguyên liệu có sẵn trong tủ lạnh.
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
+                  <div className="flex flex-col sm:flex-row gap-2 justify-center md:justify-start">
                     <Link
                       to="/register"
-                      className="px-6 py-3 bg-white text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-colors"
+                      className="px-5 py-2 bg-white text-orange-600 font-semibold rounded-lg hover:bg-orange-50 transition-colors"
                     >
                       Bắt đầu ngay
                     </Link>
                     <Link
                       to="/explore"
-                      className="px-6 py-3 bg-orange-600 text-white font-semibold rounded-lg border border-orange-400 hover:bg-orange-500 transition-colors"
+                      className="px-5 py-2 bg-orange-600 text-white font-semibold rounded-lg border border-orange-400 hover:bg-orange-500 transition-colors"
                     >
                       Khám phá công thức
                     </Link>
@@ -62,11 +63,11 @@ export default function HomePage() {
             </div>
             <div className="flex-1 flex justify-center">
               <div className="relative">
-                <div className="w-64 h-64 bg-orange-400 rounded-full opacity-50 absolute -top-4 -left-4" />
+                <div className="w-48 h-48 md:w-64 md:h-64 bg-orange-400 rounded-full opacity-50 absolute -top-3 -left-3 md:-top-4 md:-left-4" />
                 <img
                   src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=400"
                   alt="Nấu ăn"
-                  className="w-64 h-64 object-cover rounded-2xl shadow-xl relative z-10"
+                  className="w-48 h-48 md:w-64 md:h-64 object-cover rounded-2xl shadow-xl relative z-10"
                 />
               </div>
             </div>
@@ -103,8 +104,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      
-      {/* CTA Section - khác nhau cho guest vs logged in */}
+      {/* CTA Section */}
       <section className="py-8 px-4">
         <div className="max-w-6xl mx-auto">
           {isAuthenticated ? (
@@ -119,7 +119,7 @@ export default function HomePage() {
                   to="/recipes/create"
                   className="flex items-center gap-3 p-4 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
                 >
-                  <FaPlus className="text-2xl" />
+                  <span className="text-2xl">📝</span>
                   <div>
                     <p className="font-semibold">Tạo công thức</p>
                     <p className="text-sm text-orange-100">Chia sẻ món của bạn</p>
@@ -129,7 +129,7 @@ export default function HomePage() {
                   to="/collections"
                   className="flex items-center gap-3 p-4 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
                 >
-                  <FaBook className="text-2xl" />
+                  <span className="text-2xl">📚</span>
                   <div>
                     <p className="font-semibold">Bộ sưu tập</p>
                     <p className="text-sm text-orange-100">Lưu công thức yêu thích</p>
@@ -139,7 +139,7 @@ export default function HomePage() {
                   to="/pantry"
                   className="flex items-center gap-3 p-4 bg-white/20 rounded-xl hover:bg-white/30 transition-colors"
                 >
-                  <FaClock className="text-2xl" />
+                  <span className="text-2xl">🧊</span>
                   <div>
                     <p className="font-semibold">Tủ lạnh số</p>
                     <p className="text-sm text-orange-100">Quản lý nguyên liệu</p>
@@ -172,6 +172,9 @@ export default function HomePage() {
           )}
         </div>
       </section>
+
+      {/* Recipe sections */}
+      <HomePageContent />
     </div>
   );
 }
