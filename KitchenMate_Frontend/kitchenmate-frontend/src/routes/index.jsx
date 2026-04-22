@@ -9,6 +9,7 @@ import RegisterPage from '../pages/RegisterPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
 import HomePage from '../pages/HomePage';
+import CreateRecipePage from '../pages/CreateRecipePage';
 
 export const router = createBrowserRouter([
   {
@@ -89,9 +90,7 @@ export const router = createBrowserRouter([
             path: '/recipes/create',
             element: (
               <ProtectedRoute>
-                <div className="p-4">
-                  <h1 className="text-2xl font-bold text-gray-900">Tạo công thức</h1>
-                </div>
+                <CreateRecipePage />
               </ProtectedRoute>
             ),
           },
