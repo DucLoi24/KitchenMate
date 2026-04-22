@@ -123,15 +123,17 @@ export default function CreateRecipeForm() {
         }
 
         // Upload step media (only after recipe is successfully created)
+        const createdStepsMap = {};
+        if (res.data?.steps) {
+          res.data.steps.forEach(s => { createdStepsMap[s.step_number] = s.id; });
+        }
         const stepsWithMedia = steps.filter(s => s.mediaFile && s.instruction.trim());
-        const createdSteps = res.data?.steps || [];
 
         for (const step of stepsWithMedia) {
-          const stepIndex = steps.indexOf(step);
-          const createdStep = createdSteps[stepIndex];
-          if (createdStep?.id && recipeId) {
+          const stepId = createdStepsMap[step.step_number];
+          if (stepId && recipeId) {
             try {
-              await recipeApi.uploadStepMedia(recipeId, createdStep.id, step.mediaFile);
+              await recipeApi.uploadStepMedia(recipeId, stepId, step.mediaFile);
             } catch (uploadErr) {
               console.warn(`Step media upload failed for step ${step.step_number}:`, uploadErr);
             }
@@ -222,7 +224,7 @@ export default function CreateRecipeForm() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">👁️ Hiển thị</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Hiển thị</label>
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value)}
