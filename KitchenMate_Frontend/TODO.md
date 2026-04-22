@@ -89,24 +89,26 @@ Xây dựng Frontend cho KitchenMate sử dụng ReactJS + Tailwind CSS, kết n
 ## Phase 3: Layout & Navigation
 
 ### 3.1 Layout chính
-- [ ] Component `MainLayout`:
+- [x] Component `MainLayout`:
   - Header/Navbar (logo, search bar, nav links, avatar dropdown)
   - Main content area
   - Bottom navigation bar (mobile — 5 tab: Trang chủ, Khám phá, Gợi ý, Tủ lạnh, Hồ sơ)
-- [ ] Component `AuthLayout` (cho trang login/register — không có navbar)
-- [ ] Component `AdminLayout` (sidebar cho trang admin)
+- [x] Component `AuthLayout` (cho trang login/register — không có navbar)
+- [x] Component `AdminLayout` (sidebar cho trang admin)
 
 ### 3.2 Navbar (Desktop)
-- [ ] Logo KitchenMate (trái)
-- [ ] Search bar ở giữa (tìm kiếm công thức)
-- [ ] Nút "Tạo công thức" (nếu đã đăng nhập)
-- [ ] Avatar + dropdown menu (Hồ sơ, Bộ sưu tập, Đăng xuất)
-- [ ] Nút Đăng nhập / Đăng ký (nếu chưa đăng nhập)
+- [x] Logo KitchenMate (trái)
+- [x] Search bar ở giữa (tìm kiếm công thức)
+- [x] Nút "Tạo công thức" (nếu đã đăng nhập)
+- [x] Avatar + dropdown menu (Hồ sơ, Bộ sưu tập, Đăng xuất)
+- [x] Nút Đăng nhập / Đăng ký (nếu chưa đăng nhập)
 
 ### 3.3 Bottom Navigation (Mobile)
-- [ ] 5 tab: Trang chủ, Khám phá, Gợi ý món ăn, Tủ lạnh số, Hồ sơ
-- [ ] Active state cho tab hiện tại
-- [ ] Badge thông báo (nếu có)
+- [x] 5 tab: Trang chủ, Khám phá, Gợi ý món ăn, Tủ lạnh số, Hồ sơ
+- [x] Active state cho tab hiện tại
+- [x] Badge thông báo (nếu có)
+- [x] Guest: protected tabs redirect to /login với toast message
+- [x] Logged in: badge notification trên Hồ sơ tab
 
 ---
 
