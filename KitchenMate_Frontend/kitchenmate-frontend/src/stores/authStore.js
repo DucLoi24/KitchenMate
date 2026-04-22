@@ -49,7 +49,7 @@ export const useAuthStore = create(
           set({ accessToken: access });
           return true;
         } catch (error) {
-          get().logout();
+          set({ user: null, accessToken: null, refreshToken: null, isAuthenticated: false });
           return false;
         }
       },
