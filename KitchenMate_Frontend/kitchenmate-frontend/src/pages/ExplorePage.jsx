@@ -13,12 +13,12 @@ export default function ExplorePage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [isFilterOpen, setIsFilterOpen] = useState(false);
 
-  // Parse filters from URL
+  // Parse filters from URL - ingredient stored as array of {id, name} objects for IngredientAutocomplete
   const filters = {
     search: searchParams.get('q') || '',
     difficulty: searchParams.get('difficulty') || null,
-    cooking_time_max: searchParams.get('cooking_time_max') ? parseInt(searchParams.get('cooking_time_max')) : null,
-    ingredients: searchParams.get('ingredients')?.split(',').filter(Boolean).map(id => ({ id: parseInt(id) })) || [],
+    prep_time_max: searchParams.get('prep_time_max') ? parseInt(searchParams.get('prep_time_max')) : null,
+    ingredient: searchParams.get('ingredient')?.split(',').filter(Boolean).map(id => ({ id: parseInt(id) })) || [],
   };
   const page = parseInt(searchParams.get('page') || '1');
 
@@ -31,8 +31,10 @@ export default function ExplorePage() {
           prev.delete(key);
         } else if (Array.isArray(value) && value.length === 0) {
           prev.delete(key);
+        } else if (key === 'ingredient') {
+          prev.set(key, value.join(','));
         } else {
-          prev.set(key, Array.isArray(value) ? value.map(i => i.id).join(',') : value);
+          prev.set(key, value);
         }
       });
       return prev;

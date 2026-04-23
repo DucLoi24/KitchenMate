@@ -36,18 +36,18 @@ function FilterSection({ title, icon: Icon, children, defaultOpen = true }) {
 }
 
 export default function FilterSidebar({ filters, onChange }) {
-  const { difficulty, cooking_time_max, ingredients } = filters;
+  const { difficulty, prep_time_max, ingredient } = filters;
 
   const handleDifficultyChange = (value) => {
     onChange({ ...filters, difficulty: difficulty === value ? null : value });
   };
 
   const handleTimeChange = (value) => {
-    onChange({ ...filters, cooking_time_max: cooking_time_max === value ? null : value });
+    onChange({ ...filters, prep_time_max: prep_time_max === value ? null : value });
   };
 
   const handleIngredientsChange = (newIngredients) => {
-    onChange({ ...filters, ingredients: newIngredients });
+    onChange({ ...filters, ingredient: newIngredients });
   };
 
   return (
@@ -77,7 +77,7 @@ export default function FilterSidebar({ filters, onChange }) {
             <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
-                checked={cooking_time_max === opt.value}
+                checked={prep_time_max === opt.value}
                 onChange={() => handleTimeChange(opt.value)}
                 className="rounded border-gray-300 text-orange-500 focus:ring-orange-500"
               />
@@ -88,7 +88,7 @@ export default function FilterSidebar({ filters, onChange }) {
 
         <FilterSection title="Nguyên liệu">
           <IngredientAutocomplete
-            selectedIngredients={ingredients || []}
+            selectedIngredients={ingredient || []}
             onChange={handleIngredientsChange}
           />
         </FilterSection>

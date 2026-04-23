@@ -17,18 +17,18 @@ const TIME_OPTIONS = [
 ];
 
 export default function FilterBottomSheet({ isOpen, onClose, filters, onChange }) {
-  const { difficulty, cooking_time_max, ingredients } = filters;
+  const { difficulty, prep_time_max, ingredient } = filters;
 
   const handleDifficultyChange = (value) => {
     onChange({ ...filters, difficulty: difficulty === value ? null : value });
   };
 
   const handleTimeChange = (value) => {
-    onChange({ ...filters, cooking_time_max: cooking_time_max === value ? null : value });
+    onChange({ ...filters, prep_time_max: prep_time_max === value ? null : value });
   };
 
   const handleIngredientsChange = (newIngredients) => {
-    onChange({ ...filters, ingredients: newIngredients });
+    onChange({ ...filters, ingredient: newIngredients });
   };
 
   return (
@@ -82,7 +82,7 @@ export default function FilterBottomSheet({ isOpen, onClose, filters, onChange }
                     type="button"
                     onClick={() => handleTimeChange(opt.value)}
                     className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                      cooking_time_max === opt.value
+                      prep_time_max === opt.value
                         ? 'bg-orange-500 text-white'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
@@ -96,7 +96,7 @@ export default function FilterBottomSheet({ isOpen, onClose, filters, onChange }
             <div>
               <h3 className="text-sm font-medium text-gray-700 mb-2">Nguyên liệu</h3>
               <IngredientAutocomplete
-                selectedIngredients={ingredients || []}
+                selectedIngredients={ingredient || []}
                 onChange={handleIngredientsChange}
               />
             </div>

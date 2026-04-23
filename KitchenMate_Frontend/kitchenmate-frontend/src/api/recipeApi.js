@@ -42,12 +42,12 @@ export const recipeApi = {
   },
 
   searchRecipes: async (params) => {
-    const { search, difficulty, cooking_time_max, ingredients, page } = params;
+    const { search, difficulty, prep_time_max, ingredient, page } = params;
     const requestParams = {
-      ...(search && { search }),
+      ...(search && { title: search }),  // Backend expects 'title'
       ...(difficulty && { difficulty }),
-      ...(cooking_time_max && { cooking_time_max }),
-      ...(ingredients?.length && { ingredients: ingredients.join(',') }),
+      ...(prep_time_max && { prep_time_max }),  // Backend expects 'prep_time_max'
+      ...(ingredient?.length && { ingredient: ingredient.join(',') }),  // Backend expects 'ingredient'
       page: page || 1,
     };
     const response = await axiosInstance.get('/recipes/', { params: requestParams });
