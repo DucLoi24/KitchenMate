@@ -40,4 +40,17 @@ export const recipeApi = {
     const response = await axiosInstance.post('/ingredients/', { name, category });
     return response.data;
   },
+
+  searchRecipes: async (params) => {
+    const { search, difficulty, cooking_time_max, ingredients, page } = params;
+    const requestParams = {
+      ...(search && { search }),
+      ...(difficulty && { difficulty }),
+      ...(cooking_time_max && { cooking_time_max }),
+      ...(ingredients?.length && { ingredients: ingredients.join(',') }),
+      page: page || 1,
+    };
+    const response = await axiosInstance.get('/recipes/', { params: requestParams });
+    return response.data;
+  },
 };
