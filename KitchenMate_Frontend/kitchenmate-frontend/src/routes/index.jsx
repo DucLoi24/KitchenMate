@@ -4,12 +4,19 @@ import { MainLayout } from '../components/layout';
 import AuthLayout from '../components/ui/AuthLayout';
 import ProtectedRoute from '../components/auth/ProtectedRoute';
 import AdminRoute from '../components/auth/AdminRoute';
+import AdminLayout from '../components/layout/AdminLayout';
 import LoginPage from '../pages/LoginPage';
 import RegisterPage from '../pages/RegisterPage';
 import ForgotPasswordPage from '../pages/ForgotPasswordPage';
 import ResetPasswordPage from '../pages/ResetPasswordPage';
 import HomePage from '../pages/HomePage';
 import CreateRecipePage from '../pages/CreateRecipePage';
+import RecipeDetailPage from '../pages/RecipeDetailPage';
+import ExplorePage from '../pages/ExplorePage';
+import AdminDashboard from '../pages/admin/AdminDashboard';
+import AdminPendingRecipes from '../pages/admin/AdminPendingRecipes';
+import AdminPendingIngredients from '../pages/admin/AdminPendingIngredients';
+import AdminUsers from '../pages/admin/AdminUsers';
 
 export const router = createBrowserRouter([
   {
@@ -40,9 +47,7 @@ export const router = createBrowserRouter([
             path: '/explore',
             element: (
               <ProtectedRoute>
-                <div className="p-4">
-                  <h1 className="text-2xl font-bold text-gray-900">Khám phá</h1>
-                </div>
+                <ExplorePage />
               </ProtectedRoute>
             ),
           },
@@ -94,17 +99,29 @@ export const router = createBrowserRouter([
               </ProtectedRoute>
             ),
           },
+          {
+            path: '/recipes/:id',
+            element: (
+              <ProtectedRoute>
+                <RecipeDetailPage />
+              </ProtectedRoute>
+            ),
+          },
         ],
       },
       {
         path: '/admin',
         element: (
           <AdminRoute>
-            <div className="p-4">
-              <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            </div>
+            <AdminLayout />
           </AdminRoute>
         ),
+        children: [
+          { index: true, element: <AdminDashboard /> },
+          { path: 'recipes/pending', element: <AdminPendingRecipes /> },
+          { path: 'ingredients/pending', element: <AdminPendingIngredients /> },
+          { path: 'users', element: <AdminUsers /> },
+        ],
       },
     ],
   },
