@@ -47,7 +47,7 @@ export const recipeApi = {
       ...(search && { title: search }),  // Backend expects 'title'
       ...(difficulty && { difficulty }),
       ...(prep_time_max && { prep_time_max }),  // Backend expects 'prep_time_max'
-      ...(ingredient?.length && { ingredient: ingredient.join(',') }),  // Backend expects 'ingredient'
+      ...(ingredient?.length && { ingredient: ingredient.map(i => i.id || i).join(',') }),  // Handle both {id} and plain id
       page: page || 1,
     };
     const response = await axiosInstance.get('/recipes/', { params: requestParams });
