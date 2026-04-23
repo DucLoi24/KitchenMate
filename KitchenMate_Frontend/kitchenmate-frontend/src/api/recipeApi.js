@@ -42,11 +42,14 @@ export const recipeApi = {
   },
 
   searchRecipes: async (params) => {
-    const { search, difficulty, prep_time_max, ingredient, page } = params;
+    const { search, difficulty, prep_time_max, prep_time_min, ingredient, page } = params;
     const requestParams = {
       ...(search && { title: search }),  // Backend expects 'title'
       ...(difficulty && { difficulty }),
-      ...(prep_time_max && { prep_time_max }),  // Backend expects 'prep_time_max'
+      // Backend expects 'prep_time_max' (<=). "Trên 60 phút" (value=120) means >60, so use prep_time_min=61 instead
+      ...(prep_time_max === 120 && { prep_time_min: 61 }),  // "Trên 60 phút" → prep_time > 60
+      ...(prep_time_max && prep_time_max !== 120 && { prep_time_max }),
+      ...(prep_time_min && { prep_time_min }),
       ...(ingredient?.length && { ingredient: ingredient.map(i => i.id || i).join(',') }),  // Handle both {id} and plain id
       page: page || 1,
     };
