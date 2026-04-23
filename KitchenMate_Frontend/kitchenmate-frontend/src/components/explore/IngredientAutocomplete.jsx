@@ -1,6 +1,7 @@
 // KitchenMate_Frontend/kitchenmate-frontend/src/components/explore/IngredientAutocomplete.jsx
 import { useState, useEffect, useRef } from 'react';
-import { FaSearch, FaTimes } from 'react-icons/io';
+import { FaSearch } from 'react-icons/fa';
+import { IoMdClose } from 'react-icons/io';
 import { recipeApi } from '../../api/recipeApi';
 
 export default function IngredientAutocomplete({ selectedIngredients, onChange }) {
@@ -62,7 +63,7 @@ export default function IngredientAutocomplete({ selectedIngredients, onChange }
           <span key={ing.id} className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-sm">
             {ing.name}
             <button type="button" onClick={() => handleRemove(ing.id)} className="hover:text-orange-900">
-              <FaTimes size={12} />
+              <IoMdClose size={12} />
             </button>
           </span>
         ))}
