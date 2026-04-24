@@ -12,17 +12,26 @@ import ResetPasswordPage from '../pages/ResetPasswordPage';
 import HomePage from '../pages/HomePage';
 import CreateRecipePage from '../pages/CreateRecipePage';
 import RecipeDetailPage from '../pages/RecipeDetailPage';
+import CookModePage from '../pages/CookModePage';
 import ExplorePage from '../pages/ExplorePage';
 import AdminDashboard from '../pages/admin/AdminDashboard';
 import AdminPendingRecipes from '../pages/admin/AdminPendingRecipes';
 import AdminPendingIngredients from '../pages/admin/AdminPendingIngredients';
 import AdminUsers from '../pages/admin/AdminUsers';
+import ProfilePage from '../pages/ProfilePage';
+import MyRecipesPage from '../pages/MyRecipesPage';
+import PantryPage from '../pages/PantryPage';
+import ShoppingListPage from '../pages/ShoppingListPage';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
     children: [
+      {
+        path: '/cook-mode/:id',
+        element: <CookModePage />,
+      },
       {
         index: true,
         element: <Navigate to="/home" replace />,
@@ -65,19 +74,31 @@ export const router = createBrowserRouter([
             path: '/pantry',
             element: (
               <ProtectedRoute>
-                <div className="p-4">
-                  <h1 className="text-2xl font-bold text-gray-900">Tủ lạnh số</h1>
-                </div>
+                <PantryPage />
               </ProtectedRoute>
             ),
           },
           {
-            path: '/profile',
+            path: '/shopping-list',
             element: (
               <ProtectedRoute>
-                <div className="p-4">
-                  <h1 className="text-2xl font-bold text-gray-900">Hồ sơ</h1>
-                </div>
+                <ShoppingListPage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/profile/:id',
+            element: (
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            ),
+          },
+          {
+            path: '/my-recipes',
+            element: (
+              <ProtectedRoute>
+                <MyRecipesPage />
               </ProtectedRoute>
             ),
           },
