@@ -223,6 +223,7 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
             500: Lỗi trong transaction.
         """
         item = self.get_object()
+        pantry_data = None
         try:
             with transaction.atomic():
                 item.is_purchased = False
@@ -236,20 +237,19 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
                     pantry_item.quantity -= item.quantity
                     if pantry_item.quantity <= 0:
                         pantry_item.delete()
+                        pantry_data = None
                     else:
                         pantry_item.save(update_fields=['quantity', 'updated_at'])
-                    from .serializers import PantrySerializer as PS
-                    return Response({
-                        'success': True,
-                        'message': 'Da bo danh dau da mua.',
-                        'data': PS(pantry_item).data if pantry_item.quantity > 0 else None
-                    })
+                        pantry_data = PantrySerializer(pantry_item).data
                 else:
-                    return Response({
-                        'success': True,
-                        'message': 'Da bo danh dau da mua (khong co trong tu lanh).',
-                        'data': None
-                    })
+                    pantry_data = None
+
+            from .serializers import PantrySerializer as PS
+            return Response({
+                'success': True,
+                'message': 'Da bo danh dau da mua.',
+                'data': pantry_data
+            })
         except Exception as e:
             return Response(
                 {'success': False, 'error': {'message': 'Co loi xay ra khi xu ly giao dich. Vui long thu lai.'}},
