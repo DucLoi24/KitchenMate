@@ -121,7 +121,7 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
         return ShoppingList.objects.filter(user=self.request.user).select_related('ingredient')
 
     def get_permissions(self):
-        if self.action in ('destroy', 'mark_purchased'):
+        if self.action in ('destroy', 'mark_purchased', 'mark_unpurchased'):
             return [IsOwner()]
         return [IsAuthenticated()]
 
@@ -196,6 +196,60 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
                 'message': 'Da danh dau da mua va cap nhat tu lanh.',
                 'data': PS(pantry_item).data
             })
+        except Exception as e:
+            return Response(
+                {'success': False, 'error': {'message': 'Co loi xay ra khi xu ly giao dich. Vui long thu lai.'}},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=True, methods=['post'], url_path='mark-unpurchased')
+    def mark_unpurchased(self, request, pk=None):
+        """
+        Bỏ đánh dấu đã mua — trừ quantity khỏi Pantry và đặt is_purchased=False.
+
+        Endpoint: POST /api/kitchen/shopping-list/{id}/mark-unpurchased/
+        Permission: IsOwner
+
+        Atomic Transaction (3 bước):
+            Bước 1: Đặt is_purchased=False cho ShoppingList item.
+            Bước 2: Tìm Pantry item tương ứng (user + ingredient).
+            Bước 3: Trừ quantity đã mua từ Pantry item.
+                    Nếu Pantry quantity ≤ 0 sau khi trừ → xóa Pantry item.
+
+        Returns:
+            200: Thành công — trả về dữ liệu Pantry item còn lại (hoặc null nếu đã xóa).
+            403: Không phải owner của item.
+            404: Item không tồn tại.
+            500: Lỗi trong transaction.
+        """
+        item = self.get_object()
+        try:
+            with transaction.atomic():
+                item.is_purchased = False
+                item.save(update_fields=['is_purchased'])
+
+                pantry_item = Pantry.objects.filter(
+                    user=request.user, ingredient=item.ingredient
+                ).first()
+
+                if pantry_item:
+                    pantry_item.quantity -= item.quantity
+                    if pantry_item.quantity <= 0:
+                        pantry_item.delete()
+                    else:
+                        pantry_item.save(update_fields=['quantity', 'updated_at'])
+                    from .serializers import PantrySerializer as PS
+                    return Response({
+                        'success': True,
+                        'message': 'Da bo danh dau da mua.',
+                        'data': PS(pantry_item).data if pantry_item.quantity > 0 else None
+                    })
+                else:
+                    return Response({
+                        'success': True,
+                        'message': 'Da bo danh dau da mua (khong co trong tu lanh).',
+                        'data': None
+                    })
         except Exception as e:
             return Response(
                 {'success': False, 'error': {'message': 'Co loi xay ra khi xu ly giao dich. Vui long thu lai.'}},
