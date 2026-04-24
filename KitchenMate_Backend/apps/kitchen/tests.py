@@ -206,3 +206,101 @@ class TransactionRollbackTest(TestCase):
         # ShoppingList van chua duoc mua
         shopping_item.refresh_from_db()
         self.assertFalse(shopping_item.is_purchased)
+
+
+# Feature: phase-7-transaction, Property 14: mark_unpurchased dat is_purchased=False va tru quantity khoi Pantry
+class MarkUnpurchasedPropertyTest(HypothesisTestCase):
+    """Property 14: mark_unpurchased dat is_purchased=False va tru quantity khoi Pantry."""
+
+    @given(
+        shopping_qty=st.floats(min_value=0.1, max_value=100.0, allow_nan=False, allow_infinity=False),
+        existing_qty=st.floats(min_value=0.5, max_value=100.0, allow_nan=False, allow_infinity=False),
+    )
+    @settings(max_examples=20, deadline=None)
+    def test_mark_unpurchased_subtracts_quantity(self, shopping_qty, existing_qty):
+        """
+        Sau mark_unpurchased:
+        - ShoppingList item co is_purchased=False
+        - Pantry item co quantity = existing_qty (da tru shopping_qty khoi luong da cong don)
+        """
+        user = make_user()
+        ingredient = make_ingredient()
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        # Tao pantry item truoc
+        make_pantry(user, ingredient, quantity=existing_qty, unit='kg')
+
+        # Tao va mark purchased shopping item
+        shopping_item = make_shopping_item(user, ingredient, quantity=shopping_qty, unit='kg')
+        client.post(f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/')
+
+        # Unmark
+        response = client.post(f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-unpurchased/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['success'])
+
+        # Kiem tra is_purchased
+        shopping_item.refresh_from_db()
+        self.assertFalse(shopping_item.is_purchased)
+
+        # Kiem tra quantity trong Pantry - should be back to existing_qty
+        pantry = Pantry.objects.get(user=user, ingredient=ingredient)
+        self.assertAlmostEqual(pantry.quantity, existing_qty, places=5)
+
+    @given(st.just(None))
+    @settings(max_examples=10, deadline=None)
+    def test_mark_unpurchased_deletes_pantry_if_quantity_zero(self, _):
+        """Neu quantity sau khi tru <= 0, Pantry item phai bi xoa."""
+        user = make_user()
+        ingredient = make_ingredient()
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        # existing_qty = 0 de sau mark_purchased(pantry=0+2=2) va mark_unpurchased(pantry=2-2=0) -> xoa
+        make_pantry(user, ingredient, quantity=0.0, unit='kg')
+        shopping_item = make_shopping_item(user, ingredient, quantity=2.0, unit='kg')
+        client.post(f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/')
+
+        response = client.post(f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-unpurchased/')
+        self.assertEqual(response.status_code, 200)
+
+        shopping_item.refresh_from_db()
+        self.assertFalse(shopping_item.is_purchased)
+        self.assertFalse(Pantry.objects.filter(user=user, ingredient=ingredient).exists())
+
+
+class MarkUnpurchasedRollbackTest(TestCase):
+    """Kiem tra rollback khi mark_unpurchased that bai."""
+
+    def setUp(self):
+        email = f'user_{uuid.uuid4().hex[:8]}@test.com'
+        self.user = User.objects.create_user(
+            username=email, email=email, full_name='Test', password='pass123'
+        )
+        self.ingredient = Ingredient.objects.create(
+            name=f'ing_{uuid.uuid4().hex[:8]}', status='APPROVED', category='OTHER'
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_rollback_on_pantry_error(self):
+        """Neu Pantry operation that bai, ShoppingList.is_purchased phai van la True."""
+        # Setup: tao pantry + shopping item da purchased
+        pantry = Pantry.objects.create(
+            user=self.user, ingredient=self.ingredient, quantity=5.0, unit='kg'
+        )
+        shopping_item = ShoppingList.objects.create(
+            user=self.user, ingredient=self.ingredient, quantity=3.0, unit='kg',
+            is_purchased=True
+        )
+
+        # Mock de subtract loi
+        with patch.object(Pantry.objects, 'filter', side_effect=Exception('DB error')):
+            response = self.client.post(
+                f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-unpurchased/'
+            )
+
+        self.assertEqual(response.status_code, 500)
+        shopping_item.refresh_from_db()
+        self.assertTrue(shopping_item.is_purchased)  # Rollback ve True
