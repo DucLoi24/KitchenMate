@@ -1,5 +1,5 @@
 // KitchenMate_Frontend/kitchenmate-frontend/src/components/shopping-list/ShoppingListItem.jsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export function ShoppingListItem({
   item,
@@ -10,15 +10,49 @@ export function ShoppingListItem({
   isUnmarking,
 }) {
   const [showActions, setShowActions] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState(false);
+  const [touchStartX, setTouchStartX] = useState(null);
   const isPurchased = item.is_purchased;
+
+  // Detect if device supports touch
+  useEffect(() => {
+    const hasTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    setIsTouchDevice(hasTouch);
+  }, []);
+
+  // Touch handlers for swipe-to-delete on mobile
+  const handleTouchStart = (e) => {
+    setTouchStartX(e.touches[0].clientX);
+  };
+
+  const handleTouchMove = (e) => {
+    if (touchStartX === null) return;
+    const currentX = e.touches[0].clientX;
+    const diff = touchStartX - currentX;
+    // Swipe left more than 80px reveals delete button
+    if (diff > 80) {
+      setShowActions(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setTouchStartX(null);
+  };
+
+  // On mobile (touch device), show delete button always for unpurchased items
+  // On desktop, show on hover (showActions)
+  const showDeleteButton = isTouchDevice ? true : showActions;
 
   return (
     <div
       className={`flex items-center gap-3 p-3 bg-white rounded-lg shadow-sm transition-all duration-200 ${
         isPurchased ? 'opacity-70' : ''
       }`}
-      onMouseEnter={() => setShowActions(true)}
-      onMouseLeave={() => setShowActions(false)}
+      onMouseEnter={() => !isTouchDevice && setShowActions(true)}
+      onMouseLeave={() => !isTouchDevice && setShowActions(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
       {/* Checkbox */}
       <input
@@ -47,8 +81,8 @@ export function ShoppingListItem({
         </p>
       </div>
 
-      {/* Actions - hiện trên desktop khi hover */}
-      {showActions && !isPurchased && (
+      {/* Actions - hiện trên desktop khi hover, trên mobile luôn hiển thị */}
+      {showDeleteButton && !isPurchased && (
         <button
           onClick={() => onDelete(item.id)}
           className="p-2 text-gray-400 hover:text-red-500 transition-colors"
