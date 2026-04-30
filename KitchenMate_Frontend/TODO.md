@@ -1,426 +1,723 @@
-# KitchenMate Frontend - TODO List
+# KitchenMate Frontend - TODO
 
-## Tổng quan dự án
-Xây dựng Frontend cho KitchenMate sử dụng ReactJS + Tailwind CSS, kết nối với Backend API đã hoàn thiện (Phase 1-12).
-
-**Backend API Base URL**: `http://localhost:8000/api/`
-**Tài liệu API**: `http://localhost:8000/api/docs/` (Swagger UI)
+> Tech Stack: React + Tailwind CSS (custom config), Framer Motion (animation/physics-based), GSAP (scroll-triggered), Lenis (smooth scroll)
 
 ---
 
-## Phase 1: Setup & Cấu hình dự án
+## Tổng quan hệ thống
 
-### 1.1 Khởi tạo dự án
-- [x] Tạo dự án React với Vite: `npm create vite@latest kitchenmate-frontend -- --template react`
-- [x] Cài đặt Tailwind CSS v3 (v4)
-- [x] Cài đặt React Router DOM v6
-- [x] Cài đặt Axios (HTTP client)
-- [x] Cài đặt React Query (TanStack Query v5) — cache & fetch API data
-- [x] Cài đặt React Hook Form + Zod (form validation)
-- [x] Cài đặt Zustand (global state management — auth, user info)
-- [x] Cài đặt các thư viện UI hỗ trợ:
-  - `react-hot-toast` (notifications)
-  - `react-icons` (icon library)
-  - `@headlessui/react` (accessible UI components — modal, dropdown)
-  - `react-image-crop` hoặc `react-easy-crop` (crop ảnh avatar)
-  - `swiper` (carousel/slider cho trang chủ)
-
-### 1.2 Cấu hình dự án
-- [x] Cấu hình `vite.config.js` — proxy API để tránh CORS trong dev
-- [x] Tạo file `.env` với `VITE_API_BASE_URL=http://localhost:8000/api`
-- [x] Tạo cấu trúc thư mục chuẩn:
-  ```
-  src/
-  ├── api/          # Axios instances + API call functions
-  ├── assets/       # Ảnh, icon tĩnh
-  ├── components/   # Reusable UI components
-  ├── contexts/     # React Context (AuthContext)
-  ├── hooks/        # Custom hooks
-  ├── pages/        # Page components (route-level)
-  ├── stores/       # Zustand stores
-  ├── utils/        # Helper functions
-  └── routes/       # Route definitions
-  ```
-- [x] Cấu hình Axios instance (`src/api/axiosInstance.js`):
-  - Base URL từ env
-  - Interceptor tự động đính kèm JWT token vào header
-  - Interceptor xử lý 401 → tự động refresh token hoặc logout
-- [x] Cấu hình React Query Provider bọc toàn bộ app
-- [x] Cấu hình React Router với layout lồng nhau (nested routes)
-- [x] Cấu hình Tailwind theme — màu sắc chính của KitchenMate (cam/xanh lá)
+- **Đề tài**: Xây dựng ứng dụng Web hỗ trợ quản lý nguyên liệu và gợi ý món ăn thông minh tích hợp chia sẻ công thức
+- **Backend**: Django REST Framework + PostgreSQL + JWT + Local LLM (Llama 3/Gemma)
+- **Frontend**: React + Tailwind CSS + Framer Motion + GSAP + Lenis
 
 ---
 
-## Phase 2: Authentication (Đăng ký / Đăng nhập)
+## PHASE 1: Foundation & Setup
 
-**API sử dụng**: `/api/auth/`
+### 1.1 Project Setup
 
-### 2.1 Auth Store (Zustand)
-- [x] Tạo `src/stores/authStore.js`:
-  - State: `user`, `accessToken`, `refreshToken`, `isAuthenticated`
-  - Actions: `login()`, `logout()`, `setUser()`, `refreshAccessToken()`
-  - Persist token vào `localStorage`
+- [x] Initialize Vite + React project
+- [x] Configure Tailwind CSS v4 với custom theme từ design spec
+- [x] Setup ESLint + Prettier
+- [x] Setup project structure (src/components, src/pages, src/hooks, src/api, src/stores)
+- [x] Setup Husky + lint-staged
 
-### 2.2 Trang Đăng ký (`/register`)
-- [x] Form: Username, Email, Mật khẩu, Xác nhận mật khẩu
-- [x] Validation với Zod (email format, password min 8 ký tự, password match)
-- [x] Gọi `POST /api/auth/register/`
-- [x] Hiển thị lỗi từ server (email đã tồn tại, username đã dùng)
-- [x] Redirect sang `/login` sau khi đăng ký thành công
+### 1.2 Core Dependencies
 
-### 2.3 Trang Đăng nhập (`/login`)
-- [x] Form: Email, Mật khẩu
-- [x] Gọi `POST /api/auth/login/` → lưu `access` + `refresh` token
-- [x] Redirect về trang trước đó hoặc trang chủ
-- [x] Link "Quên mật khẩu"
+- [x] Install & configure Framer Motion
+- [x] Install & configure GSAP + ScrollTrigger
+- [x] Install & configure Lenis smooth scroll
+- [x] Install Axios + axios-instance (backend API client)
+- [x] Install React Router v6
+- [x] Install Zustand / Jotai (state management)
+- [x] Install React Query (server state)
+- [x] Install React Hook Form + Zod (form handling)
+- [x] Install Lucide React (icons)
+- [x] Install clsx + tailwind-merge (className utilities)
 
-### 2.4 Quên mật khẩu
-- [x] Trang `/forgot-password`: nhập email → gọi `POST /api/auth/forgot-password/`
-- [x] Trang `/reset-password?token=...`: nhập mật khẩu mới → gọi `POST /api/auth/reset-password/`
+### 1.3 Design System Base
 
-### 2.5 Protected Routes
-- [x] Tạo component `ProtectedRoute` — redirect về `/login` nếu chưa đăng nhập
-- [x] Tạo component `AdminRoute` — redirect nếu không phải admin
-- [x] Tự động refresh token khi access token hết hạn (interceptor Axios)
-- [x] Logout: gọi `POST /api/auth/logout/` + xóa token khỏi store
+- [x] Setup Tailwind custom theme colors (primary, secondary, accent)
+- [x] Setup typography scale
+- [x] Setup spacing system
+- [x] Create Button, Input, Card, Badge components
+- [x] Create responsive breakpoints
 
----
+### 1.4 API Layer
 
-## Phase 3: Layout & Navigation
+- [x] Setup axiosInstance với interceptors (auth token, error handling)
+- [x] Create API modules: authApi, recipeApi, ingredientApi, kitchenApi, socialApi
+- [x] Setup React Query hooks (useAuth, useRecipes, usePantry, etc.)
+- [x] Setup API error handling + toast notifications
 
-### 3.1 Layout chính
-- [x] Component `MainLayout`:
-  - Header/Navbar (logo, search bar, nav links, avatar dropdown)
-  - Main content area
-  - Bottom navigation bar (mobile — 5 tab: Trang chủ, Khám phá, Gợi ý, Tủ lạnh, Hồ sơ)
-- [x] Component `AuthLayout` (cho trang login/register — không có navbar)
-- [x] Component `AdminLayout` (sidebar cho trang admin)
+### 1.5 Testing Foundation
 
-### 3.2 Navbar (Desktop)
-- [x] Logo KitchenMate (trái)
-- [x] Search bar ở giữa (tìm kiếm công thức)
-- [x] Nút "Tạo công thức" (nếu đã đăng nhập)
-- [x] Avatar + dropdown menu (Hồ sơ, Bộ sưu tập, Đăng xuất)
-- [x] Nút Đăng nhập / Đăng ký (nếu chưa đăng nhập)
-
-### 3.3 Bottom Navigation (Mobile)
-- [x] 5 tab: Trang chủ, Khám phá, Gợi ý món ăn, Tủ lạnh số, Hồ sơ
-- [x] Active state cho tab hiện tại
-- [x] Badge thông báo (nếu có)
-- [x] Guest: protected tabs redirect to /login với toast message
-- [x] Logged in: badge notification trên Hồ sơ tab
+- [x] Setup Vitest + React Testing Library
+- [x] Write tests cho: Button, Input components
+- [x] Write tests cho: axiosInstance interceptor
 
 ---
 
-## Phase 4: Trang chủ & Khám phá công thức
+## PHASE 2: Authentication & User Profile
 
-**API sử dụng**: `GET /api/recipes/`
+### 2.1 Authentication Pages
 
-### 4.1 Trang chủ (`/`)
-- [x] Banner/Hero section (ảnh đẹp + tagline)
-- [x] Section "Công thức mới nhất" — danh sách RecipeCard (pagination/infinite scroll)
-- [x] Section "Công thức phổ biến" (sort theo rating hoặc save_count)
-- [x] Skeleton loading khi đang fetch data
+- [x] **LoginPage** (`/login`)
+  - Email/password form với validation
+  - Google OAuth2 button
+  - "Quên mật khẩu" link
+  - Redirect to intended page after login
+  - **User Flow**: Mở app → Login → HomePage
 
-### 4.2 Component `RecipeCard`
-- [ ] Ảnh thumbnail (lazy loading)
-- [ ] Tên món ăn, tác giả, thời gian, độ khó
-- [ ] Điểm rating trung bình (sao)
-- [ ] Nút "Lưu/Yêu thích" (toggle — gọi API collection)
-- [ ] Responsive: 1 cột mobile, 2 cột tablet, 3-4 cột desktop
+- [x] **RegisterPage** (`/register`)
+  - Email, password, confirm password, full_name fields
+  - Password strength indicator
+  - Terms & conditions checkbox
+  - **User Flow**: Login → Register → Login
 
-### 4.3 Trang Khám phá (`/explore`)
-- [ ] Thanh tìm kiếm (search theo title)
-- [ ] Bộ lọc:
-  - Độ khó: EASY / MEDIUM / HARD
-  - Thời gian: dưới 15 phút, 15-30 phút, 30-60 phút, trên 60 phút
-  - Tìm theo nguyên liệu (autocomplete từ `/api/ingredients/search/`)
-- [ ] Danh sách kết quả với pagination
-- [ ] Trạng thái "Không tìm thấy kết quả"
+- [x] **ForgotPasswordPage** (`/forgot-password`)
+  - Email input để gửi reset link
+  - Success/error feedback
 
----
+### 2.2 Auth Components
 
-## Phase 5: Chi tiết công thức & Cook Mode
+- [x] **AuthGuard** - Protected route wrapper (redirect to login if not authenticated)
+- [x] **AdminGuard** - Admin-only route protection
+- [x] **AuthContext** - Global auth state (user, token, login, logout)
+- [x] **GoogleOAuthButton** - Google sign-in integration
 
-**API sử dụng**: `GET /api/recipes/{id}/`, `GET /api/recipes/{id}/stats/`
+### 2.3 Profile Management
 
-### 5.1 Trang chi tiết công thức (`/recipes/:id`)
-- [ ] Ảnh thumbnail lớn + thông tin tổng quan (tên, tác giả, thời gian, độ khó, rating)
-- [ ] Thống kê: lượt xem, lượt lưu, điểm rating
-- [ ] Danh sách nguyên liệu (có checkbox để chọn nguyên liệu thiếu)
-- [ ] Nút "Thêm nguyên liệu thiếu vào danh sách đi chợ" → gọi `POST /api/kitchen/shopping-list/`
-- [ ] Danh sách các bước thực hiện (có ảnh/video minh họa)
-- [ ] Nút "Bắt đầu nấu" → vào Cook Mode
-- [ ] Nút "Lưu vào bộ sưu tập"
-- [ ] Section đánh giá & bình luận (Phase 8)
+- [x] **ProfilePage** (`/profile`)
+  - View/edit full_name, bio
+  - Avatar upload with preview
+  - View own recipes count, collections count
+  - **User Flow**: Profile icon → ProfilePage → Edit → Save
 
-### 5.2 Cook Mode (giao diện nấu ăn)
-- [ ] Giao diện tối giản, font chữ lớn, nền tối
-- [ ] Hiển thị từng bước một (có nút Trước/Tiếp theo)
-- [ ] Progress bar hiển thị đang ở bước mấy / tổng số bước
-- [ ] Ảnh/video minh họa cho từng bước
-- [ ] Bộ đếm thời gian (timer) cho từng bước (nếu có)
-- [ ] Giữ màn hình luôn sáng (Wake Lock API)
-- [ ] Nút thoát Cook Mode
-- [ ] Sau bước cuối: màn hình chúc mừng + đề xuất đánh giá
+- [x] **PublicProfilePage** (`/profile/:userId`)
+  - View user's public recipes
+  - View user's collections
+  - Follow/unfollow button (future)
+  - **User Flow**: Click username → PublicProfilePage
+
+### 2.4 Auth Testing
+
+- [x] Write tests cho LoginPage (form validation, API error handling)
+- [x] Write tests cho RegisterPage (password match validation)
+- [x] Write tests cho AuthContext (login, logout, token persistence)
 
 ---
 
-## Phase 6: Tạo & Quản lý công thức
+## PHASE 3: Recipe Management
 
-**API sử dụng**: `POST /api/recipes/`, `PUT/PATCH /api/recipes/{id}/`, `POST /api/recipes/{id}/publish/`
+### 3.1 Recipe Browsing
 
-### 6.1 Trang tạo công thức (`/recipes/create`)
-- [ ] Form thông tin cơ bản: Tiêu đề, Mô tả, Thời gian (phút), Độ khó, Danh mục
-- [ ] Upload ảnh thumbnail (gọi `POST /api/recipes/upload/thumbnail/`)
-- [ ] Section thêm nguyên liệu:
-  - Autocomplete tìm kiếm nguyên liệu (`GET /api/ingredients/search/?q=`)
-  - Nhập số lượng + đơn vị
-  - Nút "Đề xuất nguyên liệu mới" nếu không tìm thấy
-- [ ] Section soạn thảo các bước:
-  - Thêm/xóa/sắp xếp bước (drag & drop)
-  - Nhập nội dung hướng dẫn cho từng bước
-  - Upload ảnh/video cho từng bước (`POST /api/recipes/upload/step-media/`)
-- [ ] Toggle trạng thái: Riêng tư / Công khai
-- [ ] Nút "Lưu nháp" (PRIVATE) và "Đăng công khai" (trigger AI moderation)
-- [ ] Hiển thị thông báo kết quả AI (duyệt ngay / chờ admin / bị từ chối)
+- [ ] **ExplorePage** (`/explore`)
+  - Hero section với GSAP scroll animation
+  - Category filters (horizontal scroll on mobile)
+  - Recipe grid với Framer Motion stagger entrance
+  - Search bar với debounced autocomplete
+  - Difficulty filter (Dễ/Trung bình/Khó)
+  - Time filter (prep_time)
+  - Sort options (newest, most popular, top rated)
+  - Infinite scroll với React Query pagination
+  - **User Flow**: Home → ExplorePage → Scroll/Search/Filter → RecipeCard → RecipeDetail
 
-### 6.2 Trang chỉnh sửa công thức (`/recipes/:id/edit`)
-- [ ] Load dữ liệu công thức hiện tại vào form
-- [ ] Tương tự trang tạo mới
-- [ ] Chỉ hiển thị với owner của công thức
+- [ ] **RecipeCard** component
+  - Thumbnail image với lazy loading
+  - Title, description preview (2 lines)
+  - Author avatar + name
+  - Prep time badge
+  - Difficulty badge (color-coded)
+  - Rating stars (average)
+  - Favorite button (heart icon)
+  - Swipe-to-favorite (mobile)
+  - **User Flow**: RecipeCard click → RecipeDetail
 
-### 6.3 Đề xuất nguyên liệu mới
-- [ ] Modal "Thêm nguyên liệu mới": nhập tên + chọn category
-- [ ] Gọi `POST /api/ingredients/` → hiển thị thông báo "Đang chờ duyệt"
+### 3.2 Recipe Detail
 
----
+- [ ] **RecipeDetailPage** (`/recipe/:id`)
+  - Full-width hero image với parallax
+  - Title, description
+  - Author info (avatar, name) → click to PublicProfile
+  - Prep time, difficulty, servings
+  - Rating display (average stars + count)
+  - Favorite/Collection button
+  - Ingredient list với checkbox (check off while cooking)
+  - Steps list với numbered cards
+  - Media (images/videos per step)
+  - Comments section
+  - Related recipes carousel
+  - **Cook Mode** toggle button
+  - **User Flow**: RecipeCard → RecipeDetail → Cook Mode / Add to Collection / Rate
 
-## Phase 7: Tủ lạnh số & Danh sách đi chợ
+- [ ] **CookMode** overlay
+  - Keep screen awake (Wake Lock API)
+  - Enlarged text (accessibility)
+  - Step-by-step navigation (swipe/arrow)
+  - Ingredient reference sidebar
+  - Exit button
+  - **User Flow**: RecipeDetail → Cook Mode → Follow steps → Finish
 
-**API sử dụng**: `/api/kitchen/pantry/`, `/api/kitchen/shopping-list/`
+### 3.3 Recipe Creation/Editing
 
-### 7.1 Trang Tủ lạnh số (`/pantry`)
-- [ ] Danh sách nguyên liệu đang có (nhóm theo category)
-- [ ] Thanh tìm kiếm lọc nhanh theo tên
-- [ ] Thêm nguyên liệu: autocomplete + nhập số lượng + đơn vị
-- [ ] Chỉnh sửa số lượng inline (click để sửa trực tiếp)
-- [ ] Xóa nguyên liệu (swipe to delete trên mobile)
-- [ ] Nút "Gợi ý món ăn" → chuyển sang trang gợi ý
-- [ ] Trạng thái trống: hướng dẫn thêm nguyên liệu đầu tiên
+- [ ] **RecipeEditorPage** (`/recipe/new`, `/recipe/:id/edit`)
+  - Multi-step form wizard
+  - Step 1: Basic info (title, description, difficulty, prep_time, servings, thumbnail)
+  - Step 2: Ingredients (search/add from ingredient database, quantity, unit)
+  - Step 3: Steps (add/edit/reorder steps, add media per step)
+  - Step 4: Preview & Visibility (PRIVATE/PUBLIC)
+  - Auto-save draft (localStorage)
+  - AI moderation notice (text analyzed on PUBLIC submit)
+  - **User Flow**: Create Recipe → Editor (4 steps) → Preview → Submit → Pending/Public
 
-### 7.2 Trang Danh sách đi chợ (`/shopping-list`)
-- [ ] Danh sách nguyên liệu cần mua (phân biệt đã mua / chưa mua)
-- [ ] Checkbox "Đã mua" → gọi `POST /api/kitchen/shopping-list/{id}/mark-purchased/`
-  - Hiển thị loading state trong khi transaction đang xử lý
-  - Gạch ngang nguyên liệu sau khi đánh dấu
-  - Toast thông báo "Đã thêm vào tủ lạnh"
-- [ ] Thêm nguyên liệu thủ công (autocomplete)
-- [ ] Xóa nguyên liệu khỏi danh sách
-- [ ] Nút "Xóa tất cả đã mua"
+- [ ] **RecipeEditor** components
+  - **IngredientSearch** - Autocomplete search existing ingredients
+  - **IngredientInput** - Quantity + unit selector + add button
+  - **StepEditor** - Drag-and-drop step reordering
+  - **MediaUploader** - Image upload per step
+  - **VisibilityToggle** - PRIVATE/PUBLIC radio
 
----
+### 3.4 Recipe Testing
 
-## Phase 8: Gợi ý món ăn (Matching Engine)
-
-**API sử dụng**: `POST /api/recommendations/suggest/`
-
-### 8.1 Trang Gợi ý món ăn (`/suggestions`)
-- [ ] Chọn chế độ gợi ý:
-  - "Nấu Ngay" (COOK_NOW) — có đủ 100% nguyên liệu
-  - "Thêm Chút Nữa" (ADD_MORE) — thiếu tối đa 1-2 nguyên liệu phụ
-- [ ] Phần "Loại trừ nguyên liệu": autocomplete chọn nguyên liệu không muốn ăn
-- [ ] Nút "Tìm món ăn" → gọi API
-- [ ] Hiển thị danh sách kết quả (RecipeCard mở rộng):
-  - Điểm phù hợp
-  - Danh sách nguyên liệu còn thiếu (nếu có)
-  - Nút "Thêm nguyên liệu thiếu vào giỏ đi chợ"
-- [ ] Trạng thái tủ lạnh trống → hướng dẫn thêm nguyên liệu
-- [ ] Skeleton loading trong khi tính toán
-
----
-
-## Phase 9: Tương tác xã hội (Reviews & Collections)
-
-**API sử dụng**: `/api/social/`
-
-### 9.1 Đánh giá & Bình luận
-- [ ] Section reviews ở cuối trang chi tiết công thức
-- [ ] Hiển thị điểm rating trung bình + phân bố sao (1-5)
-- [ ] Danh sách reviews (avatar, tên, sao, nội dung, ảnh cooksnap, ngày đăng)
-- [ ] Form đánh giá (chỉ khi đã đăng nhập):
-  - Chọn số sao (1-5) bằng star rating component
-  - Nhập bình luận (textarea)
-  - Upload ảnh "trả bài" (cooksnap) → gọi `POST /api/social/reviews/{id}/upload-cooksnap/`
-  - Gọi `POST /api/social/recipes/{recipe_id}/reviews/`
-- [ ] Sửa/xóa review của chính mình
-
-### 9.2 Bộ sưu tập (`/collections`)
-- [ ] Trang danh sách bộ sưu tập của tôi
-- [ ] Tạo bộ sưu tập mới (modal nhập tên)
-- [ ] Xem chi tiết bộ sưu tập (danh sách RecipeCard)
-- [ ] Gỡ công thức khỏi bộ sưu tập
-- [ ] Xóa bộ sưu tập
-- [ ] Modal "Lưu vào bộ sưu tập" (chọn hoặc tạo mới) — dùng ở nhiều nơi
+- [ ] Write tests cho RecipeCard rendering
+- [ ] Write tests cho RecipeDetailPage data fetching
+- [ ] Write tests cho RecipeEditor form validation
+- [ ] Write tests cho CookMode component
 
 ---
 
-## Phase 10: Hồ sơ cá nhân
+## PHASE 4: Smart Kitchen (Pantry & Shopping)
 
-**API sử dụng**: `/api/accounts/`
+### 4.1 Digital Pantry
 
-### 10.1 Trang hồ sơ cá nhân (`/profile/:id`)
-- [ ] Ảnh đại diện, tên hiển thị, bio
-- [ ] Thống kê: số công thức, tổng lượt thích, rating trung bình
-- [ ] Danh sách công thức đã đăng (chỉ PUBLIC nếu xem người khác)
-- [ ] Nút "Chỉnh sửa hồ sơ" (chỉ hiện với chính mình)
+- [ ] **PantryPage** (`/pantry`)
+  - Pantry items grid/list view toggle
+  - Search/filter by ingredient name
+  - Category filters (Protein, Carb, Vegetable, Spice, Other)
+  - Each item: ingredient name, quantity, unit, expiry warning
+  - Expiry color coding (red = expired, yellow = expiring soon, green = fresh)
+  - Quick edit quantity inline
+  - Delete item (swipe on mobile)
+  - Add item FAB (floating action button)
+  - **User Flow**: Bottom nav → Pantry → View/Edit/Add items
 
-### 10.2 Chỉnh sửa hồ sơ
-- [ ] Modal hoặc trang riêng `/profile/edit`
-- [ ] Upload ảnh đại diện → gọi `POST /api/accounts/upload/avatar/`
-  - Preview ảnh trước khi upload
-  - Crop ảnh thành hình vuông
-- [ ] Cập nhật tên hiển thị, bio → gọi `PATCH /api/accounts/me/`
-- [ ] Đổi mật khẩu (form riêng)
+- [ ] **PantryItem** component
+  - Ingredient icon/image
+  - Name, quantity, unit display
+  - Expiry status badge
+  - Edit/Delete actions
+  - Swipe-to-delete gesture (mobile)
 
-### 10.3 Trang "Công thức của tôi" (`/my-recipes`)
-- [ ] Danh sách tất cả công thức (cả PRIVATE, PUBLIC, PENDING)
-- [ ] Badge trạng thái (Riêng tư / Công khai / Chờ duyệt)
-- [ ] Nút Chỉnh sửa / Xóa / Công khai hóa
-- [ ] Filter theo trạng thái
+- [ ] **PantryAddBottomSheet**
+  - Ingredient search autocomplete
+  - Quantity input (numeric keyboard)
+  - Unit selector dropdown
+  - Expiry date picker (optional)
+  - Save button
+  - **User Flow**: PantryPage → FAB → BottomSheet → Search → Add
 
----
+### 4.2 Shopping List
 
-## Phase 11: Trang Admin
+- [ ] **ShoppingListPage** (`/shopping-list`)
+  - Active items list (not purchased)
+  - Purchased items (collapsible section)
+  - Each item: ingredient, quantity, unit, checkbox
+  - Check item → auto-sync to Pantry (transaction)
+  - Quick add via search
+  - Clear purchased items button
+  - Swipe-to-delete (mobile)
+  - **User Flow**: Pantry → Shopping List icon → View items → Check purchased → Auto-add to Pantry
 
-**API sử dụng**: `/api/admin/`
+- [ ] **ShoppingListItem** component
+  - Checkbox + ingredient info
+  - Swipe actions (delete, edit quantity)
+  - Mark as purchased animation
+  - **User Flow**: Check → Item moves to Pantry + "purchased" section
 
-### 11.1 Dashboard Admin (`/admin`)
-- [ ] Tổng quan: số công thức chờ duyệt, số nguyên liệu chờ duyệt, số user bị khóa
-- [ ] Sidebar navigation
+- [ ] **ShoppingListAddBottomSheet**
+  - Same UI pattern as PantryAddBottomSheet
+  - Quick quantity adjust
+  - Add to list button
 
-### 11.2 Duyệt công thức (`/admin/recipes/pending`)
-- [ ] Danh sách công thức PENDING
-- [ ] Xem chi tiết nội dung (tiêu đề, mô tả, các bước)
-- [ ] Nút "Duyệt" → `POST /api/admin/recipes/{id}/approve/`
-- [ ] Nút "Từ chối" → `POST /api/admin/recipes/{id}/reject/`
+### 4.3 Food Suggestion (AI-Powered)
 
-### 11.3 Duyệt nguyên liệu (`/admin/ingredients/pending`)
-- [ ] Danh sách nguyên liệu PENDING (tên, category, người đề xuất)
-- [ ] Nút "Duyệt" → `POST /api/admin/ingredients/{id}/approve/`
-- [ ] Nút "Từ chối" → `POST /api/admin/ingredients/{id}/reject/`
-- [ ] Chỉnh sửa tên (sửa lỗi chính tả) trước khi duyệt
+- [ ] **SuggestionPage** (`/suggest`)
+  - Two filter tabs: "Nấu Ngay" (0 missing), "Thêm Chút Nữa" (≤2 missing + score ≥0)
+  - Suggested recipes list với match percentage
+  - Missing ingredients preview per recipe
+  - "Add missing to shopping list" button per recipe
+  - Pull-to-refresh
+  - **Algorithm display**: Show scoring breakdown (debug mode)
+  - **User Flow**: Pantry → Suggest tab → View suggestions → Click recipe → RecipeDetail
 
-### 11.4 Quản lý người dùng (`/admin/users`)
-- [ ] Danh sách user (tên, email, ngày tạo, trạng thái)
-- [ ] Tìm kiếm theo tên/email
-- [ ] Nút "Khóa tài khoản" → `POST /api/admin/users/{id}/block/`
-- [ ] Nút "Mở khóa" → `POST /api/admin/users/{id}/unblock/`
+- [ ] **SuggestionCard** component
+  - Recipe thumbnail
+  - Title
+  - Match percentage badge
+  - Missing ingredients count
+  - "Nấu Ngay" / "Thêm Chút Nữa" tag
+  - Quick actions (view, add to shopping)
 
----
+### 4.4 Pantry & Shopping Testing
 
-## Phase 12: UX & Polish
-
-### 12.1 Loading & Error States
-- [ ] Skeleton loading cho tất cả danh sách (RecipeCard, IngredientList...)
-- [ ] Error boundary component
-- [ ] Trang 404 Not Found
-- [ ] Trang 403 Forbidden
-- [ ] Empty state components (tủ lạnh trống, chưa có công thức...)
-
-### 12.2 Toast Notifications
-- [ ] Thành công: lưu công thức, đánh dấu đã mua, cập nhật hồ sơ...
-- [ ] Lỗi: validation, server error, network error
-- [ ] Info: công thức đang chờ duyệt
-
-### 12.3 Responsive & Mobile UX
-- [ ] Kiểm tra toàn bộ trang trên màn hình 375px (iPhone SE)
-- [ ] Touch-friendly: nút tối thiểu 44x44px
-- [ ] Swipe gestures cho danh sách (xóa nguyên liệu)
-- [ ] Pull-to-refresh cho danh sách chính
-
-### 12.4 Performance
-- [ ] Lazy loading ảnh (Intersection Observer hoặc `loading="lazy"`)
-- [ ] Code splitting theo route (React.lazy + Suspense)
-- [ ] Debounce cho search/autocomplete input (300ms)
-- [ ] Infinite scroll hoặc pagination cho danh sách dài
-
----
-
-## Phase 13: Testing & Deployment
-
-### 13.1 Testing
-- [ ] Viết unit test cho các utility functions (`src/utils/`)
-- [ ] Viết component test cho các form (React Testing Library)
-- [ ] Test auth flow (login, logout, token refresh)
-- [ ] Test Check-to-Pantry flow (mark purchased → pantry update)
-
-### 13.2 Build & Deployment
-- [ ] Cấu hình `.env.production` với API URL production
-- [ ] Build production: `npm run build`
-- [ ] Kiểm tra bundle size (target < 500KB gzipped)
-- [ ] Deploy lên Vercel / Netlify hoặc serve qua Nginx
+- [ ] Write tests cho PantryPage (add/edit/delete operations)
+- [ ] Write tests cho ShoppingListPage (check/uncheck operations)
+- [ ] Write tests cho SuggestionPage (filter tabs, recipe matching)
+- [ ] Write tests cho Check-to-Pantry transaction flow
 
 ---
 
-## Thứ tự ưu tiên thực hiện
+## PHASE 5: Social Features
 
-1. **Phase 1** — Setup dự án (nền tảng)
-2. **Phase 2** — Authentication (bắt buộc cho mọi tính năng)
-3. **Phase 3** — Layout & Navigation (khung sườn UI)
-4. **Phase 4** — Trang chủ & Khám phá (tính năng cốt lõi đầu tiên)
-5. **Phase 5** — Chi tiết công thức & Cook Mode
-6. **Phase 7** — Tủ lạnh số & Danh sách đi chợ
-7. **Phase 8** — Gợi ý món ăn (tính năng đặc trưng)
-8. **Phase 6** — Tạo & Quản lý công thức
-9. **Phase 9** — Tương tác xã hội
-10. **Phase 10** — Hồ sơ cá nhân
-11. **Phase 11** — Trang Admin
-12. **Phase 12** — UX Polish
-13. **Phase 13** — Testing & Deployment
+### 5.1 Rating & Comments
 
----
+- [ ] **RatingComponent**
+  - 5-star interactive rating input
+  - Hover preview
+  - Submit on click
+  - Update existing rating
+  - **User Flow**: RecipeDetail → Rate stars → Submit
 
-## Ghi chú kỹ thuật
+- [ ] **CommentSection**
+  - Comments list (paginated)
+  - Each comment: user avatar, name, text, timestamp, image
+  - Add comment form (text + optional image)
+  - Reply button (future threaded comments)
+  - Edit/Delete own comments
+  - **User Flow**: RecipeDetail → Scroll to Comments → Add comment
 
-### API Endpoints tham khảo
-| Tính năng | Method | Endpoint |
-|-----------|--------|----------|
-| Đăng ký | POST | `/api/auth/register/` |
-| Đăng nhập | POST | `/api/auth/login/` |
-| Refresh token | POST | `/api/auth/refresh/` |
-| Đăng xuất | POST | `/api/auth/logout/` |
-| Thông tin tôi | GET | `/api/accounts/me/` |
-| Cập nhật profile | PATCH | `/api/accounts/me/` |
-| Upload avatar | POST | `/api/accounts/upload/avatar/` |
-| Danh sách công thức | GET | `/api/recipes/` |
-| Chi tiết công thức | GET | `/api/recipes/{id}/` |
-| Tạo công thức | POST | `/api/recipes/` |
-| Công khai công thức | POST | `/api/recipes/{id}/publish/` |
-| Upload thumbnail | POST | `/api/recipes/upload/thumbnail/` |
-| Upload step media | POST | `/api/recipes/upload/step-media/` |
-| Tìm nguyên liệu | GET | `/api/ingredients/search/?q=` |
-| Đề xuất nguyên liệu | POST | `/api/ingredients/` |
-| Xem tủ lạnh | GET | `/api/kitchen/pantry/` |
-| Thêm vào tủ lạnh | POST | `/api/kitchen/pantry/` |
-| Xem danh sách đi chợ | GET | `/api/kitchen/shopping-list/` |
-| Đánh dấu đã mua | POST | `/api/kitchen/shopping-list/{id}/mark-purchased/` |
-| Gợi ý món ăn | POST | `/api/recommendations/suggest/` |
-| Xem reviews | GET | `/api/social/recipes/{id}/reviews/` |
-| Tạo review | POST | `/api/social/recipes/{id}/reviews/` |
-| Upload cooksnap | POST | `/api/social/reviews/{id}/upload-cooksnap/` |
-| Danh sách bộ sưu tập | GET | `/api/social/collections/` |
-| Thêm vào bộ sưu tập | POST | `/api/social/collections/{id}/add-recipe/` |
-| Thống kê công thức | GET | `/api/recipes/{id}/stats/` |
+- [ ] **CommentItem** component
+  - User avatar → click to PublicProfile
+  - Comment text
+  - Timestamp (relative: "2 giờ trước")
+  - Image thumbnail (click to expand)
+  - Edit/Delete menu (own comments only)
 
-### Lưu ý quan trọng
-- Tất cả API cần auth phải đính kèm header: `Authorization: Bearer <access_token>`
-- Khi nhận lỗi 401, tự động gọi `/api/auth/refresh/` để lấy token mới
-- Ảnh upload phải validate: chỉ chấp nhận jpg/png/webp, tối đa 5MB
-- Debounce autocomplete search 300ms để tránh spam API
-- Sử dụng React Query để cache data, tránh gọi API lặp lại không cần thiết
+### 5.2 Collections/Favorites
+
+- [ ] **CollectionsPage** (`/collections`)
+  - List of user's collections (folders)
+  - Create new collection
+  - Collection card: name, recipe count, cover image (first recipe thumbnail)
+  - **User Flow**: Profile → Collections → View/Manage
+
+- [ ] **CollectionDetailPage** (`/collection/:id`)
+  - Collection name + edit
+  - Recipe grid
+  - Remove from collection (swipe)
+  - Share collection (future)
+  - **User Flow**: Collections → Collection → View recipes
+
+- [ ] **AddToCollectionModal**
+  - List existing collections
+  - Create new collection
+  - Checkbox per collection
+  - **User Flow**: RecipeDetail → Favorite → Modal → Select collection → Save
+
+### 5.3 Social Testing
+
+- [ ] Write tests cho RatingComponent interaction
+- [ ] Write tests cho CommentSection CRUD
+- [ ] Write tests cho CollectionsPage management
 
 ---
 
-**Tạo lúc**: Phase 12 Backend hoàn thiện (192 tests pass)
-**Bắt đầu từ**: Phase 1 Frontend Setup
+## PHASE 6: Admin Panel
+
+### 6.1 Admin Dashboard
+
+- [ ] **AdminPage** (`/admin`)
+  - Stats overview (pending recipes, active users, reports)
+  - Quick actions (recent pending list)
+  - **AdminGuard**: redirect non-admins
+
+- [ ] **AdminSidebar** navigation
+  - Dashboard
+  - Pending Recipes
+  - Users Management
+  - Reports
+  - Ingredients (approve/reject)
+
+### 6.2 Content Moderation
+
+- [ ] **PendingRecipesPage** (`/admin/pending`)
+  - List recipes with PENDING status
+  - Recipe preview card
+  - AI moderation result badge (YES/NO/SUSPECT)
+  - Approve/Reject buttons
+  - View full recipe detail
+  - **User Flow**: Admin login → Pending → Review → Approve/Reject
+
+- [ ] **ModerationResultBadge**
+  - Color-coded: Green (YES), Red (NO), Yellow (SUSPECT)
+  - Tooltip showing AI confidence
+
+### 6.3 User Management
+
+- [ ] **UsersPage** (`/admin/users`)
+  - User list table
+  - Search by email/name
+  - Ban/Unban user toggle
+  - View user profile link
+  - **User Flow**: Admin → Users → Search → Ban
+
+### 6.4 Ingredient Management
+
+- [ ] **IngredientsAdminPage** (`/admin/ingredients`)
+  - List pending ingredient submissions
+  - Approve/reject new ingredients
+  - Edit existing ingredient (name, category, unit)
+  - **User Flow**: Admin → Ingredients → Review → Approve
+
+### 6.5 Admin Testing
+
+- [ ] Write tests cho AdminGuard protection
+- [ ] Write tests cho PendingRecipesPage approval flow
+- [ ] Write tests cho User ban/unban
+
+---
+
+## PHASE 7: Global Components & UX
+
+### 7.1 Navigation
+
+- [ ] **BottomNav** (mobile)
+  - Home, Explore, Add (FAB), Pantry, Profile icons
+  - Active state indicator
+  - Badge for notifications (future)
+  - **User Flow**: Any page → Bottom nav click → Navigate
+
+- [ ] **Header**
+  - Logo/brand
+  - Search bar (expandable on mobile)
+  - Notification bell (future)
+  - Profile avatar dropdown
+
+- [ ] **Sidebar** (desktop)
+  - Logo
+  - Nav links with icons
+  - Collapse toggle
+  - Active state highlight
+
+### 7.2 Search
+
+- [ ] **GlobalSearch**
+  - Command+K / search icon trigger
+  - Debounced search results
+  - Recent searches
+  - Result categories: Recipes, Users, Collections
+  - Keyboard navigation (arrow keys + enter)
+  - **User Flow**: Search icon → Type → Results → Click → Navigate
+
+- [ ] **SearchResults** components
+  - Recipe result card
+  - User result card
+  - Collection result card
+
+### 7.3 Animations & Micro-interactions
+
+- [ ] **Page Transitions** (Framer Motion)
+  - Fade + slide between pages
+  - Exit animations
+
+- [ ] **Skeleton Loaders**
+  - RecipeCard skeleton
+  - RecipeDetail skeleton
+  - List item skeleton
+
+- [ ] **Pull-to-refresh** (mobile)
+- [ ] **Infinite scroll** loader
+- [ ] **Toast notifications**
+  - Success (green), Error (red), Info (blue)
+  - Auto-dismiss
+  - Action button option
+
+- [ ] **Empty States**
+  - No recipes, No pantry items, No collections
+  - Illustrated empty states with CTA
+
+- [ ] **Error States**
+  - Network error retry
+  - Not found page (404)
+
+### 7.4 Accessibility
+
+- [ ] Keyboard navigation support
+- [ ] ARIA labels on interactive elements
+- [ ] Focus management on modals/sheets
+- [ ] Reduced motion support (prefers-reduced-motion)
+- [ ] Screen reader announcements (aria-live)
+
+### 7.5 Performance
+
+- [ ] Image lazy loading (Intersection Observer)
+- [ ] Code splitting per route
+- [ ] Memoization (React.memo, useMemo)
+- [ ] Virtual list for long recipe collections
+
+---
+
+## PHASE 8: Responsive & Polish
+
+### 8.1 Mobile-First Responsive
+
+- [ ] Test all pages on mobile viewport (375px)
+- [ ] Test all pages on tablet viewport (768px)
+- [ ] Test all pages on desktop viewport (1280px+)
+- [ ] Touch targets minimum 44x44px
+- [ ] One-handed operation zones
+
+### 8.2 Gesture Support (Mobile)
+
+- [ ] Swipe-to-delete on list items
+- [ ] Swipe-to-favorite on recipe cards
+- [ ] Pull-to-refresh
+- [ ] Bottom sheet gestures (drag to dismiss)
+
+### 8.3 Polish
+
+- [ ] Custom scrollbar styling
+- [ ] Text selection color
+- [ ] Smooth scroll (Lenis)
+- [ ] GSAP scroll-triggered animations (hero, section reveals)
+- [ ] Framer Motion physics-based animations (buttons, cards)
+- [ ] Loading states với spinners
+- [ ] Confirmation dialogs for destructive actions
+
+---
+
+## PHASE 9: Integration & E2E Testing
+
+### 9.1 API Integration
+
+- [ ] Connect all API endpoints tới backend
+- [ ] Verify JWT token flow (login → protected routes)
+- [ ] Test Google OAuth2 flow
+- [ ] Test image upload (recipe thumbnail, user avatar, comment images)
+- [ ] Test file upload progress indicators
+
+### 9.2 E2E Tests (Playwright)
+
+- [ ] Login flow: `/login` → home redirect
+- [ ] Register flow: `/register` → `/login`
+- [ ] Recipe creation: `Explore` → `Create` → `RecipeDetail`
+- [ ] Pantry flow: Add → Edit → Delete
+- [ ] Shopping list: Add → Check → Pantry sync
+- [ ] Suggestion flow: View suggestions → Recipe detail
+- [ ] Rating flow: Recipe detail → Rate → See rating
+- [ ] Comment flow: Recipe detail → Add comment → View comment
+- [ ] Collection flow: Recipe → Add to collection → View collection
+- [ ] Admin flow: Login as admin → Pending → Approve
+
+### 9.3 Performance Testing
+
+- [ ] Lighthouse audit (Performance, Accessibility, Best Practices, SEO)
+- [ ] Core Web Vitals (LCP, INP, CLS)
+- [ ] Bundle size analysis
+
+---
+
+## Backend API Endpoints Reference
+
+### Accounts (`/api/accounts/`)
+- `POST /register/` - Register new user
+- `POST /login/` - Login (email/password)
+- `POST /google-auth/` - Google OAuth2
+- `GET /profile/` - Get current user profile
+- `PUT /profile/` - Update profile
+- `GET /profile/:id/` - Get public profile
+
+### Recipes (`/api/recipes/`)
+- `GET /` - List recipes (public only, with filters)
+- `GET /:id/` - Recipe detail
+- `POST /` - Create recipe (auth required)
+- `PUT /:id/` - Update recipe (owner only)
+- `DELETE /:id/` - Delete recipe (owner only)
+- `GET /:id/steps/` - Get recipe steps
+- `POST /:id/rate/` - Rate recipe
+
+### Ingredients (`/api/ingredients/`)
+- `GET /` - List all ingredients
+- `POST /` - Create ingredient (admin only in thesis, but may allow user submission)
+- `GET /:id/` - Ingredient detail
+- `GET /categories/` - List categories
+
+### Kitchen (`/api/kitchen/`)
+- `GET /pantry/` - Get user's pantry
+- `POST /pantry/` - Add to pantry
+- `PUT /pantry/:id/` - Update pantry item
+- `DELETE /pantry/:id/` - Delete pantry item
+- `GET /shopping/` - Get shopping list
+- `POST /shopping/` - Add to shopping list
+- `PUT /shopping/:id/` - Update shopping item (mark purchased)
+- `DELETE /shopping/:id/` - Delete shopping item
+- `POST /shopping/:id/purchase/` - Mark purchased → sync to Pantry (transaction)
+- `GET /suggest/` - Get food suggestions based on pantry
+
+### Social (`/api/social/`)
+- `GET /comments/recipe/:id/` - Get comments for recipe
+- `POST /comments/` - Add comment
+- `PUT /comments/:id/` - Update comment (owner only)
+- `DELETE /comments/:id/` - Delete comment (owner only)
+- `GET /collections/` - Get user's collections
+- `POST /collections/` - Create collection
+- `GET /collections/:id/` - Get collection detail
+- `POST /collections/:id/recipes/` - Add recipe to collection
+- `DELETE /collections/:id/recipes/:recipeId/` - Remove recipe from collection
+
+### Admin (`/api/admin/`)
+- `GET /pending-recipes/` - List pending recipes
+- `POST /moderate/recipe/:id/` - Approve/Reject recipe
+- `GET /users/` - List users
+- `PUT /users/:id/ban/` - Ban/Unban user
+
+---
+
+## User Flows Summary
+
+### Main User Flows
+
+1. **Explore & Cook**: Home → Explore → Browse/Search/Filter → RecipeDetail → Cook Mode
+2. **Create Recipe**: Profile → Create Recipe → Editor (4 steps) → Submit → Pending → Public
+3. **Manage Pantry**: Pantry → View items → Add/Edit/Delete → Suggest → Cook
+4. **Shopping Flow**: Suggestion → Add missing to shopping → ShoppingList → Check purchased → Pantry sync
+5. **Social**: RecipeDetail → Rate ★★★★★ → Comment → Add to Collection
+
+### Admin Flows
+
+1. **Content Moderation**: Admin → Pending Recipes → Review → AI result → Approve/Reject
+2. **User Management**: Admin → Users → Search → Ban/Unban
+
+---
+
+## Key Technical Notes
+
+### AI Content Moderation (Backend)
+- On PUBLIC recipe submit → text analyzed by local LLM
+- Result: YES (auto-approve) / NO (auto-reject) / SUSPECT (pending manual review)
+- Frontend shows moderation status badge
+
+### Check-to-Pantry Transaction
+- When shopping item marked `is_purchased=True`
+- Backend uses `transaction.atomic()` to ensure both:
+  1. ShoppingList updated
+  2. Pantry item added/updated
+- If either fails → both rollback
+
+### Food Suggestion Algorithm
+1. Ignore STAPLE spices (salt, sugar, fish sauce)
+2. 3-tier scoring:
+   - Match Points: 20pts per matching ingredient
+   - Risk Penalty: Protein -100, Carb -80, Vegetable -50, Other -25, Spice -10
+   - Affinity Bonus: 50pts for previously liked recipes
+3. Filter: "Nấu Ngay" = 0 missing | "Thêm Chút Nữa" = ≤2 missing + score ≥0
+
+### Tech Stack Details
+- **Framer Motion**: Page transitions, stagger animations, gestures
+- **GSAP**: Hero parallax, scroll-triggered section reveals
+- **Lenis**: Smooth scroll normalization across browsers
+
+---
+
+## File Structure
+
+```
+KitchenMate_Frontend/
+├── src/
+│   ├── api/
+│   │   ├── axiosInstance.js
+│   │   ├── authApi.js
+│   │   ├── recipeApi.js
+│   │   ├── ingredientApi.js
+│   │   ├── kitchenApi.js
+│   │   └── socialApi.js
+│   ├── assets/
+│   │   └── (images, icons)
+│   ├── components/
+│   │   ├── ui/              # Base components (Button, Input, Card, Badge)
+│   │   ├── auth/            # Auth-related (AuthGuard, GoogleOAuthButton)
+│   │   ├── recipe/          # Recipe components
+│   │   ├── pantry/          # Pantry components
+│   │   ├── shopping/        # Shopping list components
+│   │   ├── social/          # Comments, ratings, collections
+│   │   ├── admin/           # Admin components
+│   │   └── layout/           # Header, Footer, Sidebar, BottomNav
+│   ├── hooks/
+│   │   ├── useAuth.js
+│   │   ├── useRecipes.js
+│   │   ├── usePantry.js
+│   │   └── ...
+│   ├── pages/
+│   │   ├── auth/            # Login, Register, ForgotPassword
+│   │   ├── home/            # HomePage
+│   │   ├── explore/         # ExplorePage
+│   │   ├── recipe/          # RecipeDetail, RecipeEditor
+│   │   ├── pantry/          # PantryPage
+│   │   ├── shopping/        # ShoppingListPage
+│   │   ├── suggestion/      # SuggestionPage
+│   │   ├── profile/         # ProfilePage, PublicProfilePage
+│   │   ├── collections/     # CollectionsPage, CollectionDetailPage
+│   │   └── admin/           # AdminPages
+│   ├── stores/              # Zustand/Jotai stores
+│   ├── utils/               # Helpers (cn, formatDate, etc.)
+│   ├── App.jsx
+│   └── main.jsx
+├── public/
+├── index.html
+├── tailwind.config.js
+├── vite.config.js
+└── package.json
+```
+
+---
+
+## Dependencies Checklist
+
+```json
+{
+  "dependencies": {
+    "react": "^18.x",
+    "react-dom": "^18.x",
+    "react-router-dom": "^6.x",
+    "axios": "^1.x",
+    "@tanstack/react-query": "^5.x",
+    "zustand": "^4.x",
+    "jotai": "^2.x",
+    "react-hook-form": "^7.x",
+    "zod": "^3.x",
+    "@hookform/resolvers": "^3.x",
+    "framer-motion": "^11.x",
+    "gsap": "^3.x",
+    "@studio-freight/lenis": "^1.x",
+    "lucide-react": "^0.x",
+    "clsx": "^2.x",
+    "tailwind-merge": "^2.x",
+    "react-hot-toast": "^2.x"
+  },
+  "devDependencies": {
+    "vite": "^5.x",
+    "tailwindcss": "^4.x",
+    "@vitejs/plugin-react": "^4.x",
+    "eslint": "^8.x",
+    "prettier": "^3.x",
+    "vitest": "^1.x",
+    "@testing-library/react": "^14.x",
+    "playwright": "^1.x"
+  }
+}
+```
+
+---
+
+## Priority Order
+
+1. **Phase 1** (Foundation) - Must complete first
+2. **Phase 2** (Auth) - Required for all other features
+3. **Phase 3** (Recipes) - Core feature
+4. **Phase 4** (Smart Kitchen) - Core feature
+5. **Phase 5** (Social) - Engagement features
+6. **Phase 6** (Admin) - Moderation
+7. **Phase 7** (Global Components) - UX polish
+8. **Phase 8** (Responsive) - Mobile experience
+9. **Phase 9** (Integration & E2E) - Final verification
