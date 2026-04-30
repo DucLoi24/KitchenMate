@@ -1,0 +1,1 @@
+export { createLenis, default } from './lenis'
