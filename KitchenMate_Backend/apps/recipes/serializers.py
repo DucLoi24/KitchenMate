@@ -6,7 +6,16 @@ from rest_framework import serializers
 from django.db.models import Avg
 
 from apps.accounts.serializers import UserSerializer
-from .models import Recipe, RecipeIngredient, RecipeStep
+from .models import Recipe, RecipeCategory, RecipeIngredient, RecipeStep
+
+
+class RecipeCategorySerializer(serializers.ModelSerializer):
+    """Serializer cho danh mục công thức."""
+    is_active = serializers.BooleanField(read_only=True)
+
+    class Meta:
+        model = RecipeCategory
+        fields = ('id', 'name', 'slug', 'description', 'order', 'is_active')
 
 
 class RecipeIngredientSerializer(serializers.ModelSerializer):
@@ -30,12 +39,13 @@ class RecipeStepSerializer(serializers.ModelSerializer):
 class RecipeListSerializer(serializers.ModelSerializer):
     """Dùng cho list endpoint — ít trường hơn để tối ưu performance."""
     user_name = serializers.CharField(source='user.full_name', read_only=True)
+    categories = RecipeCategorySerializer(many=True, read_only=True)
 
     class Meta:
         model = Recipe
         fields = (
             'id', 'title', 'description', 'difficulty', 'prep_time',
-            'thumbnail_url', 'visibility', 'user', 'user_name', 'created_at'
+            'thumbnail_url', 'visibility', 'user', 'user_name', 'categories', 'created_at'
         )
 
 
@@ -49,25 +59,29 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
 
     Nested serializers (read_only):
         - user (UserSerializer): Thông tin tác giả công thức (public-safe fields).
+        - categories (RecipeCategorySerializer, many): Danh sách categories.
         - recipe_ingredients (RecipeIngredientSerializer, many): Danh sách nguyên liệu
           kèm tên và danh mục từ bảng Ingredient.
         - steps (RecipeStepSerializer, many): Danh sách các bước thực hiện theo thứ tự.
     """
     user = UserSerializer(read_only=True)
+    categories = RecipeCategorySerializer(many=True, read_only=True)
     recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
     steps = RecipeStepSerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
 
     def get_avg_rating(self, obj):
-        result = obj.reviews.aggregate(avg=Avg('rating'))
-        return round(result['avg'], 1) if result['avg'] else None
+        val = getattr(obj, 'avg_rating', None)
+        if val is None or val == 0.0:
+            return None
+        return round(val, 1)
 
     class Meta:
         model = Recipe
         fields = (
             'id', 'title', 'description', 'difficulty', 'prep_time',
-            'thumbnail_url', 'visibility', 'user', 'recipe_ingredients',
-            'steps', 'avg_rating', 'created_at', 'updated_at'
+            'thumbnail_url', 'visibility', 'user', 'categories',
+            'recipe_ingredients', 'steps', 'avg_rating', 'created_at', 'updated_at'
         )
 
 
@@ -76,6 +90,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
     Serializer dùng cho create/update endpoint của công thức.
 
     Cấu trúc input (nested):
+        - categories (list): Danh sách category IDs.
         - ingredients (list, write_only): Danh sách nguyên liệu, mỗi phần tử theo
           cấu trúc RecipeIngredientSerializer (ingredient, quantity, unit).
         - steps (list, write_only): Danh sách các bước thực hiện, mỗi phần tử theo
@@ -92,23 +107,56 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         - difficulty (str): Độ khó (EASY / MEDIUM / HARD).
         - prep_time (int): Thời gian chuẩn bị (phút).
         - thumbnail_url (str): URL ảnh đại diện.
+        - categories (list): Nested list category IDs.
         - ingredients (list, write_only): Nested list nguyên liệu.
         - steps (list, write_only): Nested list các bước thực hiện.
     """
+    categories = serializers.PrimaryKeyRelatedField(
+        queryset=RecipeCategory.objects.filter(is_active=True),
+        many=True,
+        required=False
+    )
     ingredients = RecipeIngredientSerializer(many=True, write_only=True, required=False)
     steps = RecipeStepSerializer(many=True, write_only=True, required=False)
 
     class Meta:
         model = Recipe
-        fields = ('title', 'description', 'difficulty', 'prep_time', 'thumbnail_url', 'ingredients', 'steps')
+        fields = ('title', 'description', 'difficulty', 'prep_time', 'thumbnail_url', 'categories', 'ingredients', 'steps')
 
     def create(self, validated_data):
+        categories_data = validated_data.pop('categories', [])
         ingredients_data = validated_data.pop('ingredients', [])
         steps_data = validated_data.pop('steps', [])
         with transaction.atomic():
             recipe = Recipe.objects.create(**validated_data)
+            recipe.categories.set(categories_data)
             for ing in ingredients_data:
                 RecipeIngredient.objects.create(recipe=recipe, **ing)
             for step in steps_data:
                 RecipeStep.objects.create(recipe=recipe, **step)
         return recipe
+
+    def update(self, instance, validated_data):
+        categories_data = validated_data.pop('categories', None)
+        ingredients_data = validated_data.pop('ingredients', None)
+        steps_data = validated_data.pop('steps', None)
+
+        with transaction.atomic():
+            for attr, value in validated_data.items():
+                setattr(instance, attr, value)
+            instance.save()
+
+            if categories_data is not None:
+                instance.categories.set(categories_data)
+
+            if ingredients_data is not None:
+                instance.recipe_ingredients.all().delete()
+                for ing in ingredients_data:
+                    RecipeIngredient.objects.create(recipe=instance, **ing)
+
+            if steps_data is not None:
+                instance.steps.all().delete()
+                for step in steps_data:
+                    RecipeStep.objects.create(recipe=instance, **step)
+
+        return instance

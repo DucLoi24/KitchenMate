@@ -2,6 +2,36 @@ import uuid
 from django.db import models
 from django.conf import settings
 from django.core.validators import MinValueValidator
+from django.utils.text import slugify
+
+
+class RecipeCategory(models.Model):
+    """
+    Danh mục phân loại công thức nấu ăn.
+    Admin có thể CRUD, có soft delete.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
+    description = models.TextField(blank=True, default='')
+    order = models.IntegerField(default=0, help_text='Thứ tự hiển thị')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'recipe_categories'
+        verbose_name = 'Danh mục công thức'
+        verbose_name_plural = 'Danh mục công thức'
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
 
 class Recipe(models.Model):
@@ -48,6 +78,12 @@ class Recipe(models.Model):
     )
     thumbnail_url = models.TextField(blank=True, null=True)
     view_count = models.PositiveIntegerField(default=0)
+    categories = models.ManyToManyField(
+        RecipeCategory,
+        related_name='recipes',
+        blank=True,
+        symmetrical=False
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

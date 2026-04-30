@@ -2,6 +2,7 @@
 Views cho recipes app.
 """
 from django.db.models import F, Avg, Count
+from django.db.models.functions import Coalesce
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -44,9 +45,14 @@ class RecipeViewSet(viewsets.GenericViewSet):
     filterset_class = RecipeFilter
 
     def get_queryset(self):
-        return Recipe.objects.select_related('user').prefetch_related(
-            'recipe_ingredients__ingredient', 'steps'
+        base_qs = Recipe.objects.select_related('user').prefetch_related(
+            'categories', 'recipe_ingredients__ingredient', 'steps'
         )
+        if self.action in ('list', 'retrieve'):
+            return base_qs.annotate(
+                avg_rating=Coalesce(Avg('reviews__rating'), 0.0)
+            )
+        return base_qs
 
     def get_serializer_class(self):
         if self.action == 'create':
