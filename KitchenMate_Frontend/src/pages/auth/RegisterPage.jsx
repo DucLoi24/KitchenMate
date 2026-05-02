@@ -71,7 +71,7 @@ export function RegisterPage() {
 
     setIsLoading(true)
     try {
-      await register({ full_name: fullName, email, password })
+      await register({ full_name: fullName, email, password, password_confirm: confirmPassword })
     } catch (err) {
       // Extract error message - ensure it's always a string
       const responseMsg = err.response?.data?.message
@@ -262,10 +262,10 @@ export function RegisterPage() {
                   >
                     {passwordCriteria.slice(0, 3).map((criteria) => (
                       <div key={criteria.id} className="flex items-center gap-2 text-xs">
-                        <span className={password.test(password) ? 'text-green-600' : 'text-[var(--color-text-muted)]'}>
-                          {password.test(password) ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
+                        <span className={criteria.test(password) ? 'text-green-600' : 'text-[var(--color-text-muted)]'}>
+                          {criteria.test(password) ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
                         </span>
-                        <span className={password.test(password) ? 'text-green-600' : 'text-[var(--color-text-muted)]'}>
+                        <span className={criteria.test(password) ? 'text-green-600' : 'text-[var(--color-text-muted)]'}>
                           {criteria.label}
                         </span>
                       </div>

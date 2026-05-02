@@ -15,7 +15,7 @@ category_router = DefaultRouter()
 category_router.register(r'categories', RecipeCategoryViewSet, basename='category')
 
 urlpatterns = [
-    path('', include(category_router.urls)),
     path('', include(router.urls)),
+    path('', include(category_router.urls)),
     path('<uuid:pk>/stats/', RecipeStatsView.as_view(), name='recipe-stats'),
 ]

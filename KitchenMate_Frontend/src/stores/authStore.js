@@ -7,7 +7,6 @@ export const useAuthStore = create(
       user: null,
       accessToken: null,
       refreshToken: null,
-      isAuthenticated: false,
       isLoading: false,
 
       setAuth: (user, accessToken, refreshToken) => {
@@ -15,7 +14,6 @@ export const useAuthStore = create(
           user,
           accessToken,
           refreshToken,
-          isAuthenticated: !!accessToken,
           isLoading: false,
         })
       },
@@ -25,7 +23,6 @@ export const useAuthStore = create(
           user,
           accessToken,
           refreshToken,
-          isAuthenticated: true,
           isLoading: false,
         })
       },
@@ -35,7 +32,6 @@ export const useAuthStore = create(
           user: null,
           accessToken: null,
           refreshToken: null,
-          isAuthenticated: false,
           isLoading: false,
         })
       },

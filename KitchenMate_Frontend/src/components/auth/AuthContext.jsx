@@ -8,28 +8,33 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const navigate = useNavigate()
   const location = useLocation()
-  const { user, accessToken, isAuthenticated, setAuth, logout: clearAuth, updateUser } = useAuthStore()
+  const { user, accessToken, setAuth, logout: clearAuth, updateUser } = useAuthStore()
+  const isAuthenticated = !!accessToken
 
-  // Initialize auth state from stored tokens on mount
   useEffect(() => {
+    // Zustand persist tự khôi phục accessToken từ auth-storage.
+    // Chỉ cần verify token còn hợp lệ bằng cách gọi getProfile.
     const initAuth = async () => {
+      const { accessToken: storedToken } = useAuthStore.getState()
+      if (!storedToken) return
+
       useAuthStore.getState().setLoading(true)
-      const storedToken = localStorage.getItem('access_token')
-      if (storedToken && !user) {
-        try {
-          const userData = await authApi.getProfile()
-          setAuth(userData, storedToken, localStorage.getItem('refresh_token'))
-        } catch {
-          // Token invalid or expired - clear auth
+      try {
+        const userData = await authApi.getProfile()
+        updateUser(userData.data)
+      } catch (err) {
+        // Token hết hạn hoặc không hợp lệ → axiosInstance sẽ tự refresh.
+        // Nếu refresh cũng thất bại, interceptor sẽ redirect về /login.
+        // Chỉ clear nếu lỗi không phải 401 (401 đã được interceptor xử lý).
+        if (err?.response?.status !== 401) {
           clearAuth()
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
         }
+      } finally {
+        useAuthStore.getState().setLoading(false)
       }
-      useAuthStore.getState().setLoading(false)
     }
     initAuth()
-  }, [user, setAuth, clearAuth])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const login = useCallback(async (email, password) => {
     const data = await authApi.login(email, password)
@@ -55,8 +60,9 @@ export function AuthProvider({ children }) {
   const refreshUser = useCallback(async () => {
     try {
       const userData = await authApi.getProfile()
-      updateUser(userData)
-      return userData
+      // Backend returns {success, data: {user, ...}} - extract user from data.data
+      updateUser(userData.data)
+      return userData.data
     } catch (error) {
       logout()
       throw error

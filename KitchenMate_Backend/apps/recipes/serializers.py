@@ -39,13 +39,46 @@ class RecipeStepSerializer(serializers.ModelSerializer):
 class RecipeListSerializer(serializers.ModelSerializer):
     """Dùng cho list endpoint — ít trường hơn để tối ưu performance."""
     user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_avatar = serializers.SerializerMethodField()
     categories = RecipeCategorySerializer(many=True, read_only=True)
+    avg_rating = serializers.SerializerMethodField()
+    save_count = serializers.IntegerField(read_only=True, default=0)
+    view_count = serializers.IntegerField(read_only=True, default=0)
+    thumbnail_url = serializers.SerializerMethodField()
+
+    def get_user_avatar(self, obj):
+        avatar = getattr(obj.user, 'avatar', None)
+        if avatar:
+            request = self.context.get('request')
+            if request and avatar.url:
+                return request.build_absolute_uri(avatar.url)
+        return None
+
+    def get_thumbnail_url(self, obj):
+        url = getattr(obj, 'thumbnail_url', None)
+        if not url:
+            return None
+        # If already absolute URL, return as-is
+        if url.startswith('http'):
+            return url
+        # Build absolute URL from request
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(url)
+        return url
+
+    def get_avg_rating(self, obj):
+        val = getattr(obj, 'avg_rating', None)
+        if val is None or val == 0.0:
+            return None
+        return round(float(val), 1)
 
     class Meta:
         model = Recipe
         fields = (
             'id', 'title', 'description', 'difficulty', 'prep_time',
-            'thumbnail_url', 'visibility', 'user', 'user_name', 'categories', 'created_at'
+            'thumbnail_url', 'visibility', 'user', 'user_name', 'user_avatar',
+            'categories', 'avg_rating', 'save_count', 'view_count', 'created_at'
         )
 
 

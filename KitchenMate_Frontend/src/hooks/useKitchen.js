@@ -93,6 +93,18 @@ export function useMarkAsPurchased() {
   })
 }
 
+export function useMarkAsUnpurchased() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: shoppingListApi.markAsUnpurchased,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shopping-list'] })
+      queryClient.invalidateQueries({ queryKey: ['pantry'] })
+    },
+  })
+}
+
 export default {
   usePantry,
   useAddToPantry,
@@ -103,4 +115,5 @@ export default {
   useUpdateShoppingItem,
   useRemoveFromShoppingList,
   useMarkAsPurchased,
+  useMarkAsUnpurchased,
 }

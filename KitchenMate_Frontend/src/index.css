@@ -65,6 +65,7 @@
   --max-width-lg: 32rem;
   --max-width-xl: 36rem;
   --max-width-2xl: 42rem;
+  --max-width-4xl: 56rem;
 
   /* Border radius */
   --radius-sm: 0.375rem;

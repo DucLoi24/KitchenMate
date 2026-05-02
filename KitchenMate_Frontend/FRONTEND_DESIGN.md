@@ -394,6 +394,12 @@ import { Mail, Lock, ArrowRight } from 'lucide-react'
    - `max-w-md` compiles thành `var(--spacing-md)` = 16px (không phải 448px)
    - Use `max-w-[28rem]` hoặc `max-w-[448px]` cho explicit widths
 
+**Tailwind v4 max-width Checklist** (trước khi commit):
+- [ ] `max-w-4xl` → Đã thêm `--max-width-4xl: 56rem` trong index.css HOẶC dùng `max-w-[56rem]`
+- [ ] `max-w-md` → Đã thêm `--max-width-md: 28rem` trong index.css HOẶC dùng `max-w-[28rem]`
+- [ ] Các giá trị khác → Dùng `max-w-[Xrem]` hoặc `max-w-[Xpx]`
+- [ ] Verify trên cả mobile và desktop - content không bị ép vào cột hẹp
+
 2. ⚠️ **Pure white background:**
    - Warm off-white `bg-[var(--color-background)]` tạo cảm giác ấm áp hơn pure white
    - Nhưng không phải là hard rule - có thể dùng khi cần contrast cao

@@ -50,7 +50,8 @@ class RecipeViewSet(viewsets.GenericViewSet):
         )
         if self.action in ('list', 'retrieve'):
             return base_qs.annotate(
-                avg_rating=Coalesce(Avg('reviews__rating'), 0.0)
+                avg_rating=Coalesce(Avg('reviews__rating'), 0.0),
+                save_count=Count('saved_in_collections', distinct=True),
             )
         return base_qs
 

@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **KitchenMate** (2221 symbols, 3780 relationships, 71 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **KitchenMate** (2539 symbols, 4404 relationships, 83 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -194,7 +194,7 @@ src/
 ### Backend API Exploration
 - **BẮT BUỘC explore backend API trước khi làm bất cứ điều gì liên quan ở phía frontend**
 - Trước khi bắt đầu feature frontend mới:
-  1. Đọc backend API endpoint (trong `apps/*/views.py`, `apps/*/serializers.py`)
+  1. Đọc backend API endpoint
   2. Kiểm tra API docs (Swagger UI: http://127.0.0.1:8000/api/docs/)
   3. Hiểu request/response shape, authentication requirements, error codes
   4. Nếu endpoint chưa có → implement backend trước, hoặc báo cho user để coordinate
@@ -206,12 +206,16 @@ src/
 - Thiết kế UI/UX phải follow frontend-design skill và design spec đã có trong TODO.md và FRONTEND_DESIGN.md
 - Dùng tiếng Việt cho tất cả UI text, labels, messages, errors
 - Responsive-first: mobile trước, desktop sau
+- **KHÔNG dùng `max-w-sm` cho dialogs/modals** — dùng `max-w-md` hoặc `max-w-lg` để tránh text bị ép chen lại
 
 ### Testing Requirements
 - **Sau khi viết xong feature hoặc fix bug, PHẢI tự test bằng một trong các cách sau:**
   1. Viết unit tests cho backend logic mới
   2. Viết integration tests cho API flows mới
   3. Chạy Playwright E2E tests cho frontend flows
+    - Tài khoản cho AI Test (Chưa phải tài khoản admin):
+      - Email: `aitesterkm@kitchenmate.vn`
+      - Password: `Tester1234@`
   4. Nếu không có test infrastructure sẵn có → tạo minimal test script để verify
 - Test phải pass trước khi mark task là completed
 - Không được commit code mới nếu test infrastructure không setup — phải setup trước
@@ -225,66 +229,7 @@ src/
 - Frontend text: hardcoded tiếng Việt trong components (không i18n library vì scope nhỏ)
 - ví dụ: "Đăng nhập" thay vì "Login", "Tủ lạnh" thay vì "Pantry", "Công thức" thay vì "Recipe"
 
-## Mẫu Subagent
-
-Dùng `Agent` tool để spawn subagent khi phù hợp. Subagent chạy độc lập, giữ context của main agent gọn gàng.
-
-### Khi nào spawn
-- Task chỉ cần kết quả, không cần giữ lịch sử quá trình thực hiện
-- Công việc phức tạp có thể chiếm dụng context của main agent
-- Công việc độc lập có thể chạy song song
-
-### Chiến lược Spawn
-| Phụ thuộc task | Mẫu Spawn |
-|----------------|---------------|
-| Task độc lập | Song song (nhiều subagent cùng lúc) |
-| Có phụ thuộc tuần tự | Từng cái một, đợi kết quả rồi mới sang cái tiếp theo |
-| Validation/test | Spawn sau khi task chính hoàn thành |
-
-### Nguyên tắc
-- **KHÔNG spawn subagent lồng nhau** — subagent không được spawn subagent khác
-- Được phép có hoặc không load skills cho subagent
-- Main agent nghiệm thu và kiểm tra kết quả và điều phối
-- Dùng `run_in_background: true` cho task song song để tránh blocking
-
-## Sử dụng Skills
-
-Claude Code có quyền truy cập vào nhiều skills (subagent definitions). Khi có task, phải invoke skill phù hợp TRƯỚC KHI làm bất cứ điều gì khác, kể cả clarifying questions.
-
-### Nguyên tắc quan trọng
-
-- **Invoke trước, hỏi sau** — Ngay cả khi chỉ có 1% khả năng skill áp dụng, vẫn phải invoke `Skill` tool để check. Nếu skill phù hợp thì follow skill đó.
-- **Process skills trước** — Khi có cả process skill (brainstorming, debugging) và implementation skill, invoke process skill trước để xác định cách tiếp cận đúng.
-
-### Priority Order
-
-| Thứ tự | Loại skill | Ví dụ |
-|--------|-----------|-------|
-| 1 | Feature developer | `feature-dev:feature-dev` |
-| 1 | Process skills (xác định cách tiếp cận) | `superpowers:brainstorming`, `superpowers:systematic-debugging` |
-| 2 | Implementation skills (hướng dẫn thực thi) | `frontend-design`, `voltagent-core-dev:backend-developer` |
-| 3 | Utility skills | `gitnexus-*`, `chrome-devtools-mcp:*` |
-
-### Khi nào invoke
-
-| Task | Skill nên dùng |
-|------|---------------|
-| Làm rõ yêu cầu mơ hồ từ người dùng | `superpowers:brainstorming` |
-| Debug bug, test fail | `superpowers:systematic-debugging` |
-| Dev feature mới | BẮT BUỘC PHẢI CÓ `feature-dev:feature-dev` (Nếu là bên frontend thì bắt buộc phải đi kèm `frontend-design:frontend-design`)|
-| Thiết kế UI frontend | `frontend-design:frontend-design` |
-| Backend API work | `voltagent-core-dev:backend-developer` |
-| Explore code, hiểu architecture | `gitnexus-exploring` |
-| Phân tích impact trước khi edit | `gitnexus-impact-analysis` |
-
-### Subagent vs Skill
-
-- **Skill**: Được load như checklist hướng dẫn, Claude Code follow các bước trong skill đó
-- **Subagent**: Agent độc lập chạy song song, có thể giao task cho nó
-
-Khi spawn subagent, được phép quyết định có load skill cho subagent đó hay không tùy ngữ cảnh.
-
 ## Một số lưu ý
 
-- Luôn update MEMORY. (Hoặc CLAUDE.md khi cần thiết)
+- Luôn update MEMORY khi có sự thay đổi, và luôn verify lại những thông tin mà bạn định đưa vào MEMORY. (Hoặc CLAUDE.md, AGENTS.md khi cần thiết)
 - Không được dùng Icon dạng text khi design, phải dùng của thư viện.

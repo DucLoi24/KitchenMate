@@ -181,10 +181,7 @@ SIMPLE_JWT = {
 # ==============================================================================
 
 CORS_ALLOWED_ORIGINS = [
-    'http://localhost:5173',  # Vite dev server (default)
-    'http://localhost:5174',  # Vite dev server (alternate)
-    'http://localhost:6677',  # Vite dev server (alternate 2)
-    'http://localhost:3000',  # CRA dev server
+    'http://localhost:5174',  # Vite dev server
 ]
 
 CORS_ALLOW_CREDENTIALS = True

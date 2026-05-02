@@ -1,25 +1,39 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 
-// Test the authApi module which uses axiosInstance
-describe('authApi Token Storage', () => {
+/**
+ * Helper tạo auth-storage theo đúng format Zustand persist.
+ */
+function setAuthStorage({ accessToken = null, refreshToken = null, user = null } = {}) {
+  localStorage.setItem(
+    'auth-storage',
+    JSON.stringify({ state: { accessToken, refreshToken, user, isLoading: false }, version: 0 })
+  )
+}
+
+describe('auth-storage Token Storage (Zustand persist format)', () => {
   beforeEach(() => {
-    localStorage.setItem('access_token', 'test-access-token')
-    localStorage.setItem('refresh_token', 'test-refresh-token')
+    setAuthStorage({ accessToken: 'test-access-token', refreshToken: 'test-refresh-token' })
   })
 
-  it('retrieves access_token from localStorage', () => {
-    expect(localStorage.getItem('access_token')).toBe('test-access-token')
+  afterEach(() => {
+    localStorage.clear()
   })
 
-  it('retrieves refresh_token from localStorage', () => {
-    expect(localStorage.getItem('refresh_token')).toBe('test-refresh-token')
+  it('retrieves accessToken từ auth-storage', () => {
+    const raw = localStorage.getItem('auth-storage')
+    const parsed = JSON.parse(raw)
+    expect(parsed.state.accessToken).toBe('test-access-token')
   })
 
-  it('clears tokens on logout', () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
-    expect(localStorage.getItem('access_token')).toBeNull()
-    expect(localStorage.getItem('refresh_token')).toBeNull()
+  it('retrieves refreshToken từ auth-storage', () => {
+    const raw = localStorage.getItem('auth-storage')
+    const parsed = JSON.parse(raw)
+    expect(parsed.state.refreshToken).toBe('test-refresh-token')
+  })
+
+  it('xóa auth-storage khi logout', () => {
+    localStorage.removeItem('auth-storage')
+    expect(localStorage.getItem('auth-storage')).toBeNull()
   })
 })
 
@@ -41,34 +55,44 @@ describe('axiosInstance Configuration', () => {
   })
 })
 
-describe('Token Refresh Logic', () => {
+describe('Token Refresh Logic (auth-storage)', () => {
   beforeEach(() => {
-    localStorage.setItem('refresh_token', 'valid-refresh-token')
+    setAuthStorage({ refreshToken: 'valid-refresh-token' })
+  })
+
+  afterEach(() => {
+    localStorage.clear()
   })
 
   it('detects when refresh token is available', () => {
-    const refreshToken = localStorage.getItem('refresh_token')
-    expect(refreshToken).toBeTruthy()
-    expect(refreshToken).toBe('valid-refresh-token')
+    const raw = localStorage.getItem('auth-storage')
+    const parsed = JSON.parse(raw)
+    expect(parsed.state.refreshToken).toBeTruthy()
+    expect(parsed.state.refreshToken).toBe('valid-refresh-token')
   })
 
   it('detects when refresh token is missing', () => {
-    localStorage.removeItem('refresh_token')
-    const refreshToken = localStorage.getItem('refresh_token')
-    expect(refreshToken).toBeNull()
+    localStorage.removeItem('auth-storage')
+    expect(localStorage.getItem('auth-storage')).toBeNull()
   })
 })
 
-describe('Auth Token Logic', () => {
+describe('Auth Token Logic (auth-storage)', () => {
+  afterEach(() => {
+    localStorage.clear()
+  })
+
   it('detects when access token is available', () => {
-    localStorage.setItem('access_token', 'valid-access-token')
-    const token = localStorage.getItem('access_token')
-    expect(token).toBeTruthy()
+    setAuthStorage({ accessToken: 'valid-access-token' })
+    const raw = localStorage.getItem('auth-storage')
+    const parsed = JSON.parse(raw)
+    expect(parsed.state.accessToken).toBeTruthy()
   })
 
   it('detects when access token is missing', () => {
-    localStorage.removeItem('access_token')
-    const token = localStorage.getItem('access_token')
-    expect(token).toBeNull()
+    setAuthStorage({ accessToken: null })
+    const raw = localStorage.getItem('auth-storage')
+    const parsed = JSON.parse(raw)
+    expect(parsed.state.accessToken).toBeNull()
   })
 })

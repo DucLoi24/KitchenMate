@@ -7,7 +7,7 @@ export const pantryApi = {
 
   addToPantry: async (itemData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.post('/kitchen/pantry/add/', itemData)
+    const { data } = await axiosInstance.post('/kitchen/pantry/', itemData)
     return data
   },
 
@@ -21,41 +21,41 @@ export const pantryApi = {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     await axiosInstance.delete(`/kitchen/pantry/${id}/`)
   },
-
-  checkExpiry: async () => {
-    const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.get('/kitchen/pantry/expiring/')
-    return data
-  },
 }
 
 export const shoppingListApi = {
   getShoppingList: async () => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.get('/kitchen/shopping/')
+    const { data } = await axiosInstance.get('/kitchen/shopping-list/')
     return data
   },
 
   addToShoppingList: async (itemData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.post('/kitchen/shopping/add/', itemData)
+    const { data } = await axiosInstance.post('/kitchen/shopping-list/', itemData)
     return data
   },
 
   updateShoppingItem: async (id, itemData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.patch(`/kitchen/shopping/${id}/`, itemData)
+    const { data } = await axiosInstance.patch(`/kitchen/shopping-list/${id}/`, itemData)
     return data
   },
 
   removeFromShoppingList: async (id) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    await axiosInstance.delete(`/kitchen/shopping/${id}/`)
+    await axiosInstance.delete(`/kitchen/shopping-list/${id}/`)
   },
 
   markAsPurchased: async (id) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.post(`/kitchen/shopping/${id}/purchase/`)
+    const { data } = await axiosInstance.post(`/kitchen/shopping-list/${id}/mark-purchased/`)
+    return data
+  },
+
+  markAsUnpurchased: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/kitchen/shopping-list/${id}/mark-unpurchased/`)
     return data
   },
 }

@@ -14,12 +14,18 @@ export const authApi = {
   register: async (userData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post('/auth/register/', userData)
-    return data
+    // Backend returns {success, message, data: {user, tokens: {access, refresh}}}
+    // Normalize to {user, access, refresh}
+    return {
+      user: data.data.user,
+      access: data.data.tokens.access,
+      refresh: data.data.tokens.refresh,
+    }
   },
 
   logout: () => {
-    localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
+    // Xóa auth-storage (Zustand persist key) thay vì access_token/refresh_token cũ
+    localStorage.removeItem('auth-storage')
   },
 
   refreshToken: async (refresh) => {
@@ -30,13 +36,13 @@ export const authApi = {
 
   getProfile: async () => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.get('/auth/profile/')
+    const { data } = await axiosInstance.get('/accounts/me/')
     return data
   },
 
   updateProfile: async (profileData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.patch('/auth/profile/', profileData)
+    const { data } = await axiosInstance.patch('/accounts/me/', profileData)
     return data
   },
 
@@ -46,11 +52,13 @@ export const authApi = {
     return data
   },
 
-  resetPassword: async (token, newPassword) => {
+  resetPassword: async (uid, token, newPassword) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post('/auth/reset-password/', {
+      uid: uid,
       token,
-      password: newPassword,
+      new_password: newPassword,
+      new_password_confirm: newPassword,
     })
     return data
   },

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from '@tanstack/react-query'
 import { recipeApi } from '@/api/recipeApi'
 
 export function useRecipes(params = {}) {
@@ -59,6 +59,27 @@ export function useDeleteRecipe() {
   })
 }
 
+function extractPageNumber(url) {
+  if (!url) return undefined
+  const match = url.match(/[?&]page=(\d+)/)
+  return match ? match[1] : undefined
+}
+
+export function useRecipesInfinite(baseParams = {}) {
+  return useInfiniteQuery({
+    queryKey: ['recipes', 'infinite', baseParams],
+    queryFn: ({ pageParam = 1 }) =>
+      recipeApi.getRecipes({ ...baseParams, page: pageParam, page_size: 12 }),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage) => {
+      // API response: { success: true, data: { count, next, previous, results } }
+      const nextPage = lastPage?.data?.next
+      if (!nextPage) return undefined
+      return extractPageNumber(nextPage)
+    },
+  })
+}
+
 export default {
   useRecipes,
   useRecipe,
@@ -66,4 +87,5 @@ export default {
   useCreateRecipe,
   useUpdateRecipe,
   useDeleteRecipe,
+  useRecipesInfinite,
 }

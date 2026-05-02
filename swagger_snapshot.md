@@ -1,0 +1,1258 @@
+- generic [ref=e3]:
+  - generic:
+    - img
+  - generic [ref=e5]:
+    - generic [ref=e9]:
+      - generic [ref=e10]:
+        - heading "KitchenMate API 1.0.0 OAS 3.0" [level=1] [ref=e11]:
+          - text: KitchenMate API
+          - generic [ref=e12]:
+            - generic [ref=e14]: 1.0.0
+            - generic [ref=e16]: OAS 3.0
+        - link /api/schema/ [ref=e17] [cursor=pointer]:
+          - /url: /api/schema/
+          - generic [ref=e18]: /api/schema/
+      - paragraph [ref=e21]: API cho ứng dụng quản lý nguyên liệu và gợi ý món ăn KitchenMate
+    - button "Authorize" [ref=e25] [cursor=pointer]:
+      - generic [ref=e26]: Authorize
+      - img [ref=e27]
+    - generic [ref=e31]:
+      - generic [ref=e33]:
+        - heading "accounts Collapse operation" [level=3] [ref=e34] [cursor=pointer]:
+          - link "accounts" [ref=e35]:
+            - /url: "#/accounts"
+          - button "Collapse operation" [expanded] [ref=e36]:
+            - img [ref=e37]
+        - generic [ref=e40]:
+          - generic [ref=e43] [cursor=pointer]:
+            - 'button "GET /api/accounts/{id}/" [ref=e44]':
+              - generic [ref=e45]: GET
+              - 'link /api/accounts/{id}/ [ref=e48]':
+                - /url: "#/accounts/accounts_retrieve"
+                - generic [ref=e49]:
+                  - text: /api
+                  - text: /accounts
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e52]:
+              - img [ref=e53]
+            - 'button "get /api/accounts/{id}/" [ref=e55]':
+              - img [ref=e56]
+          - generic [ref=e60] [cursor=pointer]:
+            - 'button "GET /api/accounts/{id}/recipes/" [ref=e61]':
+              - generic [ref=e62]: GET
+              - 'link /api/accounts/{id}/recipes/ [ref=e65]':
+                - /url: "#/accounts/accounts_recipes_retrieve"
+                - generic [ref=e66]:
+                  - text: /api
+                  - text: /accounts
+                  - text: "/{id}"
+                  - text: /recipes
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e69]:
+              - img [ref=e70]
+            - 'button "get /api/accounts/{id}/recipes/" [ref=e72]':
+              - img [ref=e73]
+          - generic [ref=e77] [cursor=pointer]:
+            - 'button "GET /api/accounts/{id}/stats/" [ref=e78]':
+              - generic [ref=e79]: GET
+              - 'link /api/accounts/{id}/stats/ [ref=e82]':
+                - /url: "#/accounts/accounts_stats_retrieve"
+                - generic [ref=e83]:
+                  - text: /api
+                  - text: /accounts
+                  - text: "/{id}"
+                  - text: /stats
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e86]:
+              - img [ref=e87]
+            - 'button "get /api/accounts/{id}/stats/" [ref=e89]':
+              - img [ref=e90]
+          - generic [ref=e94] [cursor=pointer]:
+            - button "GET /api/accounts/me/" [ref=e95]:
+              - generic [ref=e96]: GET
+              - link /api/accounts/me/ [ref=e99]:
+                - /url: "#/accounts/accounts_me_retrieve"
+                - generic [ref=e100]:
+                  - text: /api
+                  - text: /accounts
+                  - text: /me
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e103]:
+              - img [ref=e104]
+            - button "get /api/accounts/me/" [ref=e106]:
+              - img [ref=e107]
+          - generic [ref=e111] [cursor=pointer]:
+            - button "PUT /api/accounts/me/" [ref=e112]:
+              - generic [ref=e113]: PUT
+              - link /api/accounts/me/ [ref=e116]:
+                - /url: "#/accounts/accounts_me_update"
+                - generic [ref=e117]:
+                  - text: /api
+                  - text: /accounts
+                  - text: /me
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e120]:
+              - img [ref=e121]
+            - button "put /api/accounts/me/" [ref=e123]:
+              - img [ref=e124]
+          - generic [ref=e128] [cursor=pointer]:
+            - button "PATCH /api/accounts/me/" [ref=e129]:
+              - generic [ref=e130]: PATCH
+              - link /api/accounts/me/ [ref=e133]:
+                - /url: "#/accounts/accounts_me_partial_update"
+                - generic [ref=e134]:
+                  - text: /api
+                  - text: /accounts
+                  - text: /me
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e137]:
+              - img [ref=e138]
+            - button "patch /api/accounts/me/" [ref=e140]:
+              - img [ref=e141]
+          - generic [ref=e145] [cursor=pointer]:
+            - button "POST /api/accounts/me/change-password/" [ref=e146]:
+              - generic [ref=e147]: POST
+              - link /api/accounts/me/change-password/ [ref=e150]:
+                - /url: "#/accounts/accounts_me_change_password_create"
+                - generic [ref=e151]:
+                  - text: /api
+                  - text: /accounts
+                  - text: /me
+                  - text: /change-password
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e154]:
+              - img [ref=e155]
+            - button "post /api/accounts/me/change-password/" [ref=e157]:
+              - img [ref=e158]
+      - generic [ref=e161]:
+        - heading "Accounts Collapse operation" [level=3] [ref=e162] [cursor=pointer]:
+          - link "Accounts" [ref=e163]:
+            - /url: "#/Accounts"
+          - button "Collapse operation" [expanded] [ref=e164]:
+            - img [ref=e165]
+        - generic [ref=e171] [cursor=pointer]:
+          - button "POST /api/accounts/me/avatar/ Upload avatar" [ref=e172]:
+            - generic [ref=e173]: POST
+            - generic [ref=e174]:
+              - link /api/accounts/me/avatar/ [ref=e176]:
+                - /url: "#/Accounts/accounts_me_avatar_create"
+                - generic [ref=e177]:
+                  - text: /api
+                  - text: /accounts
+                  - text: /me
+                  - text: /avatar
+                  - text: /
+              - generic [ref=e178]: Upload avatar
+          - generic "Copy to clipboard"
+          - button "authorization button unlocked" [ref=e181]:
+            - img [ref=e182]
+          - button "post /api/accounts/me/avatar/" [ref=e184]:
+            - img [ref=e185]
+      - generic [ref=e188]:
+        - heading "admin Collapse operation" [level=3] [ref=e189] [cursor=pointer]:
+          - link "admin" [ref=e190]:
+            - /url: "#/admin"
+          - button "Collapse operation" [expanded] [ref=e191]:
+            - img [ref=e192]
+        - generic [ref=e195]:
+          - generic [ref=e198] [cursor=pointer]:
+            - 'button "POST /api/admin/ingredients/{id}/approve/" [ref=e199]':
+              - generic [ref=e200]: POST
+              - 'link /api/admin/ingredients/{id}/approve/ [ref=e203]':
+                - /url: "#/admin/admin_ingredients_approve_create"
+                - generic [ref=e204]:
+                  - text: /api
+                  - text: /admin
+                  - text: /ingredients
+                  - text: "/{id}"
+                  - text: /approve
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e207]:
+              - img [ref=e208]
+            - 'button "post /api/admin/ingredients/{id}/approve/" [ref=e210]':
+              - img [ref=e211]
+          - generic [ref=e215] [cursor=pointer]:
+            - 'button "POST /api/admin/ingredients/{id}/reject/" [ref=e216]':
+              - generic [ref=e217]: POST
+              - 'link /api/admin/ingredients/{id}/reject/ [ref=e220]':
+                - /url: "#/admin/admin_ingredients_reject_create"
+                - generic [ref=e221]:
+                  - text: /api
+                  - text: /admin
+                  - text: /ingredients
+                  - text: "/{id}"
+                  - text: /reject
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e224]:
+              - img [ref=e225]
+            - 'button "post /api/admin/ingredients/{id}/reject/" [ref=e227]':
+              - img [ref=e228]
+          - generic [ref=e232] [cursor=pointer]:
+            - button "GET /api/admin/ingredients/pending/" [ref=e233]:
+              - generic [ref=e234]: GET
+              - link /api/admin/ingredients/pending/ [ref=e237]:
+                - /url: "#/admin/admin_ingredients_pending_retrieve"
+                - generic [ref=e238]:
+                  - text: /api
+                  - text: /admin
+                  - text: /ingredients
+                  - text: /pending
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e241]:
+              - img [ref=e242]
+            - button "get /api/admin/ingredients/pending/" [ref=e244]:
+              - img [ref=e245]
+          - generic [ref=e249] [cursor=pointer]:
+            - 'button "POST /api/admin/recipes/{id}/approve/" [ref=e250]':
+              - generic [ref=e251]: POST
+              - 'link /api/admin/recipes/{id}/approve/ [ref=e254]':
+                - /url: "#/admin/admin_recipes_approve_create"
+                - generic [ref=e255]:
+                  - text: /api
+                  - text: /admin
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /approve
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e258]:
+              - img [ref=e259]
+            - 'button "post /api/admin/recipes/{id}/approve/" [ref=e261]':
+              - img [ref=e262]
+          - generic [ref=e266] [cursor=pointer]:
+            - 'button "POST /api/admin/recipes/{id}/reject/" [ref=e267]':
+              - generic [ref=e268]: POST
+              - 'link /api/admin/recipes/{id}/reject/ [ref=e271]':
+                - /url: "#/admin/admin_recipes_reject_create"
+                - generic [ref=e272]:
+                  - text: /api
+                  - text: /admin
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /reject
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e275]:
+              - img [ref=e276]
+            - 'button "post /api/admin/recipes/{id}/reject/" [ref=e278]':
+              - img [ref=e279]
+          - generic [ref=e283] [cursor=pointer]:
+            - button "GET /api/admin/recipes/pending/" [ref=e284]:
+              - generic [ref=e285]: GET
+              - link /api/admin/recipes/pending/ [ref=e288]:
+                - /url: "#/admin/admin_recipes_pending_retrieve"
+                - generic [ref=e289]:
+                  - text: /api
+                  - text: /admin
+                  - text: /recipes
+                  - text: /pending
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e292]:
+              - img [ref=e293]
+            - button "get /api/admin/recipes/pending/" [ref=e295]:
+              - img [ref=e296]
+          - generic [ref=e300] [cursor=pointer]:
+            - 'button "POST /api/admin/users/{id}/block/" [ref=e301]':
+              - generic [ref=e302]: POST
+              - 'link /api/admin/users/{id}/block/ [ref=e305]':
+                - /url: "#/admin/admin_users_block_create"
+                - generic [ref=e306]:
+                  - text: /api
+                  - text: /admin
+                  - text: /users
+                  - text: "/{id}"
+                  - text: /block
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e309]:
+              - img [ref=e310]
+            - 'button "post /api/admin/users/{id}/block/" [ref=e312]':
+              - img [ref=e313]
+          - generic [ref=e317] [cursor=pointer]:
+            - 'button "POST /api/admin/users/{id}/unblock/" [ref=e318]':
+              - generic [ref=e319]: POST
+              - 'link /api/admin/users/{id}/unblock/ [ref=e322]':
+                - /url: "#/admin/admin_users_unblock_create"
+                - generic [ref=e323]:
+                  - text: /api
+                  - text: /admin
+                  - text: /users
+                  - text: "/{id}"
+                  - text: /unblock
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e326]:
+              - img [ref=e327]
+            - 'button "post /api/admin/users/{id}/unblock/" [ref=e329]':
+              - img [ref=e330]
+          - generic [ref=e334] [cursor=pointer]:
+            - button "GET /api/admin/users/list/" [ref=e335]:
+              - generic [ref=e336]: GET
+              - link /api/admin/users/list/ [ref=e339]:
+                - /url: "#/admin/admin_users_list_retrieve"
+                - generic [ref=e340]:
+                  - text: /api
+                  - text: /admin
+                  - text: /users
+                  - text: /list
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e343]:
+              - img [ref=e344]
+            - button "get /api/admin/users/list/" [ref=e346]:
+              - img [ref=e347]
+      - generic [ref=e350]:
+        - heading "auth Collapse operation" [level=3] [ref=e351] [cursor=pointer]:
+          - link "auth" [ref=e352]:
+            - /url: "#/auth"
+          - button "Collapse operation" [expanded] [ref=e353]:
+            - img [ref=e354]
+        - generic [ref=e357]:
+          - generic [ref=e360] [cursor=pointer]:
+            - button "POST /api/auth/forgot-password/" [ref=e361]:
+              - generic [ref=e362]: POST
+              - link /api/auth/forgot-password/ [ref=e365]:
+                - /url: "#/auth/auth_forgot_password_create"
+                - generic [ref=e366]:
+                  - text: /api
+                  - text: /auth
+                  - text: /forgot-password
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e369]:
+              - img [ref=e370]
+            - button "post /api/auth/forgot-password/" [ref=e372]:
+              - img [ref=e373]
+          - generic [ref=e377] [cursor=pointer]:
+            - button "POST /api/auth/login/" [ref=e378]:
+              - generic [ref=e379]: POST
+              - link /api/auth/login/ [ref=e382]:
+                - /url: "#/auth/auth_login_create"
+                - generic [ref=e383]:
+                  - text: /api
+                  - text: /auth
+                  - text: /login
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e386]:
+              - img [ref=e387]
+            - button "post /api/auth/login/" [ref=e389]:
+              - img [ref=e390]
+          - generic [ref=e394] [cursor=pointer]:
+            - button "POST /api/auth/logout/" [ref=e395]:
+              - generic [ref=e396]: POST
+              - link /api/auth/logout/ [ref=e399]:
+                - /url: "#/auth/auth_logout_create"
+                - generic [ref=e400]:
+                  - text: /api
+                  - text: /auth
+                  - text: /logout
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e403]:
+              - img [ref=e404]
+            - button "post /api/auth/logout/" [ref=e406]:
+              - img [ref=e407]
+          - generic [ref=e411] [cursor=pointer]:
+            - button "POST /api/auth/refresh/" [ref=e412]:
+              - generic [ref=e413]: POST
+              - link /api/auth/refresh/ [ref=e416]:
+                - /url: "#/auth/auth_refresh_create"
+                - generic [ref=e417]:
+                  - text: /api
+                  - text: /auth
+                  - text: /refresh
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "post /api/auth/refresh/" [ref=e420]:
+              - img [ref=e421]
+          - generic [ref=e425] [cursor=pointer]:
+            - button "POST /api/auth/register/" [ref=e426]:
+              - generic [ref=e427]: POST
+              - link /api/auth/register/ [ref=e430]:
+                - /url: "#/auth/auth_register_create"
+                - generic [ref=e431]:
+                  - text: /api
+                  - text: /auth
+                  - text: /register
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e434]:
+              - img [ref=e435]
+            - button "post /api/auth/register/" [ref=e437]:
+              - img [ref=e438]
+          - generic [ref=e442] [cursor=pointer]:
+            - button "POST /api/auth/reset-password/" [ref=e443]:
+              - generic [ref=e444]: POST
+              - link /api/auth/reset-password/ [ref=e447]:
+                - /url: "#/auth/auth_reset_password_create"
+                - generic [ref=e448]:
+                  - text: /api
+                  - text: /auth
+                  - text: /reset-password
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e451]:
+              - img [ref=e452]
+            - button "post /api/auth/reset-password/" [ref=e454]:
+              - img [ref=e455]
+      - generic [ref=e458]:
+        - heading "ingredients Collapse operation" [level=3] [ref=e459] [cursor=pointer]:
+          - link "ingredients" [ref=e460]:
+            - /url: "#/ingredients"
+          - button "Collapse operation" [expanded] [ref=e461]:
+            - img [ref=e462]
+        - generic [ref=e465]:
+          - generic [ref=e468] [cursor=pointer]:
+            - button "GET /api/ingredients/" [ref=e469]:
+              - generic [ref=e470]: GET
+              - link /api/ingredients/ [ref=e473]:
+                - /url: "#/ingredients/ingredients_list"
+                - generic [ref=e474]:
+                  - text: /api
+                  - text: /ingredients
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e477]:
+              - img [ref=e478]
+            - button "get /api/ingredients/" [ref=e480]:
+              - img [ref=e481]
+          - generic [ref=e485] [cursor=pointer]:
+            - button "POST /api/ingredients/" [ref=e486]:
+              - generic [ref=e487]: POST
+              - link /api/ingredients/ [ref=e490]:
+                - /url: "#/ingredients/ingredients_create"
+                - generic [ref=e491]:
+                  - text: /api
+                  - text: /ingredients
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e494]:
+              - img [ref=e495]
+            - button "post /api/ingredients/" [ref=e497]:
+              - img [ref=e498]
+          - generic [ref=e502] [cursor=pointer]:
+            - button "GET /api/ingredients/search/" [ref=e503]:
+              - generic [ref=e504]: GET
+              - link /api/ingredients/search/ [ref=e507]:
+                - /url: "#/ingredients/ingredients_search_retrieve"
+                - generic [ref=e508]:
+                  - text: /api
+                  - text: /ingredients
+                  - text: /search
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e511]:
+              - img [ref=e512]
+            - button "get /api/ingredients/search/" [ref=e514]:
+              - img [ref=e515]
+      - generic [ref=e518]:
+        - heading "kitchen Collapse operation" [level=3] [ref=e519] [cursor=pointer]:
+          - link "kitchen" [ref=e520]:
+            - /url: "#/kitchen"
+          - button "Collapse operation" [expanded] [ref=e521]:
+            - img [ref=e522]
+        - generic [ref=e525]:
+          - generic [ref=e528] [cursor=pointer]:
+            - button "GET /api/kitchen/pantry/" [ref=e529]:
+              - generic [ref=e530]: GET
+              - link /api/kitchen/pantry/ [ref=e533]:
+                - /url: "#/kitchen/kitchen_pantry_list"
+                - generic [ref=e534]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /pantry
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e537]:
+              - img [ref=e538]
+            - button "get /api/kitchen/pantry/" [ref=e540]:
+              - img [ref=e541]
+          - generic [ref=e545] [cursor=pointer]:
+            - button "POST /api/kitchen/pantry/" [ref=e546]:
+              - generic [ref=e547]: POST
+              - link /api/kitchen/pantry/ [ref=e550]:
+                - /url: "#/kitchen/kitchen_pantry_create"
+                - generic [ref=e551]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /pantry
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e554]:
+              - img [ref=e555]
+            - button "post /api/kitchen/pantry/" [ref=e557]:
+              - img [ref=e558]
+          - generic [ref=e562] [cursor=pointer]:
+            - 'button "GET /api/kitchen/pantry/{id}/" [ref=e563]':
+              - generic [ref=e564]: GET
+              - 'link /api/kitchen/pantry/{id}/ [ref=e567]':
+                - /url: "#/kitchen/kitchen_pantry_retrieve"
+                - generic [ref=e568]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /pantry
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e571]:
+              - img [ref=e572]
+            - 'button "get /api/kitchen/pantry/{id}/" [ref=e574]':
+              - img [ref=e575]
+          - generic [ref=e579] [cursor=pointer]:
+            - 'button "PUT /api/kitchen/pantry/{id}/" [ref=e580]':
+              - generic [ref=e581]: PUT
+              - 'link /api/kitchen/pantry/{id}/ [ref=e584]':
+                - /url: "#/kitchen/kitchen_pantry_update"
+                - generic [ref=e585]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /pantry
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e588]:
+              - img [ref=e589]
+            - 'button "put /api/kitchen/pantry/{id}/" [ref=e591]':
+              - img [ref=e592]
+          - generic [ref=e596] [cursor=pointer]:
+            - 'button "PATCH /api/kitchen/pantry/{id}/" [ref=e597]':
+              - generic [ref=e598]: PATCH
+              - 'link /api/kitchen/pantry/{id}/ [ref=e601]':
+                - /url: "#/kitchen/kitchen_pantry_partial_update"
+                - generic [ref=e602]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /pantry
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e605]:
+              - img [ref=e606]
+            - 'button "patch /api/kitchen/pantry/{id}/" [ref=e608]':
+              - img [ref=e609]
+          - generic [ref=e613] [cursor=pointer]:
+            - 'button "DELETE /api/kitchen/pantry/{id}/" [ref=e614]':
+              - generic [ref=e615]: DELETE
+              - 'link /api/kitchen/pantry/{id}/ [ref=e618]':
+                - /url: "#/kitchen/kitchen_pantry_destroy"
+                - generic [ref=e619]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /pantry
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e622]:
+              - img [ref=e623]
+            - 'button "delete /api/kitchen/pantry/{id}/" [ref=e625]':
+              - img [ref=e626]
+          - generic [ref=e630] [cursor=pointer]:
+            - button "GET /api/kitchen/shopping-list/" [ref=e631]:
+              - generic [ref=e632]: GET
+              - link /api/kitchen/shopping-list/ [ref=e635]:
+                - /url: "#/kitchen/kitchen_shopping_list_list"
+                - generic [ref=e636]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /shopping-list
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e639]:
+              - img [ref=e640]
+            - button "get /api/kitchen/shopping-list/" [ref=e642]:
+              - img [ref=e643]
+          - generic [ref=e647] [cursor=pointer]:
+            - button "POST /api/kitchen/shopping-list/" [ref=e648]:
+              - generic [ref=e649]: POST
+              - link /api/kitchen/shopping-list/ [ref=e652]:
+                - /url: "#/kitchen/kitchen_shopping_list_create"
+                - generic [ref=e653]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /shopping-list
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e656]:
+              - img [ref=e657]
+            - button "post /api/kitchen/shopping-list/" [ref=e659]:
+              - img [ref=e660]
+          - generic [ref=e664] [cursor=pointer]:
+            - 'button "DELETE /api/kitchen/shopping-list/{id}/" [ref=e665]':
+              - generic [ref=e666]: DELETE
+              - 'link /api/kitchen/shopping-list/{id}/ [ref=e669]':
+                - /url: "#/kitchen/kitchen_shopping_list_destroy"
+                - generic [ref=e670]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /shopping-list
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e673]:
+              - img [ref=e674]
+            - 'button "delete /api/kitchen/shopping-list/{id}/" [ref=e676]':
+              - img [ref=e677]
+          - generic [ref=e681] [cursor=pointer]:
+            - 'button "POST /api/kitchen/shopping-list/{id}/mark-purchased/" [ref=e682]':
+              - generic [ref=e683]: POST
+              - 'link /api/kitchen/shopping-list/{id}/mark-purchased/ [ref=e686]':
+                - /url: "#/kitchen/kitchen_shopping_list_mark_purchased_create"
+                - generic [ref=e687]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /shopping-list
+                  - text: "/{id}"
+                  - text: /mark-purchased
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e690]:
+              - img [ref=e691]
+            - 'button "post /api/kitchen/shopping-list/{id}/mark-purchased/" [ref=e693]':
+              - img [ref=e694]
+          - generic [ref=e698] [cursor=pointer]:
+            - 'button "POST /api/kitchen/shopping-list/{id}/mark-unpurchased/" [ref=e699]':
+              - generic [ref=e700]: POST
+              - 'link /api/kitchen/shopping-list/{id}/mark-unpurchased/ [ref=e703]':
+                - /url: "#/kitchen/kitchen_shopping_list_mark_unpurchased_create"
+                - generic [ref=e704]:
+                  - text: /api
+                  - text: /kitchen
+                  - text: /shopping-list
+                  - text: "/{id}"
+                  - text: /mark-unpurchased
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e707]:
+              - img [ref=e708]
+            - 'button "post /api/kitchen/shopping-list/{id}/mark-unpurchased/" [ref=e710]':
+              - img [ref=e711]
+      - generic [ref=e714]:
+        - heading "recipes Collapse operation" [level=3] [ref=e715] [cursor=pointer]:
+          - link "recipes" [ref=e716]:
+            - /url: "#/recipes"
+          - button "Collapse operation" [expanded] [ref=e717]:
+            - img [ref=e718]
+        - generic [ref=e721]:
+          - generic [ref=e724] [cursor=pointer]:
+            - button "GET /api/recipes/" [ref=e725]:
+              - generic [ref=e726]: GET
+              - link /api/recipes/ [ref=e729]:
+                - /url: "#/recipes/recipes_list"
+                - generic [ref=e730]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e733]:
+              - img [ref=e734]
+            - button "get /api/recipes/" [ref=e736]:
+              - img [ref=e737]
+          - generic [ref=e741] [cursor=pointer]:
+            - button "POST /api/recipes/" [ref=e742]:
+              - generic [ref=e743]: POST
+              - link /api/recipes/ [ref=e746]:
+                - /url: "#/recipes/recipes_create"
+                - generic [ref=e747]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e750]:
+              - img [ref=e751]
+            - button "post /api/recipes/" [ref=e753]:
+              - img [ref=e754]
+          - generic [ref=e758] [cursor=pointer]:
+            - 'button "GET /api/recipes/{id}/" [ref=e759]':
+              - generic [ref=e760]: GET
+              - 'link /api/recipes/{id}/ [ref=e763]':
+                - /url: "#/recipes/recipes_retrieve"
+                - generic [ref=e764]:
+                  - text: /api
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e767]:
+              - img [ref=e768]
+            - 'button "get /api/recipes/{id}/" [ref=e770]':
+              - img [ref=e771]
+          - generic [ref=e775] [cursor=pointer]:
+            - 'button "PUT /api/recipes/{id}/" [ref=e776]':
+              - generic [ref=e777]: PUT
+              - 'link /api/recipes/{id}/ [ref=e780]':
+                - /url: "#/recipes/recipes_update"
+                - generic [ref=e781]:
+                  - text: /api
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e784]:
+              - img [ref=e785]
+            - 'button "put /api/recipes/{id}/" [ref=e787]':
+              - img [ref=e788]
+          - generic [ref=e792] [cursor=pointer]:
+            - 'button "PATCH /api/recipes/{id}/" [ref=e793]':
+              - generic [ref=e794]: PATCH
+              - 'link /api/recipes/{id}/ [ref=e797]':
+                - /url: "#/recipes/recipes_partial_update"
+                - generic [ref=e798]:
+                  - text: /api
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e801]:
+              - img [ref=e802]
+            - 'button "patch /api/recipes/{id}/" [ref=e804]':
+              - img [ref=e805]
+          - generic [ref=e809] [cursor=pointer]:
+            - 'button "DELETE /api/recipes/{id}/" [ref=e810]':
+              - generic [ref=e811]: DELETE
+              - 'link /api/recipes/{id}/ [ref=e814]':
+                - /url: "#/recipes/recipes_destroy"
+                - generic [ref=e815]:
+                  - text: /api
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e818]:
+              - img [ref=e819]
+            - 'button "delete /api/recipes/{id}/" [ref=e821]':
+              - img [ref=e822]
+          - generic [ref=e826] [cursor=pointer]:
+            - 'button "POST /api/recipes/{id}/publish/" [ref=e827]':
+              - generic [ref=e828]: POST
+              - 'link /api/recipes/{id}/publish/ [ref=e831]':
+                - /url: "#/recipes/recipes_publish_create"
+                - generic [ref=e832]:
+                  - text: /api
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /publish
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e835]:
+              - img [ref=e836]
+            - 'button "post /api/recipes/{id}/publish/" [ref=e838]':
+              - img [ref=e839]
+          - generic [ref=e843] [cursor=pointer]:
+            - 'button "GET /api/recipes/{id}/stats/" [ref=e844]':
+              - generic [ref=e845]: GET
+              - 'link /api/recipes/{id}/stats/ [ref=e848]':
+                - /url: "#/recipes/recipes_stats_retrieve"
+                - generic [ref=e849]:
+                  - text: /api
+                  - text: /recipes
+                  - text: "/{id}"
+                  - text: /stats
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e852]:
+              - img [ref=e853]
+            - 'button "get /api/recipes/{id}/stats/" [ref=e855]':
+              - img [ref=e856]
+          - generic [ref=e860] [cursor=pointer]:
+            - button "GET /api/recipes/categories/" [ref=e861]:
+              - generic [ref=e862]: GET
+              - link /api/recipes/categories/ [ref=e865]:
+                - /url: "#/recipes/recipes_categories_list"
+                - generic [ref=e866]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /categories
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e869]:
+              - img [ref=e870]
+            - button "get /api/recipes/categories/" [ref=e872]:
+              - img [ref=e873]
+          - generic [ref=e877] [cursor=pointer]:
+            - button "POST /api/recipes/categories/" [ref=e878]:
+              - generic [ref=e879]: POST
+              - link /api/recipes/categories/ [ref=e882]:
+                - /url: "#/recipes/recipes_categories_create"
+                - generic [ref=e883]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /categories
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e886]:
+              - img [ref=e887]
+            - button "post /api/recipes/categories/" [ref=e889]:
+              - img [ref=e890]
+          - generic [ref=e894] [cursor=pointer]:
+            - 'button "GET /api/recipes/categories/{slug}/" [ref=e895]':
+              - generic [ref=e896]: GET
+              - 'link /api/recipes/categories/{slug}/ [ref=e899]':
+                - /url: "#/recipes/recipes_categories_retrieve"
+                - generic [ref=e900]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /categories
+                  - text: "/{slug}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e903]:
+              - img [ref=e904]
+            - 'button "get /api/recipes/categories/{slug}/" [ref=e906]':
+              - img [ref=e907]
+          - generic [ref=e911] [cursor=pointer]:
+            - 'button "PUT /api/recipes/categories/{slug}/" [ref=e912]':
+              - generic [ref=e913]: PUT
+              - 'link /api/recipes/categories/{slug}/ [ref=e916]':
+                - /url: "#/recipes/recipes_categories_update"
+                - generic [ref=e917]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /categories
+                  - text: "/{slug}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e920]:
+              - img [ref=e921]
+            - 'button "put /api/recipes/categories/{slug}/" [ref=e923]':
+              - img [ref=e924]
+          - generic [ref=e928] [cursor=pointer]:
+            - 'button "PATCH /api/recipes/categories/{slug}/" [ref=e929]':
+              - generic [ref=e930]: PATCH
+              - 'link /api/recipes/categories/{slug}/ [ref=e933]':
+                - /url: "#/recipes/recipes_categories_partial_update"
+                - generic [ref=e934]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /categories
+                  - text: "/{slug}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e937]:
+              - img [ref=e938]
+            - 'button "patch /api/recipes/categories/{slug}/" [ref=e940]':
+              - img [ref=e941]
+          - generic [ref=e945] [cursor=pointer]:
+            - 'button "DELETE /api/recipes/categories/{slug}/" [ref=e946]':
+              - generic [ref=e947]: DELETE
+              - 'link /api/recipes/categories/{slug}/ [ref=e950]':
+                - /url: "#/recipes/recipes_categories_destroy"
+                - generic [ref=e951]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /categories
+                  - text: "/{slug}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e954]:
+              - img [ref=e955]
+            - 'button "delete /api/recipes/categories/{slug}/" [ref=e957]':
+              - img [ref=e958]
+          - generic [ref=e962] [cursor=pointer]:
+            - button "GET /api/recipes/my-recipes/" [ref=e963]:
+              - generic [ref=e964]: GET
+              - link /api/recipes/my-recipes/ [ref=e967]:
+                - /url: "#/recipes/recipes_my_recipes_retrieve"
+                - generic [ref=e968]:
+                  - text: /api
+                  - text: /recipes
+                  - text: /my-recipes
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e971]:
+              - img [ref=e972]
+            - button "get /api/recipes/my-recipes/" [ref=e974]:
+              - img [ref=e975]
+      - generic [ref=e978]:
+        - heading "Recipes Collapse operation" [level=3] [ref=e979] [cursor=pointer]:
+          - link "Recipes" [ref=e980]:
+            - /url: "#/Recipes"
+          - button "Collapse operation" [expanded] [ref=e981]:
+            - img [ref=e982]
+        - generic [ref=e985]:
+          - generic [ref=e988] [cursor=pointer]:
+            - 'button "POST /api/recipes/{recipe_id}/steps/{step_id}/media/ Upload recipe step media" [ref=e989]':
+              - generic [ref=e990]: POST
+              - generic [ref=e991]:
+                - 'link /api/recipes/{recipe_id}/steps/{step_id}/media/ [ref=e993]':
+                  - /url: "#/Recipes/recipes_steps_media_create"
+                  - generic [ref=e994]:
+                    - text: /api
+                    - text: /recipes
+                    - text: "/{recipe_id}"
+                    - text: /steps
+                    - text: "/{step_id}"
+                    - text: /media
+                    - text: /
+                - generic [ref=e995]: Upload recipe step media
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e998]:
+              - img [ref=e999]
+            - 'button "post /api/recipes/{recipe_id}/steps/{step_id}/media/" [ref=e1001]':
+              - img [ref=e1002]
+          - generic [ref=e1006] [cursor=pointer]:
+            - 'button "POST /api/recipes/{recipe_id}/thumbnail/ Upload recipe thumbnail" [ref=e1007]':
+              - generic [ref=e1008]: POST
+              - generic [ref=e1009]:
+                - 'link /api/recipes/{recipe_id}/thumbnail/ [ref=e1011]':
+                  - /url: "#/Recipes/recipes_thumbnail_create"
+                  - generic [ref=e1012]:
+                    - text: /api
+                    - text: /recipes
+                    - text: "/{recipe_id}"
+                    - text: /thumbnail
+                    - text: /
+                - generic [ref=e1013]: Upload recipe thumbnail
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1016]:
+              - img [ref=e1017]
+            - 'button "post /api/recipes/{recipe_id}/thumbnail/" [ref=e1019]':
+              - img [ref=e1020]
+      - generic [ref=e1023]:
+        - heading "recommendations Collapse operation" [level=3] [ref=e1024] [cursor=pointer]:
+          - link "recommendations" [ref=e1025]:
+            - /url: "#/recommendations"
+          - button "Collapse operation" [expanded] [ref=e1026]:
+            - img [ref=e1027]
+        - generic [ref=e1033] [cursor=pointer]:
+          - button "POST /api/recommendations/suggest/" [ref=e1034]:
+            - generic [ref=e1035]: POST
+            - link /api/recommendations/suggest/ [ref=e1038]:
+              - /url: "#/recommendations/recommendations_suggest_create"
+              - generic [ref=e1039]:
+                - text: /api
+                - text: /recommendations
+                - text: /suggest
+                - text: /
+          - generic "Copy to clipboard"
+          - button "authorization button unlocked" [ref=e1042]:
+            - img [ref=e1043]
+          - button "post /api/recommendations/suggest/" [ref=e1045]:
+            - img [ref=e1046]
+      - generic [ref=e1049]:
+        - heading "social Collapse operation" [level=3] [ref=e1050] [cursor=pointer]:
+          - link "social" [ref=e1051]:
+            - /url: "#/social"
+          - button "Collapse operation" [expanded] [ref=e1052]:
+            - img [ref=e1053]
+        - generic [ref=e1056]:
+          - generic [ref=e1059] [cursor=pointer]:
+            - button "GET /api/social/collections/" [ref=e1060]:
+              - generic [ref=e1061]: GET
+              - link /api/social/collections/ [ref=e1064]:
+                - /url: "#/social/social_collections_list"
+                - generic [ref=e1065]:
+                  - text: /api
+                  - text: /social
+                  - text: /collections
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1068]:
+              - img [ref=e1069]
+            - button "get /api/social/collections/" [ref=e1071]:
+              - img [ref=e1072]
+          - generic [ref=e1076] [cursor=pointer]:
+            - button "POST /api/social/collections/" [ref=e1077]:
+              - generic [ref=e1078]: POST
+              - link /api/social/collections/ [ref=e1081]:
+                - /url: "#/social/social_collections_create"
+                - generic [ref=e1082]:
+                  - text: /api
+                  - text: /social
+                  - text: /collections
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1085]:
+              - img [ref=e1086]
+            - button "post /api/social/collections/" [ref=e1088]:
+              - img [ref=e1089]
+          - generic [ref=e1093] [cursor=pointer]:
+            - 'button "DELETE /api/social/collections/{id}/" [ref=e1094]':
+              - generic [ref=e1095]: DELETE
+              - 'link /api/social/collections/{id}/ [ref=e1098]':
+                - /url: "#/social/social_collections_destroy"
+                - generic [ref=e1099]:
+                  - text: /api
+                  - text: /social
+                  - text: /collections
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1102]:
+              - img [ref=e1103]
+            - 'button "delete /api/social/collections/{id}/" [ref=e1105]':
+              - img [ref=e1106]
+          - generic [ref=e1110] [cursor=pointer]:
+            - 'button "POST /api/social/collections/{id}/add-recipe/" [ref=e1111]':
+              - generic [ref=e1112]: POST
+              - 'link /api/social/collections/{id}/add-recipe/ [ref=e1115]':
+                - /url: "#/social/social_collections_add_recipe_create"
+                - generic [ref=e1116]:
+                  - text: /api
+                  - text: /social
+                  - text: /collections
+                  - text: "/{id}"
+                  - text: /add-recipe
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1119]:
+              - img [ref=e1120]
+            - 'button "post /api/social/collections/{id}/add-recipe/" [ref=e1122]':
+              - img [ref=e1123]
+          - generic [ref=e1127] [cursor=pointer]:
+            - 'button "DELETE /api/social/collections/{id}/remove-recipe/" [ref=e1128]':
+              - generic [ref=e1129]: DELETE
+              - 'link /api/social/collections/{id}/remove-recipe/ [ref=e1132]':
+                - /url: "#/social/social_collections_remove_recipe_destroy"
+                - generic [ref=e1133]:
+                  - text: /api
+                  - text: /social
+                  - text: /collections
+                  - text: "/{id}"
+                  - text: /remove-recipe
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1136]:
+              - img [ref=e1137]
+            - 'button "delete /api/social/collections/{id}/remove-recipe/" [ref=e1139]':
+              - img [ref=e1140]
+          - generic [ref=e1144] [cursor=pointer]:
+            - 'button "GET /api/social/recipes/{recipe_pk}/reviews/" [ref=e1145]':
+              - generic [ref=e1146]: GET
+              - 'link /api/social/recipes/{recipe_pk}/reviews/ [ref=e1149]':
+                - /url: "#/social/social_recipes_reviews_list"
+                - generic [ref=e1150]:
+                  - text: /api
+                  - text: /social
+                  - text: /recipes
+                  - text: "/{recipe_pk}"
+                  - text: /reviews
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button locked" [ref=e1153]:
+              - img [ref=e1154]
+            - 'button "get /api/social/recipes/{recipe_pk}/reviews/" [ref=e1156]':
+              - img [ref=e1157]
+          - generic [ref=e1161] [cursor=pointer]:
+            - 'button "POST /api/social/recipes/{recipe_pk}/reviews/" [ref=e1162]':
+              - generic [ref=e1163]: POST
+              - 'link /api/social/recipes/{recipe_pk}/reviews/ [ref=e1166]':
+                - /url: "#/social/social_recipes_reviews_create"
+                - generic [ref=e1167]:
+                  - text: /api
+                  - text: /social
+                  - text: /recipes
+                  - text: "/{recipe_pk}"
+                  - text: /reviews
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1170]:
+              - img [ref=e1171]
+            - 'button "post /api/social/recipes/{recipe_pk}/reviews/" [ref=e1173]':
+              - img [ref=e1174]
+          - generic [ref=e1178] [cursor=pointer]:
+            - 'button "PUT /api/social/recipes/{recipe_pk}/reviews/{id}/" [ref=e1179]':
+              - generic [ref=e1180]: PUT
+              - 'link /api/social/recipes/{recipe_pk}/reviews/{id}/ [ref=e1183]':
+                - /url: "#/social/social_recipes_reviews_update"
+                - generic [ref=e1184]:
+                  - text: /api
+                  - text: /social
+                  - text: /recipes
+                  - text: "/{recipe_pk}"
+                  - text: /reviews
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1187]:
+              - img [ref=e1188]
+            - 'button "put /api/social/recipes/{recipe_pk}/reviews/{id}/" [ref=e1190]':
+              - img [ref=e1191]
+          - generic [ref=e1195] [cursor=pointer]:
+            - 'button "PATCH /api/social/recipes/{recipe_pk}/reviews/{id}/" [ref=e1196]':
+              - generic [ref=e1197]: PATCH
+              - 'link /api/social/recipes/{recipe_pk}/reviews/{id}/ [ref=e1200]':
+                - /url: "#/social/social_recipes_reviews_partial_update"
+                - generic [ref=e1201]:
+                  - text: /api
+                  - text: /social
+                  - text: /recipes
+                  - text: "/{recipe_pk}"
+                  - text: /reviews
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1204]:
+              - img [ref=e1205]
+            - 'button "patch /api/social/recipes/{recipe_pk}/reviews/{id}/" [ref=e1207]':
+              - img [ref=e1208]
+          - generic [ref=e1212] [cursor=pointer]:
+            - 'button "DELETE /api/social/recipes/{recipe_pk}/reviews/{id}/" [ref=e1213]':
+              - generic [ref=e1214]: DELETE
+              - 'link /api/social/recipes/{recipe_pk}/reviews/{id}/ [ref=e1217]':
+                - /url: "#/social/social_recipes_reviews_destroy"
+                - generic [ref=e1218]:
+                  - text: /api
+                  - text: /social
+                  - text: /recipes
+                  - text: "/{recipe_pk}"
+                  - text: /reviews
+                  - text: "/{id}"
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1221]:
+              - img [ref=e1222]
+            - 'button "delete /api/social/recipes/{recipe_pk}/reviews/{id}/" [ref=e1224]':
+              - img [ref=e1225]
+          - generic [ref=e1229] [cursor=pointer]:
+            - 'button "DELETE /api/social/reviews/{id}/delete/" [ref=e1230]':
+              - generic [ref=e1231]: DELETE
+              - 'link /api/social/reviews/{id}/delete/ [ref=e1234]':
+                - /url: "#/social/social_reviews_delete_destroy"
+                - generic [ref=e1235]:
+                  - text: /api
+                  - text: /social
+                  - text: /reviews
+                  - text: "/{id}"
+                  - text: /delete
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1238]:
+              - img [ref=e1239]
+            - 'button "delete /api/social/reviews/{id}/delete/" [ref=e1241]':
+              - img [ref=e1242]
+          - generic [ref=e1246] [cursor=pointer]:
+            - 'button "PUT /api/social/reviews/{id}/update/" [ref=e1247]':
+              - generic [ref=e1248]: PUT
+              - 'link /api/social/reviews/{id}/update/ [ref=e1251]':
+                - /url: "#/social/social_reviews_update_update"
+                - generic [ref=e1252]:
+                  - text: /api
+                  - text: /social
+                  - text: /reviews
+                  - text: "/{id}"
+                  - text: /update
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1255]:
+              - img [ref=e1256]
+            - 'button "put /api/social/reviews/{id}/update/" [ref=e1258]':
+              - img [ref=e1259]
+          - generic [ref=e1263] [cursor=pointer]:
+            - 'button "PATCH /api/social/reviews/{id}/update/" [ref=e1264]':
+              - generic [ref=e1265]: PATCH
+              - 'link /api/social/reviews/{id}/update/ [ref=e1268]':
+                - /url: "#/social/social_reviews_update_partial_update"
+                - generic [ref=e1269]:
+                  - text: /api
+                  - text: /social
+                  - text: /reviews
+                  - text: "/{id}"
+                  - text: /update
+                  - text: /
+            - generic "Copy to clipboard"
+            - button "authorization button unlocked" [ref=e1272]:
+              - img [ref=e1273]
+            - 'button "patch /api/social/reviews/{id}/update/" [ref=e1275]':
+              - img [ref=e1276]
+      - generic [ref=e1279]:
+        - heading "Social Collapse operation" [level=3] [ref=e1280] [cursor=pointer]:
+          - link "Social" [ref=e1281]:
+            - /url: "#/Social"
+          - button "Collapse operation" [expanded] [ref=e1282]:
+            - img [ref=e1283]
+        - generic [ref=e1289] [cursor=pointer]:
+          - 'button "POST /api/social/reviews/{review_id}/cooksnap/ Upload cooksnap" [ref=e1290]':
+            - generic [ref=e1291]: POST
+            - generic [ref=e1292]:
+              - 'link /api/social/reviews/{review_id}/cooksnap/ [ref=e1294]':
+                - /url: "#/Social/social_reviews_cooksnap_create"
+                - generic [ref=e1295]:
+                  - text: /api
+                  - text: /social
+                  - text: /reviews
+                  - text: "/{review_id}"
+                  - text: /cooksnap
+                  - text: /
+              - generic [ref=e1296]: Upload cooksnap
+          - generic "Copy to clipboard"
+          - button "authorization button unlocked" [ref=e1299]:
+            - img [ref=e1300]
+          - 'button "post /api/social/reviews/{review_id}/cooksnap/" [ref=e1302]':
+            - img [ref=e1303]
+    - generic [ref=e1307]:
+      - heading "Schemas" [level=4] [ref=e1308] [cursor=pointer]:
+        - button "Schemas" [expanded] [ref=e1309]:
+          - generic [ref=e1310]: Schemas
+          - img [ref=e1311]
+      - generic [ref=e1313]:
+        - button "CategoryEnum" [ref=e1316] [cursor=pointer]:
+          - generic [ref=e1318]: CategoryEnum
+        - button "Collection" [ref=e1322] [cursor=pointer]:
+          - generic [ref=e1324]: Collection
+        - button "CollectionRecipe" [ref=e1328] [cursor=pointer]:
+          - generic [ref=e1330]: CollectionRecipe
+        - button "DifficultyEnum" [ref=e1334] [cursor=pointer]:
+          - generic [ref=e1336]: DifficultyEnum
+        - button "Ingredient" [ref=e1340] [cursor=pointer]:
+          - generic [ref=e1342]: Ingredient
+        - button "PaginatedCollectionList" [ref=e1346] [cursor=pointer]:
+          - generic [ref=e1348]: PaginatedCollectionList
+        - button "PaginatedIngredientList" [ref=e1352] [cursor=pointer]:
+          - generic [ref=e1354]: PaginatedIngredientList
+        - button "PaginatedPantryList" [ref=e1358] [cursor=pointer]:
+          - generic [ref=e1360]: PaginatedPantryList
+        - button "PaginatedRecipeCategoryList" [ref=e1364] [cursor=pointer]:
+          - generic [ref=e1366]: PaginatedRecipeCategoryList
+        - button "PaginatedRecipeListList" [ref=e1370] [cursor=pointer]:
+          - generic [ref=e1372]: PaginatedRecipeListList
+        - button "PaginatedReviewList" [ref=e1376] [cursor=pointer]:
+          - generic [ref=e1378]: PaginatedReviewList
+        - button "PaginatedShoppingListList" [ref=e1382] [cursor=pointer]:
+          - generic [ref=e1384]: PaginatedShoppingListList
+        - button "Pantry" [ref=e1388] [cursor=pointer]:
+          - generic [ref=e1390]: Pantry
+        - button "PatchedPantry" [ref=e1394] [cursor=pointer]:
+          - generic [ref=e1396]: PatchedPantry
+        - button "PatchedRecipeCategory" [ref=e1400] [cursor=pointer]:
+          - generic [ref=e1402]: PatchedRecipeCategory
+        - button "PatchedRecipeList" [ref=e1406] [cursor=pointer]:
+          - generic [ref=e1408]: PatchedRecipeList
+        - button "PatchedReview" [ref=e1412] [cursor=pointer]:
+          - generic [ref=e1414]: PatchedReview
+        - button "RecipeCategory" [ref=e1418] [cursor=pointer]:
+          - generic [ref=e1420]: RecipeCategory
+        - button "RecipeCreate" [ref=e1424] [cursor=pointer]:
+          - generic [ref=e1426]: RecipeCreate
+        - button "RecipeDetail" [ref=e1430] [cursor=pointer]:
+          - generic [ref=e1432]: RecipeDetail
+        - button "RecipeIngredient" [ref=e1436] [cursor=pointer]:
+          - generic [ref=e1438]: RecipeIngredient
+        - button "RecipeList" [ref=e1442] [cursor=pointer]:
+          - generic [ref=e1444]: RecipeList
+        - button "RecipeStep" [ref=e1448] [cursor=pointer]:
+          - generic [ref=e1450]: RecipeStep
+        - button "Review" [ref=e1454] [cursor=pointer]:
+          - generic [ref=e1456]: Review
+        - button "ShoppingList" [ref=e1460] [cursor=pointer]:
+          - generic [ref=e1462]: ShoppingList
+        - button "StatusEnum" [ref=e1466] [cursor=pointer]:
+          - generic [ref=e1468]: StatusEnum
+        - button "TokenRefresh" [ref=e1472] [cursor=pointer]:
+          - generic [ref=e1474]: TokenRefresh
+        - button "User" [ref=e1478] [cursor=pointer]:
+          - generic [ref=e1480]: User
+        - button "VisibilityEnum" [ref=e1484] [cursor=pointer]:
+          - generic [ref=e1486]: VisibilityEnum

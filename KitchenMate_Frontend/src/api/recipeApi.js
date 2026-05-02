@@ -28,15 +28,19 @@ export const recipeApi = {
     await axiosInstance.delete(`/recipes/${id}/`)
   },
 
-  getMyRecipes: async () => {
+  uploadThumbnail: async (recipeId, file) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.get('/recipes/my/')
+    const formData = new FormData()
+    formData.append('file', file)
+    const { data } = await axiosInstance.post(`/recipes/${recipeId}/thumbnail/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     return data
   },
 
-  searchRecipes: async (query, params = {}) => {
+  getMyRecipes: async () => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.get('/recipes/search/', { query, ...params })
+    const { data } = await axiosInstance.get('/recipes/my-recipes/')
     return data
   },
 }

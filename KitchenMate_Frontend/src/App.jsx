@@ -4,17 +4,18 @@ import { AuthGuard } from '@/components/auth/AuthGuard'
 import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
 import { ProfilePage, PublicProfilePage } from '@/pages/profile'
 import { HomePage } from '@/pages/home'
+import { ExplorePage } from '@/pages/explore'
+import { RecipeDetailPage, RecipeEditorPage } from '@/pages/recipe'
+import { PantryPage } from '@/pages/pantry'
+import { ShoppingPage } from '@/pages/shopping'
 import { Header } from '@/components/layout'
 import { Sidebar } from '@/components/layout'
 import { BottomNav } from '@/components/layout'
 import { useState } from 'react'
 
 // Lazy load pages for performance
-const PantryPage = () => <div className="p-6 text-[var(--color-text)]">Tủ lạnh - Cần đăng nhập</div>
-const ShoppingPage = () => <div className="p-6 text-[var(--color-text)]">Danh sách đi chợ - Cần đăng nhập</div>
 const SuggestPage = () => <div className="p-6 text-[var(--color-text)]">Gợi ý món ăn - Cần đăng nhập</div>
 const CollectionsPage = () => <div className="p-6 text-[var(--color-text)]">Bộ sưu tập - Cần đăng nhập</div>
-const CreateRecipePage = () => <div className="p-6 text-[var(--color-text)]">Tạo công thức - Cần đăng nhập</div>
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -38,6 +39,8 @@ function App() {
 
                 {/* Public routes */}
                 <Route path="/" element={<HomePage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/recipe/:id" element={<RecipeDetailPage />} />
 
                 {/* Protected routes - require login */}
                 <Route path="/pantry" element={
@@ -53,7 +56,10 @@ function App() {
                   <AuthGuard><CollectionsPage /></AuthGuard>
                 } />
                 <Route path="/recipe/new" element={
-                  <AuthGuard><CreateRecipePage /></AuthGuard>
+                  <AuthGuard><RecipeEditorPage /></AuthGuard>
+                } />
+                <Route path="/recipe/:id/edit" element={
+                  <AuthGuard><RecipeEditorPage /></AuthGuard>
                 } />
                 <Route path="/profile" element={
                   <AuthGuard><ProfilePage /></AuthGuard>
