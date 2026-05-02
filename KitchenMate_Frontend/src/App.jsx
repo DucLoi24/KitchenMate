@@ -8,13 +8,13 @@ import { ExplorePage } from '@/pages/explore'
 import { RecipeDetailPage, RecipeEditorPage } from '@/pages/recipe'
 import { PantryPage } from '@/pages/pantry'
 import { ShoppingPage } from '@/pages/shopping'
+import { SuggestionPage } from '@/pages/suggestion'
 import { Header } from '@/components/layout'
 import { Sidebar } from '@/components/layout'
 import { BottomNav } from '@/components/layout'
 import { useState } from 'react'
 
 // Lazy load pages for performance
-const SuggestPage = () => <div className="p-6 text-[var(--color-text)]">Gợi ý món ăn - Cần đăng nhập</div>
 const CollectionsPage = () => <div className="p-6 text-[var(--color-text)]">Bộ sưu tập - Cần đăng nhập</div>
 
 function App() {
@@ -50,7 +50,7 @@ function App() {
                   <AuthGuard><ShoppingPage /></AuthGuard>
                 } />
                 <Route path="/suggest" element={
-                  <AuthGuard><SuggestPage /></AuthGuard>
+                  <AuthGuard><SuggestionPage /></AuthGuard>
                 } />
                 <Route path="/collections" element={
                   <AuthGuard><CollectionsPage /></AuthGuard>

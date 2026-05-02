@@ -83,7 +83,11 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
 
     recipes = Recipe.objects.filter(
         visibility='PUBLIC'
-    ).select_related('user').prefetch_related('recipe_ingredients__ingredient')
+    ).select_related('user').prefetch_related(
+        'recipe_ingredients__ingredient',
+        'categories',
+        'steps'
+    )
 
     if exclude_ingredient_ids:
         recipes = recipes.exclude(

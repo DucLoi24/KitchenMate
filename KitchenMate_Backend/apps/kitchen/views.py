@@ -312,7 +312,7 @@ class RecommendationView(APIView):
             400: mode không hợp lệ (không phải COOK_NOW hoặc ADD_MORE).
         """
         from apps.kitchen.services.recommendation_engine import get_recommendations
-        from apps.recipes.serializers import RecipeListSerializer
+        from apps.recipes.serializers import RecipeDetailSerializer
 
         mode = request.data.get('mode')
         if mode not in ('COOK_NOW', 'ADD_MORE'):
@@ -327,7 +327,7 @@ class RecommendationView(APIView):
         data = []
         for item in results:
             data.append({
-                'recipe': RecipeListSerializer(item['recipe']).data,
+                'recipe': RecipeDetailSerializer(item['recipe'], context={'request': request}).data,
                 'score': item['score'],
                 'missing_ingredients': item['missing_ingredients'],
             })
