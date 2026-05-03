@@ -105,6 +105,7 @@ class ReviewViewSet(viewsets.GenericViewSet,
 class CollectionViewSet(viewsets.GenericViewSet,
                         mixins.ListModelMixin,
                         mixins.CreateModelMixin,
+                        mixins.RetrieveModelMixin,
                         mixins.DestroyModelMixin):
     """
     ViewSet quản lý bộ sưu tập công thức (Collection) của user.
@@ -157,8 +158,64 @@ class CollectionViewSet(viewsets.GenericViewSet,
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
+        if instance.is_favorites:
+            return Response(
+                {'success': False, 'error': {'message': 'Khong the xoa danh sach Yeu thich.'}},
+                status=status.HTTP_403_FORBIDDEN
+            )
         instance.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(detail=False, methods=['post'], url_path='toggle-favorite')
+    def toggle_favorite(self, request):
+        """
+        POST /api/social/collections/toggle-favorite/
+        Toggle a recipe in/out of the user's Favorites collection.
+        Body: { "recipe_id": <uuid> }
+        Response: { "success": true, "is_favorited": true/false }
+        """
+        favorites_collection = Collection.objects.filter(
+            user=request.user, is_favorites=True
+        ).first()
+
+        if not favorites_collection:
+            return Response(
+                {'success': False, 'error': {'message': 'Khong tim thay danh sach Yeu thich.'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        recipe_id = request.data.get('recipe_id')
+        if not recipe_id:
+            return Response(
+                {'success': False, 'error': {'message': 'recipe_id la bat buoc.'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Check if recipe is already in favorites
+        exists = CollectionRecipe.objects.filter(
+            collection=favorites_collection, recipe_id=recipe_id
+        ).exists()
+
+        if exists:
+            # Remove from favorites
+            CollectionRecipe.objects.filter(
+                collection=favorites_collection, recipe_id=recipe_id
+            ).delete()
+            return Response({
+                'success': True,
+                'message': 'Da xoa khoi Yeu thich.',
+                'is_favorited': False
+            })
+        else:
+            # Add to favorites
+            CollectionRecipe.objects.create(
+                collection=favorites_collection, recipe_id=recipe_id
+            )
+            return Response({
+                'success': True,
+                'message': 'Da them vao Yeu thich.',
+                'is_favorited': True
+            }, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=['post'], url_path='add-recipe')
     def add_recipe(self, request, pk=None):

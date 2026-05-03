@@ -45,6 +45,9 @@ class Collection(models.Model):
     """
     Thư mục bộ sưu tập công thức cá nhân của người dùng.
     Ví dụ: 'Món ngon ngày Tết', 'Thực đơn giảm cân'
+
+    'Yêu thích' là collection đặc biệt được tạo tự động khi user đăng ký,
+    không thể xóa và dùng để lưu các công thức yêu thích.
     """
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -52,6 +55,10 @@ class Collection(models.Model):
         related_name='collections'
     )
     name = models.CharField(max_length=100)
+    is_favorites = models.BooleanField(
+        default=False,
+        help_text='True nếu đây là collection Yêu thích mặc định, không thể xóa'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

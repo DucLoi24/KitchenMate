@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { lazy, Suspense } from 'react'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
+import { AdminGuard } from '@/components/auth/AdminGuard'
 import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
 import { ProfilePage, PublicProfilePage } from '@/pages/profile'
 import { HomePage } from '@/pages/home'
@@ -14,8 +16,23 @@ import { Sidebar } from '@/components/layout'
 import { BottomNav } from '@/components/layout'
 import { useState } from 'react'
 
-// Lazy load pages for performance
-const CollectionsPage = () => <div className="p-6 text-[var(--color-text)]">Bộ sưu tập - Cần đăng nhập</div>
+// Lazy load collections pages
+const CollectionsPage = lazy(() => import('@/pages/collections/CollectionsPage').then(m => ({ default: m.default || m.CollectionsPage })))
+const CollectionDetailPage = lazy(() => import('@/pages/collections/CollectionDetailPage').then(m => ({ default: m.default || m.CollectionDetailPage })))
+
+// Lazy load admin pages
+const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage').then(m => ({ default: m.default || m.DashboardPage })))
+const RecipeManagementPage = lazy(() => import('@/pages/admin/RecipeManagementPage').then(m => ({ default: m.default || m.RecipeManagementPage })))
+const IngredientManagementPage = lazy(() => import('@/pages/admin/IngredientManagementPage').then(m => ({ default: m.default || m.IngredientManagementPage })))
+
+// Loading fallback
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="w-10 h-10 border-4 border-[var(--color-border)] border-t-[var(--color-primary)] rounded-full animate-spin" />
+    </div>
+  )
+}
 
 function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -53,7 +70,13 @@ function App() {
                   <AuthGuard><SuggestionPage /></AuthGuard>
                 } />
                 <Route path="/collections" element={
-                  <AuthGuard><CollectionsPage /></AuthGuard>
+                  <AuthGuard><Suspense fallback={<PageLoader />}><CollectionsPage /></Suspense></AuthGuard>
+                } />
+                <Route path="/collections/favorites" element={
+                  <AuthGuard><Suspense fallback={<PageLoader />}><CollectionDetailPage /></Suspense></AuthGuard>
+                } />
+                <Route path="/collections/:id" element={
+                  <AuthGuard><Suspense fallback={<PageLoader />}><CollectionDetailPage /></Suspense></AuthGuard>
                 } />
                 <Route path="/recipe/new" element={
                   <AuthGuard><RecipeEditorPage /></AuthGuard>
@@ -65,6 +88,17 @@ function App() {
                   <AuthGuard><ProfilePage /></AuthGuard>
                 } />
                 <Route path="/profile/:userId" element={<PublicProfilePage />} />
+
+                {/* Admin routes */}
+                <Route path="/admin" element={
+                  <AdminGuard><Suspense fallback={<PageLoader />}><DashboardPage /></Suspense></AdminGuard>
+                } />
+                <Route path="/admin/recipes" element={
+                  <AdminGuard><Suspense fallback={<PageLoader />}><RecipeManagementPage /></Suspense></AdminGuard>
+                } />
+                <Route path="/admin/ingredients" element={
+                  <AdminGuard><Suspense fallback={<PageLoader />}><IngredientManagementPage /></Suspense></AdminGuard>
+                } />
               </Routes>
             </main>
           </div>

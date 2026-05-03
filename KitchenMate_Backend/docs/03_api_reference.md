@@ -782,7 +782,7 @@ Upload ảnh cooksnap cho đánh giá.
 ---
 
 ### GET `/api/social/collections/`
-Danh sách bộ sưu tập của user hiện tại.
+Danh sách bộ sưu tập của user hiện tại (bao gồm "Yêu thích" mặc định).
 
 **Permission:** IsAuthenticated
 
@@ -795,15 +795,27 @@ Danh sách bộ sưu tập của user hiện tại.
       {
         "id": 1,
         "name": "Món ngon ngày Tết",
+        "is_favorites": false,
         "recipe_count": 5,
         "collection_recipes": [
           { "id": 1, "recipe": "uuid", "added_at": "..." }
         ],
         "created_at": "..."
+      },
+      {
+        "id": 2,
+        "name": "Yêu thích",
+        "is_favorites": true,
+        "recipe_count": 3,
+        "collection_recipes": [...],
+        "created_at": "..."
       }
     ]
   }
 }
+```
+
+- `is_favorites: true` cho collection "Yêu thích" mặc định (không thể xóa)
 ```
 
 ---
@@ -848,6 +860,50 @@ Gỡ công thức khỏi bộ sưu tập.
 Xóa bộ sưu tập (kéo theo xóa tất cả CollectionRecipe liên quan).
 
 **Permission:** IsOwner
+
+**Response 204:** No content
+
+**Response 403** (Favorites collection):
+```json
+{
+  "success": false,
+  "error": { "message": "Khong the xoa danh sach Yeu thich." }
+}
+```
+
+---
+
+### POST `/api/social/collections/toggle-favorite/`
+Toggle công thức trong danh sách "Yêu thích" của user.
+
+**Permission:** IsAuthenticated
+
+**Request Body:**
+```json
+{ "recipe_id": "uuid" }
+```
+
+**Response 200 (added):**
+```json
+{
+  "success": true,
+  "message": "Da them vao Yeu thich.",
+  "is_favorited": true
+}
+```
+
+**Response 200 (removed):**
+```json
+{
+  "success": true,
+  "message": "Da xoa khoi Yeu thich.",
+  "is_favorited": false
+}
+```
+
+**Response 404:** `{ "success": false, "error": { "message": "Khong tim thay danh sach Yeu thich." } }`
+
+**Response 400:** `{ "success": false, "error": { "message": "recipe_id la bat buoc." } }`
 
 ---
 

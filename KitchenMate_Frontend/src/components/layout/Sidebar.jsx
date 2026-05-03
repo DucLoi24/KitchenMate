@@ -32,7 +32,12 @@ const bottomNavItems = [
 
 export function Sidebar({ isOpen = true }) {
   const location = useLocation()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
+  const isAdmin = user?.is_staff || user?.is_superuser
+
+  const allNavItems = isAdmin
+    ? [...navItems, { to: '/admin', icon: Settings, label: 'Quản trị' }]
+    : navItems
 
   return (
     <motion.aside
@@ -46,7 +51,7 @@ export function Sidebar({ isOpen = true }) {
       {/* Main Navigation */}
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
         <ul className="space-y-1">
-          {navItems.map(({ to, icon: Icon, label }) => {
+          {allNavItems.map(({ to, icon: Icon, label }) => {
             const isActive = location.pathname === to ||
               (to !== '/' && location.pathname.startsWith(to))
 

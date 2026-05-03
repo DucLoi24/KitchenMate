@@ -34,10 +34,12 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 class CollectionRecipeSerializer(serializers.ModelSerializer):
     """Serializer cho CollectionRecipe (cong thuc trong bo suu tap)."""
+    recipe_thumbnail = serializers.CharField(source='recipe.thumbnail_url', read_only=True, default=None)
+    recipe_title = serializers.CharField(source='recipe.title', read_only=True)
 
     class Meta:
         model = CollectionRecipe
-        fields = ('id', 'recipe', 'added_at')
+        fields = ('id', 'recipe', 'recipe_thumbnail', 'recipe_title', 'added_at')
         read_only_fields = ('id', 'added_at')
 
 
@@ -48,5 +50,5 @@ class CollectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Collection
-        fields = ('id', 'name', 'recipe_count', 'collection_recipes', 'created_at')
+        fields = ('id', 'name', 'is_favorites', 'recipe_count', 'collection_recipes', 'created_at')
         read_only_fields = ('id', 'created_at')

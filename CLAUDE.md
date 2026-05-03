@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **KitchenMate** (2539 symbols, 4404 relationships, 83 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **KitchenMate** (2921 symbols, 5007 relationships, 87 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -206,7 +206,7 @@ src/
 - Thiết kế UI/UX phải follow frontend-design skill và design spec đã có trong TODO.md và FRONTEND_DESIGN.md
 - Dùng tiếng Việt cho tất cả UI text, labels, messages, errors
 - Responsive-first: mobile trước, desktop sau
-- **KHÔNG dùng `max-w-sm` cho dialogs/modals** — dùng `max-w-md` hoặc `max-w-lg` để tránh text bị ép chen lại
+- **KHÔNG dùng `max-w-sm`, `max-w-xs`, `max-w-md`, `max-w-lg` cho bất kỳ điều gì** — vì text bị ép chen lại
 
 ### Testing Requirements
 - **Sau khi viết xong feature hoặc fix bug, PHẢI tự test bằng một trong các cách sau:**
@@ -233,3 +233,67 @@ src/
 
 - Luôn update MEMORY khi có sự thay đổi, và luôn verify lại những thông tin mà bạn định đưa vào MEMORY. (Hoặc CLAUDE.md, AGENTS.md khi cần thiết)
 - Không được dùng Icon dạng text khi design, phải dùng của thư viện.
+
+---
+
+## Django DRF Pitfalls
+
+### ViewSet Base Class
+**Context**: Khi tạo/chỉnh sửa DRF ViewSet dùng mixins
+**Rule**: PHẢI include `viewsets.GenericViewSet` làm base class đầu tiên nếu dùng custom mixins combination. Nếu thiếu, router sẽ lỗi `AttributeError: type object 'X' has no attribute 'get_extra_actions'`
+```python
+# ĐÚNG
+class CollectionViewSet(viewsets.GenericViewSet,
+                        mixins.ListModelMixin,
+                        mixins.RetrieveModelMixin,
+                        mixins.CreateModelMixin):
+    pass
+
+# SAI - sẽ crash khi router duyệt
+class CollectionViewSet(mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        mixins.RetrieveModelMixin):
+    pass
+```
+
+### Serializer Class Order
+**Context**: Khi một serializer reference another serializer trong body
+**Rule**: Class được reference phải được define TRƯỚC class reference nó. Nếu không sẽ gây `NameError: name 'X' is not defined`
+```python
+# ĐÚNG - CollectionRecipeSerializer define trước
+class CollectionRecipeSerializer(serializers.ModelSerializer):
+    ...
+
+class CollectionSerializer(serializers.ModelSerializer):
+    collection_recipes = CollectionRecipeSerializer(...)  # OK
+
+# SAI - CollectionSerializer define trước khi CollectionRecipeSerializer tồn tại
+class CollectionSerializer(serializers.ModelSerializer):
+    collection_recipes = CollectionRecipeSerializer(...)  # NameError
+```
+
+### Pagination Response Format
+**Context**: Backend DRF pagination wrap response thành `{success, data: {count, next, previous, results}}`
+**Pattern**: Frontend phải handle cả paginated và non-paginated:
+```javascript
+const list = res.data?.results || res.data?.data || res.data || res || []
+```
+
+---
+
+## Frontend Patterns
+
+### Flattened Serializer Fields
+**Context**: Khi backend serializer flatten nested objects (VD: `recipe_thumbnail`, `recipe_title` thay vì nested `recipe.thumbnail_url`)
+**Rule**: Frontend mapping phải dùng flattened field names, KHÔNG dùng nested path
+```javascript
+// ĐÚNG
+thumbnails.map(cr => cr.recipe_thumbnail)
+
+// SAI - backend không return nested object
+cr.recipe?.thumbnail
+```
+
+### Tailwind max-w Constraints
+**Context**: Dialogs/confirmation modals với error messages
+**Rule**: KHÔNG dùng `max-w-sm`, `max-w-xs`, `max-w-md`, `max-w-lg` cho text content — gây text bị ép chen lại.

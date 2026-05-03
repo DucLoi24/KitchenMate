@@ -45,6 +45,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
     save_count = serializers.IntegerField(read_only=True, default=0)
     view_count = serializers.IntegerField(read_only=True, default=0)
     thumbnail_url = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField(read_only=True, default=False)
 
     def get_user_avatar(self, obj):
         avatar = getattr(obj.user, 'avatar', None)
@@ -78,7 +79,8 @@ class RecipeListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'user_name', 'user_avatar',
-            'categories', 'avg_rating', 'save_count', 'view_count', 'created_at'
+            'categories', 'avg_rating', 'save_count', 'view_count',
+            'is_favorited', 'created_at'
         )
 
 
@@ -102,6 +104,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
     steps = RecipeStepSerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
+    is_favorited = serializers.BooleanField(read_only=True, default=False)
 
     def get_avg_rating(self, obj):
         val = getattr(obj, 'avg_rating', None)
@@ -114,7 +117,8 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'categories',
-            'recipe_ingredients', 'steps', 'avg_rating', 'created_at', 'updated_at'
+            'recipe_ingredients', 'steps', 'avg_rating',
+            'is_favorited', 'created_at', 'updated_at'
         )
 
 

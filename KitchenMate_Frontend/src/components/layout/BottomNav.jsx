@@ -1,23 +1,31 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, Compass, PlusCircle, UtensilsCrossed, ShoppingCart, Lightbulb } from 'lucide-react'
+import { Home, Compass, PlusCircle, UtensilsCrossed, ShoppingCart, Lightbulb, Bookmark, Settings } from 'lucide-react'
 import { cn } from '@/components/ui/Button'
+import { useAuth } from '@/components/auth/AuthContext'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },
   { to: '/explore', icon: Compass, label: 'Khám phá' },
   { to: '/recipe/new', icon: PlusCircle, label: 'Tạo', isCreate: true },
   { to: '/pantry', icon: UtensilsCrossed, label: 'Tủ lạnh' },
+  { to: '/collections', icon: Bookmark, label: 'Bộ sưu tập' },
   { to: '/suggest', icon: Lightbulb, label: 'Gợi ý' },
 ]
 
+const adminNavItem = { to: '/admin', icon: Settings, label: 'Quản trị' }
+
 export function BottomNav() {
   const location = useLocation()
+  const { user } = useAuth()
+  const isAdmin = user?.is_staff || user?.is_superuser
+
+  const allItems = isAdmin ? [...navItems, adminNavItem] : navItems
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface)] border-t border-[var(--color-border)] safe-area-pb">
       <div className="flex items-center justify-around h-16 px-2">
-        {navItems.map(({ to, icon: Icon, label, isCreate }) => {
+        {allItems.map(({ to, icon: Icon, label, isCreate }) => {
           const isActive = location.pathname === to ||
             (to !== '/' && location.pathname.startsWith(to))
 

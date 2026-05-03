@@ -1,7 +1,7 @@
 """
 Views cho recipes app.
 """
-from django.db.models import F, Avg, Count
+from django.db.models import F, Avg, Count, Exists, OuterRef
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -15,6 +15,7 @@ from core.services.ai_moderator import moderate_text, ModerationTimeoutError, Mo
 from .models import Recipe
 from .serializers import RecipeListSerializer, RecipeDetailSerializer, RecipeCreateSerializer
 from .filters import RecipeFilter
+from apps.social.models import Collection, CollectionRecipe
 
 
 class RecipeViewSet(viewsets.GenericViewSet):
@@ -49,10 +50,24 @@ class RecipeViewSet(viewsets.GenericViewSet):
             'categories', 'recipe_ingredients__ingredient', 'steps'
         )
         if self.action in ('list', 'retrieve'):
-            return base_qs.annotate(
+            queryset = base_qs.annotate(
                 avg_rating=Coalesce(Avg('reviews__rating'), 0.0),
                 save_count=Count('saved_in_collections', distinct=True),
             )
+            # Annotate is_favorited if user is authenticated
+            if self.request.user.is_authenticated:
+                favorites_collection = Collection.objects.filter(
+                    user=self.request.user, is_favorites=True
+                ).values_list('id', flat=True)
+                queryset = queryset.annotate(
+                    is_favorited=Exists(
+                        CollectionRecipe.objects.filter(
+                            collection_id__in=favorites_collection,
+                            recipe_id=OuterRef('pk')
+                        )
+                    )
+                )
+            return queryset
         return base_qs
 
     def get_serializer_class(self):

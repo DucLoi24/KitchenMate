@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
-  Clock, Star, ChefHat, Heart, ArrowLeft, Play,
+  Clock, Star, ChefHat, Heart, ArrowLeft, Play, Library,
   ChevronLeft, ChevronRight, X, Utensils, ShoppingBasket
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -12,9 +12,12 @@ import { createPortal } from 'react-dom'
 
 import { useRecipe } from '@/hooks/useRecipes'
 import { useAddToShoppingList, useShoppingList, usePantry } from '@/hooks/useKitchen'
+import { useAuth } from '@/hooks/useAuth'
+import { socialApi } from '@/api/socialApi'
 import { Badge, Button } from '@/components/ui'
 import { cn } from '@/components/ui/Button'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
+import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 import { recipeApi } from '@/api/recipeApi'
 import { ReviewsSection } from '@/components/recipe/ReviewsSection'
 
@@ -623,18 +626,29 @@ export function RecipeDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const [isCookMode, setIsCookMode] = useState(false)
+  const [showCollectionModal, setShowCollectionModal] = useState(false)
 
   const { data, isLoading, error } = useRecipe(id)
   const addToShoppingList = useAddToShoppingList()
   const { data: shoppingData } = useShoppingList()
   const { data: pantryData } = usePantry()
+  const { isAuthenticated } = useAuth()
 
   const recipe = data?.data
   const shoppingIngredients = shoppingData?.data?.results || []
   const pantryIngredients = pantryData?.data?.results || []
 
-  const handleFavorite = () => {
-    toast('Tính năng đang phát triển', { icon: '🔧' })
+  const handleFavorite = async () => {
+    if (!isAuthenticated) {
+      // GuestCTA handled in RecipeCard context
+      return
+    }
+    try {
+      const res = await socialApi.toggleFavorite(id)
+      toast.success(res.is_favorited ? 'Đã thêm vào Yêu thích' : 'Đã xóa khỏi Yêu thích')
+    } catch {
+      toast.error('Không thể cập nhật yêu thích')
+    }
   }
 
   const handleAddToShoppingList = async (ingredient, quantity, unit) => {
@@ -735,6 +749,13 @@ export function RecipeDetailPage() {
               <span>Lưu</span>
             </button>
             <button
+              onClick={() => setShowCollectionModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] hover:bg-[var(--color-background-alt)] transition-colors"
+            >
+              <Library className="w-5 h-5" />
+              <span>Lưu vào danh sách</span>
+            </button>
+            <button
               onClick={() => setIsCookMode(true)}
               className="flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--color-secondary)] text-white hover:bg-[var(--color-secondary-light)] transition-colors"
             >
@@ -764,6 +785,12 @@ export function RecipeDetailPage() {
         recipe={recipe}
         isOpen={isCookMode}
         onClose={() => setIsCookMode(false)}
+      />
+
+      <AddToCollectionModal
+        isOpen={showCollectionModal}
+        onClose={() => setShowCollectionModal(false)}
+        recipeId={id}
       />
 
       <div className="h-20 lg:h-0" />

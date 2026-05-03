@@ -9,6 +9,7 @@
 .claude
 .kiro
 .kilo
+.workflow-plan
 
 # Playwright
 .playwright-mcp
@@ -57,3 +58,4 @@ logs/
 
 # Media (user uploads)
 media/
+.specs/scratchpad/

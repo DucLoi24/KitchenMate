@@ -1,7 +1,12 @@
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Star, ChefHat, Heart } from 'lucide-react'
+import { Clock, Star, ChefHat, Heart, Library } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { cn } from '@/components/ui/Button'
+import { useAuth } from '@/hooks/useAuth'
+import { socialApi } from '@/api/socialApi'
+import { GuestCTA } from '@/components/auth/GuestCTA'
+import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 
 const difficultyConfig = {
   EASY: { label: 'Dễ', variant: 'success', icon: '🍀' },
@@ -17,6 +22,7 @@ export function RecipeCard({
   onClick,
   className,
 }) {
+  const { isAuthenticated } = useAuth()
   const {
     id,
     title,
@@ -27,9 +33,56 @@ export function RecipeCard({
     avg_rating,
     save_count,
     is_favorited,
+    is_in_collection,
   } = recipe
 
+  const [favorited, setFavorited] = useState(!!is_favorited)
+  const [inCollection, setInCollection] = useState(!!is_in_collection)
+  const [showGuestCTA, setShowGuestCTA] = useState(false)
+  const [showCollectionModal, setShowCollectionModal] = useState(false)
+  const [toast, setToast] = useState('')
+  const debounceRef = useRef(null)
+
+  // Sync state when prop changes (e.g., after page refresh)
+  useEffect(() => {
+    setFavorited(!!is_favorited)
+  }, [is_favorited])
+
+  useEffect(() => {
+    setInCollection(!!is_in_collection)
+  }, [is_in_collection])
+
   const difficultyInfo = difficultyConfig[difficulty] || difficultyConfig.MEDIUM
+
+  const handleFavoriteToggle = useCallback(async () => {
+    if (debounceRef.current) return
+    debounceRef.current = setTimeout(() => { debounceRef.current = null }, 300)
+
+    if (!isAuthenticated) {
+      setShowGuestCTA(true)
+      return
+    }
+
+    // Optimistic UI
+    const prev = favorited
+    setFavorited(!prev)
+
+    try {
+      const res = await socialApi.toggleFavorite(id)
+      setFavorited(res.is_favorited)
+    } catch {
+      // Revert on failure
+      setFavorited(prev)
+    }
+  }, [isAuthenticated, favorited, id])
+
+  const handleCollectionToggle = useCallback(() => {
+    if (!isAuthenticated) {
+      setShowGuestCTA(true)
+      return
+    }
+    setShowCollectionModal(true)
+  }, [isAuthenticated])
 
   return (
     <motion.article
@@ -71,24 +124,45 @@ export function RecipeCard({
           </Badge>
         </div>
 
-        {/* Favorite Button */}
+        {/* Action Buttons (Heart + Collection) */}
         {showFavoriteButton && (
-          <motion.button
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={(e) => {
-              e.stopPropagation()
-              // Handle favorite toggle
-            }}
-            className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
-          >
-            <Heart
-              className={cn(
-                'w-4 h-4 transition-colors',
-                is_favorited ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'
-              )}
-            />
-          </motion.button>
+          <div className="absolute top-3 right-3 flex gap-2">
+            {/* Favorite (Heart) Button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleFavoriteToggle()
+              }}
+              className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
+            >
+              <Heart
+                className={cn(
+                  'w-4 h-4 transition-colors',
+                  favorited ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'
+                )}
+              />
+            </motion.button>
+
+            {/* Collection Button */}
+            <motion.button
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              onClick={(e) => {
+                e.stopPropagation()
+                handleCollectionToggle()
+              }}
+              className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
+            >
+              <Library
+                className={cn(
+                  'w-4 h-4 transition-colors',
+                  inCollection ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400 hover:text-yellow-500'
+                )}
+              />
+            </motion.button>
+          </div>
         )}
       </div>
 
@@ -149,6 +223,21 @@ export function RecipeCard({
           </div>
         )}
       </div>
+
+      {/* Guest CTA Modal */}
+      {showGuestCTA && (
+        <GuestCTA
+          context="collections"
+          onClose={() => setShowGuestCTA(false)}
+        />
+      )}
+
+      {/* Add to Collection Modal */}
+      <AddToCollectionModal
+        isOpen={showCollectionModal}
+        onClose={() => setShowCollectionModal(false)}
+        recipeId={id}
+      />
     </motion.article>
   )
 }

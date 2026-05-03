@@ -32,6 +32,15 @@ export const socialApi = {
     return data
   },
 
+  // Favorites toggle (POST /api/social/collections/toggle-favorite/)
+  toggleFavorite: async (recipeId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post('/social/collections/toggle-favorite/', {
+      recipe_id: recipeId,
+    })
+    return data
+  },
+
   // Collections
   getCollections: async () => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
@@ -45,10 +54,31 @@ export const socialApi = {
     return data
   },
 
+  deleteCollection: async (collectionId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.delete(`/social/collections/${collectionId}/`)
+    return data
+  },
+
+  // Collection detail (GET /api/social/collections/{id}/)
+  getCollectionDetail: async (collectionId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/social/collections/${collectionId}/`)
+    return data
+  },
+
   addToCollection: async (collectionId, recipeId) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post(`/social/collections/${collectionId}/add-recipe/`, {
       recipe_id: recipeId,
+    })
+    return data
+  },
+
+  removeFromCollection: async (collectionId, recipeId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.delete(`/social/collections/${collectionId}/remove-recipe/`, {
+      data: { recipe_id: recipeId },
     })
     return data
   },

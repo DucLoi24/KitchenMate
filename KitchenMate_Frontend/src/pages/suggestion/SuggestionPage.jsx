@@ -929,6 +929,7 @@ export default function SuggestionPage() {
                   missingIngredients={item.missing_ingredients}
                   onClick={() => handleRecipeClick(item.recipe, item.score, item.missing_ingredients)}
                   index={index}
+                  showFavoriteButton
                 />
               ))}
             </motion.div>

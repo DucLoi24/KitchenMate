@@ -346,6 +346,7 @@ export function ExplorePage() {
                 hasNextPage={hasNextPage}
                 fetchNextPage={fetchNextPage}
                 onRecipeClick={handleRecipeClick}
+                showFavoriteButton
               />
             )}
           </div>

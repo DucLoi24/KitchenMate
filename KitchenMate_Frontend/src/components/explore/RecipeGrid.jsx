@@ -30,6 +30,7 @@ export function RecipeGrid({
   hasNextPage,
   fetchNextPage,
   onRecipeClick,
+  showFavoriteButton = false,
   className
 }) {
   const loadMoreRef = useRef(null)
@@ -78,6 +79,7 @@ export function RecipeGrid({
           >
             <RecipeCard
               recipe={recipe}
+              showFavoriteButton={showFavoriteButton}
               onClick={() => onRecipeClick(recipe)}
             />
           </motion.div>
