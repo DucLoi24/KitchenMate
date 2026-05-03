@@ -16,6 +16,7 @@ import { Badge, Button } from '@/components/ui'
 import { cn } from '@/components/ui/Button'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { recipeApi } from '@/api/recipeApi'
+import { ReviewsSection } from '@/components/recipe/ReviewsSection'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -365,25 +366,6 @@ function StepsList({ steps }) {
           </li>
         ))}
       </ol>
-    </div>
-  )
-}
-
-function CommentsPlaceholder() {
-  return (
-    <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-6 border border-[var(--color-border)]">
-      <h2 className="font-display text-xl font-semibold text-[var(--color-text)] mb-4">
-        Bình luận
-      </h2>
-      <div className="flex flex-col items-center justify-center py-8 text-center">
-        <div className="w-16 h-16 rounded-full bg-[var(--color-background-alt)] flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-[var(--color-text-muted)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-          </svg>
-        </div>
-        <p className="text-[var(--color-text-secondary)]">Bình luận đang được phát triển</p>
-        <p className="text-sm text-[var(--color-text-muted)] mt-1">Sẽ có sớm thôi!</p>
-      </div>
     </div>
   )
 }
@@ -771,7 +753,7 @@ export function RecipeDetailPage() {
           </div>
 
           <div className="mt-8">
-            <CommentsPlaceholder />
+            <ReviewsSection recipeId={recipe.id} />
           </div>
         </motion.div>
 

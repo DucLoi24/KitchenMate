@@ -1,4 +1,38 @@
 export const socialApi = {
+  // Reviews for a recipe
+  getReviews: async (recipeId, page = 1) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/social/recipes/${recipeId}/reviews/`, {
+      params: { page },
+    })
+    return data
+  },
+
+  getMyReviewForRecipe: async (recipeId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/social/recipes/${recipeId}/reviews/`)
+    return data
+  },
+
+  postReview: async (recipeId, reviewData) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/social/recipes/${recipeId}/reviews/`, reviewData)
+    return data
+  },
+
+  updateReview: async (reviewId, reviewData) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.patch(`/social/reviews/${reviewId}/update/`, reviewData)
+    return data
+  },
+
+  deleteReview: async (reviewId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.delete(`/social/reviews/${reviewId}/delete/`)
+    return data
+  },
+
+  // Collections
   getCollections: async () => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.get('/social/collections/')
@@ -19,18 +53,14 @@ export const socialApi = {
     return data
   },
 
-  postReview: async (recipeId, reviewData) => {
-    const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.post(`/social/recipes/${recipeId}/reviews/`, reviewData)
-    return data
-  },
-
   uploadCooksnap: async (reviewId, imageFile) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const formData = new FormData()
-    formData.append('image', imageFile)
+    formData.append('file', imageFile)
     const { data } = await axiosInstance.post(`/social/reviews/${reviewId}/cooksnap/`, formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
     })
     return data
   },

@@ -1,4 +1,7 @@
 export { RecipeCard } from './RecipeCard'
 export { RecipeCardSkeleton } from './RecipeCardSkeleton'
+export { ReviewList } from './ReviewList'
+export { ReviewForm } from './ReviewForm'
+export { ReviewsSection } from './ReviewsSection'
 export { default as RecipeCardDefault } from './RecipeCard'
 export { default as RecipeCardSkeletonDefault } from './RecipeCardSkeleton'

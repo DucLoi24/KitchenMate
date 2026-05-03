@@ -29,7 +29,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
         fields = ('id', 'user', 'user_name', 'recipe', 'rating', 'comment', 'cooksnap_url', 'created_at')
-        read_only_fields = ('id', 'user', 'created_at')
+        read_only_fields = ('id', 'user', 'recipe', 'created_at')
 
 
 class CollectionRecipeSerializer(serializers.ModelSerializer):
