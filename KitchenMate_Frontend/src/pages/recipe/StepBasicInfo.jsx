@@ -3,7 +3,6 @@ import { motion } from 'framer-motion'
 import { Input } from '@/components/ui/Input'
 import { ChefHat, Clock, BookOpen, Upload, X } from 'lucide-react'
 import { DIFFICULTY_CONFIG } from '@/hooks/useRecipeDraft'
-import { recipeApi } from '@/api/recipeApi'
 import toast from 'react-hot-toast'
 
 const containerVariants = {
@@ -20,9 +19,7 @@ const itemVariants = {
 }
 
 export function StepBasicInfo({ data, onChange, errors = {} }) {
-  const [isUploading, setIsUploading] = useState(false)
   const [dragActive, setDragActive] = useState(false)
-  const [pendingFile, setPendingFile] = useState(null)
   const inputRef = useRef(null)
 
   const handleChange = (field) => (e) => {
@@ -44,7 +41,6 @@ export function StepBasicInfo({ data, onChange, errors = {} }) {
 
     // Create local preview immediately
     const localPreview = URL.createObjectURL(file)
-    setPendingFile(file)
     onChange((prev) => ({ ...prev, thumbnail_url: localPreview, thumbnail_file: file }))
     toast.success('Đã chọn ảnh. Ảnh sẽ được upload khi lưu công thức.')
   }
@@ -78,7 +74,6 @@ export function StepBasicInfo({ data, onChange, errors = {} }) {
 
   const handleRemoveThumbnail = () => {
     onChange((prev) => ({ ...prev, thumbnail_url: '', thumbnail_file: null }))
-    setPendingFile(null)
   }
 
   return (

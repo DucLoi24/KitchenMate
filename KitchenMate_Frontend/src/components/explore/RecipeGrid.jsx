@@ -5,13 +5,7 @@ import { cn } from '@/utils'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { RecipeCardSkeleton } from '@/components/recipe/RecipeCardSkeleton'
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-}
+// Skeleton card for loading state
 
 const itemVariants = {
   hidden: { opacity: 0, y: 30, scale: 0.95 },

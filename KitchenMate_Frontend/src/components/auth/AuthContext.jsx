@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useCallback } from 'react'
+import { createContext, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { authApi } from '@/api/authApi'
@@ -85,14 +85,6 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   )
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider')
-  }
-  return context
 }
 
 export default AuthContext

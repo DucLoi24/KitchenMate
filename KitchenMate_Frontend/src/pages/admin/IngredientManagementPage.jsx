@@ -10,12 +10,12 @@ import {
   ChevronRight,
   RefreshCw,
   AlertCircle,
-  Loader2,
   ThumbsUp,
   XCircle,
   Carrot,
 } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import toast from 'react-hot-toast'
+
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
@@ -109,7 +109,7 @@ function ApproveConfirmDialog({ isOpen, item, onConfirm, onCancel, loading }) {
   const handleConfirm = async () => {
     try {
       await onConfirm()
-    } catch (err) {
+    } catch {
       // Error handled by caller
     }
   }
@@ -169,7 +169,7 @@ function RejectDialog({ isOpen, item, onConfirm, onCancel, loading }) {
   const handleConfirm = async () => {
     try {
       await onConfirm(reason)
-    } catch (err) {
+    } catch {
       // Error handled by caller
     }
   }

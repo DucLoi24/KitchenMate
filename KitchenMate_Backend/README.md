@@ -268,6 +268,12 @@ Sau khi chạy server, truy cập:
 | GET | `/api/admin/recipes/` | Danh sách công thức chờ duyệt | Admin |
 | POST | `/api/admin/recipes/{id}/approve/` | Duyệt công thức | Admin |
 | POST | `/api/admin/recipes/{id}/reject/` | Từ chối công thức | Admin |
+| GET | `/api/admin/users/list/` | Danh sách tất cả người dùng | Admin |
+| POST | `/api/admin/users/{id}/block/` | Khoá tài khoản (superuser only, bao gồm session invalidation) | Superuser |
+| POST | `/api/admin/users/{id}/unblock/` | Mở khoá tài khoản | Admin |
+| POST | `/api/admin/users/{id}/set-admin/` | Phân quyền / xoá quyền admin (superuser only) | Superuser |
+
+> **Ghi chú:** `block` action yêu cầu superuser và sẽ xoá tất cả session của user bị khoá ngay lập tức. `set-admin` action chỉ superuser mới có quyền thực hiện.
 
 ---
 

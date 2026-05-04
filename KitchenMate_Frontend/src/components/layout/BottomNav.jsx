@@ -1,8 +1,8 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, Compass, PlusCircle, UtensilsCrossed, ShoppingCart, Lightbulb, Bookmark, Settings } from 'lucide-react'
-import { cn } from '@/components/ui/Button'
-import { useAuth } from '@/components/auth/AuthContext'
+import { Home, Compass, PlusCircle, UtensilsCrossed, Lightbulb, Bookmark, Settings } from 'lucide-react'
+import { cn } from '@/utils'
+import { useAuth } from '@/components/auth/useAuth'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },

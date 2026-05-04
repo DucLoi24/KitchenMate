@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Bookmark, Heart, Trash2, Loader2, RefreshCw, MoreHorizontal } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { Plus, Bookmark, Heart, Trash2, RefreshCw, MoreHorizontal } from 'lucide-react'
+import toast from 'react-hot-toast'
+
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { socialApi } from '@/api/socialApi'
@@ -113,8 +114,8 @@ function CollectionCard({ collection, onDelete }) {
       await socialApi.deleteCollection(collection.id)
       toast.success('Đã xóa danh sách')
       onDelete(collection.id)
-    } catch (err) {
-      toast.error(err?.response?.data?.error?.message || 'Không thể xóa danh sách')
+    } catch {
+      toast.error('Không thể xóa danh sách')
     }
     setShowDeleteDialog(false)
     setShowMenu(false)
@@ -327,7 +328,6 @@ function CreateCollectionDialog({ isOpen, onClose, onCreated }) {
 }
 
 export function CollectionsPage() {
-  const navigate = useNavigate()
   const [collections, setCollections] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
@@ -348,7 +348,7 @@ export function CollectionsPage() {
         return 0
       })
       setCollections(sorted)
-    } catch (err) {
+    } catch {
       setError(true)
     } finally {
       setLoading(false)

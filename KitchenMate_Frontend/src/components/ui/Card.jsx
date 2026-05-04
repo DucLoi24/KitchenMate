@@ -2,7 +2,7 @@ import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
 
-export function cn(...inputs) {
+function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
@@ -28,7 +28,6 @@ export function Card({
   hover = false,
   className,
   as = 'div',
-  whileHover,
   onClick,
   ...props
 }) {

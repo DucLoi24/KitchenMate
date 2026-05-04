@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Mail, Lock, User, ArrowRight, Check, X } from 'lucide-react'
-import { useAuth } from '@/components/auth/AuthContext'
+import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 

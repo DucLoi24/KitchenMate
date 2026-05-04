@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
-  Bell,
   Menu,
   X,
   User,
@@ -11,9 +10,8 @@ import {
   LogOut,
   ChefHat,
 } from 'lucide-react'
-import { useAuth } from '@/components/auth/AuthContext'
+import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui'
-import { cn } from '@/components/ui/Button'
 
 export function Header({ onMenuToggle, isSidebarOpen }) {
   const { user, isAuthenticated, logout } = useAuth()

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
+import { motion, useScroll, useTransform } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
@@ -12,14 +12,12 @@ import {
   Plus,
   UtensilsCrossed,
   ShoppingCart,
-  Star,
   Flame,
   Leaf,
   TrendingUp,
-  Calendar,
   Lightbulb,
 } from 'lucide-react'
-import { useAuth } from '@/components/auth/AuthContext'
+import { useAuth } from '@/components/auth/useAuth'
 import { useRecipes } from '@/hooks/useRecipes'
 import { useSuggestion } from '@/hooks/useSuggestion'
 import { usePantry } from '@/hooks/useKitchen'
@@ -27,33 +25,10 @@ import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { RecipeCardSkeleton } from '@/components/recipe/RecipeCardSkeleton'
-import { cn } from '@/components/ui/Button'
+import { cn } from '@/utils'
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger)
-
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] },
-  },
-}
-
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: 'easeOut' } },
-}
 
 // Section heading component
 function SectionHeading({ icon: Icon, title, subtitle, actionLabel, onAction }) {

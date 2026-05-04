@@ -1,10 +1,10 @@
-import { useState, useMemo, useCallback, useEffect } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { suggestionApi } from '@/api/suggestionApi'
 import { shoppingListApi, pantryApi } from '@/api/kitchenApi'
-import { Clock, Flame, Plus, X, ChevronLeft, ChevronRight, AlertCircle, ShoppingCart, UtensilsCrossed, ChefHat, Search, Sparkles } from 'lucide-react'
+import { Clock, Flame, Plus, X, AlertCircle, ShoppingCart, ChefHat, Search, Sparkles } from 'lucide-react'
 
 // Animation variants for staggered reveal
 const containerVariants = {
@@ -14,18 +14,6 @@ const containerVariants = {
     transition: {
       staggerChildren: 0.08,
       delayChildren: 0.1,
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { opacity: 0, y: 20 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.5,
-      ease: [0.25, 0.46, 0.45, 0.94],
     },
   },
 }
@@ -85,68 +73,6 @@ function SegmentedControl({ mode, onModeChange }) {
           <span className="text-white font-semibold">Thêm chút nữa</span>
         )}
       </button>
-    </div>
-  )
-}
-
-// Cook Time Filter Component
-function CookTimeFilter({ value, onChange }) {
-  const options = [
-    { label: 'Tất cả', value: null },
-    { label: '< 15 phút', value: 'lt15' },
-    { label: '15-30 phút', value: '15-30' },
-    { label: '30-60 phút', value: '30-60' },
-    { label: '> 60 phút', value: 'gt60' },
-  ]
-
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      {options.map((option, index) => (
-        <motion.button
-          key={option.value || 'all'}
-          onClick={() => onChange(option.value)}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 }}
-          className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all duration-200 ${
-            value === option.value
-              ? 'bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-primary-light)] text-white shadow-md'
-              : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)] hover:shadow-sm'
-          }`}
-        >
-          {option.label}
-        </motion.button>
-      ))}
-    </div>
-  )
-}
-
-// Category Filter Component
-function CategoryFilter({ selected, onChange, categories }) {
-  return (
-    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-      {categories.map((cat, index) => (
-        <motion.button
-          key={cat.id}
-          onClick={() => {
-            if (selected.includes(cat.id)) {
-              onChange(selected.filter((id) => id !== cat.id))
-            } else {
-              onChange([...selected, cat.id])
-            }
-          }}
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: index * 0.03 }}
-          className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-all duration-200 ${
-            selected.includes(cat.id)
-              ? 'bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-light)] text-white shadow-md'
-              : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] hover:bg-[var(--color-border)]'
-          }`}
-        >
-          {cat.name}
-        </motion.button>
-      ))}
     </div>
   )
 }
@@ -241,12 +167,12 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
 }
 
 // Recipe Card Component
-function RecipeCard({ recipe, score, missingIngredients, onClick, index }) {
+function RecipeCard({ recipe, score, missingIngredients, onClick }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.06, duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
@@ -264,7 +190,7 @@ function RecipeCard({ recipe, score, missingIngredients, onClick, index }) {
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: index * 0.06 + 0.3, type: 'spring', stiffness: 300 }}
+          transition={{ type: 'spring', stiffness: 300 }}
           className="absolute top-3 right-3 px-3 py-1.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-dark)] text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-1"
         >
           <Sparkles className="w-3.5 h-3.5" />
@@ -290,56 +216,6 @@ function RecipeCard({ recipe, score, missingIngredients, onClick, index }) {
           </div>
         )}
       </div>
-    </motion.div>
-  )
-}
-
-// Pagination Component
-function Pagination({ currentPage, totalPages, onPageChange }) {
-  if (totalPages <= 1) return null
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ delay: 0.3 }}
-      className="flex items-center justify-center gap-2 mt-10"
-    >
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-surface)] shadow-sm flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-border)] transition-colors"
-      >
-        <ChevronLeft className="w-5 h-5" />
-      </motion.button>
-      <div className="flex items-center gap-1">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-          <motion.button
-            key={page}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={() => onPageChange(page)}
-            className={`w-10 h-10 rounded-[var(--radius-md)] text-sm font-semibold transition-all ${
-              page === currentPage
-                ? 'bg-gradient-to-br from-[var(--color-primary)] to-[var(--color-primary-dark)] text-white shadow-md'
-                : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] shadow-sm hover:bg-[var(--color-border)]'
-            }`}
-          >
-            {page}
-          </motion.button>
-        ))}
-      </div>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-surface)] shadow-sm flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed hover:bg-[var(--color-border)] transition-colors"
-      >
-        <ChevronRight className="w-5 h-5" />
-      </motion.button>
     </motion.div>
   )
 }
@@ -461,7 +337,7 @@ function RecipeBottomSheet({ recipe, score, missingIngredients, onClose, onViewD
                 Các bước thực hiện
               </h4>
               <ol className="space-y-3">
-                {recipe.steps.map((step, index) => (
+                {recipe.steps.map((step) => (
                   <li key={step.id} className="flex gap-3 p-3 bg-[var(--color-background-alt)] rounded-lg">
                     <span className="flex-shrink-0 w-6 h-6 bg-[var(--color-secondary)] text-white rounded-full flex items-center justify-center text-xs font-bold">
                       {step.step_number}
@@ -546,7 +422,7 @@ function AddToShoppingModal({ missingIngredients, onClose, onSuccess }) {
         })),
       })
       onSuccess()
-    } catch (err) {
+    } catch {
       setError('Không thể thêm vào danh sách. Vui lòng thử lại.')
     } finally {
       setIsSubmitting(false)
@@ -806,7 +682,6 @@ export default function SuggestionPage() {
   })
 
   const recipes = data?.data || []
-  const pagination = data?.pagination || { current_page: 1, total_pages: 1 }
 
   const isPantryEmpty = !pantryData || pantryData.length === 0
 
@@ -921,14 +796,13 @@ export default function SuggestionPage() {
               animate="visible"
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
             >
-              {recipes.map((item, index) => (
+              {recipes.map((item) => (
                 <RecipeCard
                   key={item.recipe.id}
                   recipe={item.recipe}
                   score={item.score}
                   missingIngredients={item.missing_ingredients}
                   onClick={() => handleRecipeClick(item.recipe, item.score, item.missing_ingredients)}
-                  index={index}
                   showFavoriteButton
                 />
               ))}

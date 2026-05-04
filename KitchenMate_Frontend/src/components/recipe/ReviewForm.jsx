@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Camera, X, Loader2 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { StarRatingInput } from '@/components/ui/StarRatingInput'
-import { cn } from '@/components/ui/Button'
+import { cn } from '@/utils'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']

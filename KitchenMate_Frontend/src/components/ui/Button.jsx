@@ -3,6 +3,10 @@ import { twMerge } from 'tailwind-merge'
 import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 
+function cn(...inputs) {
+  return twMerge(clsx(inputs))
+}
+
 const buttonVariants = {
   base: 'inline-flex items-center justify-center gap-2 font-medium rounded-[var(--radius-md)] transition-all duration-[var(--transition-base)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
   variants: {
@@ -19,10 +23,6 @@ const buttonVariants = {
     lg: 'h-12 px-8 text-lg',
     icon: 'h-10 w-10',
   },
-}
-
-export function cn(...inputs) {
-  return twMerge(clsx(inputs))
 }
 
 export function Button({

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Loader2, Check, Bookmark, AlertCircle } from 'lucide-react'
+import { X, Plus, Check, Bookmark, AlertCircle } from 'lucide-react'
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { socialApi } from '@/api/socialApi'
@@ -25,24 +25,22 @@ export function AddToCollectionModal({
   // Fetch collections when modal opens
   useEffect(() => {
     if (isOpen && user) {
+      const fetchCollections = async () => {
+        setLoading(true)
+        setError('')
+        try {
+          const res = await socialApi.getCollections()
+          const list = res.data?.results || res.data?.data || res.data || res || []
+          setCollections(list.filter(c => !c.is_favorites))
+        } catch {
+          setError('Không thể tải danh sách bộ sưu tập')
+        } finally {
+          setLoading(false)
+        }
+      }
       fetchCollections()
     }
   }, [isOpen, user])
-
-  const fetchCollections = async () => {
-    setLoading(true)
-    setError('')
-    try {
-      const res = await socialApi.getCollections()
-      const list = res.data?.results || res.data?.data || res.data || res || []
-      // Filter out favorites from custom collections list
-      setCollections(list.filter(c => !c.is_favorites))
-    } catch (err) {
-      setError('Không thể tải danh sách bộ sưu tập')
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleToggleCollection = async (collection, isInCollection) => {
     if (submitting) return
@@ -63,10 +61,10 @@ export function AddToCollectionModal({
         await socialApi.addToCollection(collection.id, recipeId)
         setToast(`Đã thêm vào "${collection.name}"`)
       }
-    } catch (err) {
+    } catch {
       // Revert on failure
       setCollections(prevCollections)
-      setError(err?.response?.data?.error?.message || 'Không thể cập nhật danh sách')
+      setError('Không thể cập nhật danh sách')
     } finally {
       setSubmitting(false)
       setTimeout(() => setToast(''), 2000)

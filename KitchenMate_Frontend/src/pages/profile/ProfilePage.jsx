@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Camera, User, Mail, BookOpen, FolderOpen, Save, X } from 'lucide-react'
-import { useAuth } from '@/components/auth/AuthContext'
+import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'

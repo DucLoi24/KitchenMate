@@ -6,7 +6,7 @@ import { Pencil, Trash2, ChevronLeft, ChevronRight, MessageCircle } from 'lucide
 import { toast } from 'react-hot-toast'
 import { StarRatingDisplay } from '@/components/ui/StarRatingInput'
 import { socialApi } from '@/api/socialApi'
-import { cn } from '@/components/ui/Button'
+import { cn } from '@/utils'
 
 function formatDate(dateString) {
   if (!dateString) return ''

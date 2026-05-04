@@ -10,12 +10,11 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Loader2, Construction } from 'lucide-react'
-import { toast } from 'react-hot-toast'
+import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Construction } from 'lucide-react'
+
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { adminApi } from '@/api/adminApi'
+import { UserGrowthChart, RecipeSubmissionsChart, TotalViewsChart } from '@/components/admin/charts'
 
 // Stat card colors
 const STAT_COLORS = {
@@ -155,22 +154,23 @@ export function DashboardPage() {
   const [error, setError] = useState(null)
   const [stats, setStats] = useState(null)
   const [backendAvailable, setBackendAvailable] = useState(true)
+  const [chartData, setChartData] = useState({ user_growth: [], recipe_submissions: [], total_views: [] })
+  const [chartsLoading, setChartsLoading] = useState(false)
+  const [chartsError, setChartsError] = useState(null)
 
   const fetchStats = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      // Note: GET /api/admin/dashboard/stats/ is MISSING in backend
-      // Use individual endpoints with Promise.allSettled for graceful partial failure
       const { adminApi: api } = await import('@/api/adminApi')
 
       const results = await Promise.allSettled([
-        api.getUsers({ page_size: 1 }),           // user count
-        api.getRecipeAll({ page_size: 1 }),      // recipe count
-        api.getRecipePending({ page_size: 1 }),  // pending recipe count
-        api.getIngredientAll({ page_size: 1 }),  // ingredient count
-        api.getIngredientPending({ page_size: 1 }), // pending ingredient count
+        api.getUsers({ page_size: 1 }),
+        api.getRecipeAll({ page_size: 1 }),
+        api.getRecipePending({ page_size: 1 }),
+        api.getIngredientAll({ page_size: 1 }),
+        api.getIngredientPending({ page_size: 1 }),
       ])
 
       const [usersRes, recipesRes, pendingRecipesRes, ingredientsRes, pendingIngredientsRes] = results
@@ -197,8 +197,30 @@ export function DashboardPage() {
     }
   }
 
+  const fetchCharts = async () => {
+    setChartsLoading(true)
+    setChartsError(null)
+    try {
+      const { adminApi: api } = await import('@/api/adminApi')
+      const response = await api.getCharts(7)
+      if (response?.success && response?.data) {
+        setChartData({
+          user_growth: response.data.user_growth || [],
+          recipe_submissions: response.data.recipe_submissions || [],
+          total_views: response.data.total_views || [],
+        })
+      }
+    } catch (err) {
+      console.error('Failed to fetch chart data:', err)
+      setChartsError(err?.message || 'Không thể tải dữ liệu biểu đồ')
+    } finally {
+      setChartsLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchStats()
+    fetchCharts()
   }, [])
 
   // Render fallback if backend feature is missing
@@ -263,6 +285,15 @@ export function DashboardPage() {
         )}
       </div>
 
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mt-8">
+        <UserGrowthChart data={chartData.user_growth} loading={chartsLoading} error={chartsError} onRetry={fetchCharts} />
+        <TotalViewsChart data={chartData.total_views} loading={chartsLoading} error={chartsError} onRetry={fetchCharts} />
+      </div>
+      <div className="mt-4">
+        <RecipeSubmissionsChart data={chartData.recipe_submissions} loading={chartsLoading} error={chartsError} onRetry={fetchCharts} />
+      </div>
+
       {/* Quick Actions Section */}
       <div className="mt-8">
         <h2 className="font-display text-lg font-semibold text-[var(--color-text)] mb-4">
@@ -280,6 +311,12 @@ export function DashboardPage() {
             description="Duyệt hoặc từ chối nguyên liệu mới"
             icon={Carrot}
             to="/admin/ingredients"
+          />
+          <QuickActionCard
+            title="Quản lý người dùng"
+            description="Xem và quản lý tài khoản người dùng"
+            icon={Users}
+            to="/admin/users"
           />
         </div>
       </div>

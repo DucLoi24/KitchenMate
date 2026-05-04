@@ -5,20 +5,18 @@ import { toast } from 'react-hot-toast'
 import { ReviewForm } from './ReviewForm'
 import { ReviewList } from './ReviewList'
 import { socialApi } from '@/api/socialApi'
-import { useAuth } from '@/components/auth/AuthContext'
+import { useAuth } from '@/components/auth/useAuth'
 
 export function ReviewsSection({ recipeId }) {
   const { user, isAuthenticated } = useAuth()
   const [reviews, setReviews] = useState([])
   const [pagination, setPagination] = useState(null)
   const [myReview, setMyReview] = useState(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
 
   const fetchReviews = useCallback(async (page = 1) => {
     try {
-      setIsLoading(true)
       const response = await socialApi.getReviews(recipeId, page)
       const reviewList = response.data?.results || response.data || []
 
@@ -34,8 +32,6 @@ export function ReviewsSection({ recipeId }) {
       }
     } catch (err) {
       console.error('Failed to fetch reviews:', err)
-    } finally {
-      setIsLoading(false)
     }
   }, [recipeId])
 

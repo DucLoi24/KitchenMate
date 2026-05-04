@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **KitchenMate** (2921 symbols, 5007 relationships, 87 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **KitchenMate** (3152 symbols, 5316 relationships, 90 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -158,6 +158,37 @@ src/
 
 ---
 
+### Admin Panel Security Rules
+**Context**: When implementing admin actions that perform privileged operations
+**Rule**:
+- Class-level `IsAdminUser` permission only checks `is_staff` — NOT sufficient for superuser-level operations
+- Actions like block(), session invalidation, or role changes MUST have explicit `if not request.user.is_superuser: return Response(..., status=403)` at method start
+- Session invalidation on admin removal (set_admin with is_admin=False) must use same pattern as block() action
+```python
+# Correct approach - explicit superuser check at method level
+@action(detail=True, methods=['post'])
+def block(self, request, pk=None):
+    if not request.user.is_superuser:
+        return Response({'detail': 'Bạn không có quyền thực hiện'}, status=403)
+    # ... rest of implementation
+```
+**Avoid**: Relying only on class-level permission_classes for sensitive operations — is_staff users can access class-level permission but should not perform superuser actions
+
+### Transaction Atomicity for Multi-Step Operations
+**Context**: When combining state changes (user.is_active=False) with side effects (session deletion)
+**Pattern**:
+```python
+from django.db import transaction
+
+with transaction.atomic():
+    user.is_active = False
+    user.save(update_fields=['is_active'])
+    # session invalidation loop
+```
+**Why**: If session deletion fails partway, user is deactivated but remains logged in
+
+---
+
 ## Key Technical Constraints
 
 - **Database**: PostgreSQL 14+ bắt buộc (không dùng SQLite)
@@ -281,6 +312,22 @@ const list = res.data?.results || res.data?.data || res.data || res || []
 
 ---
 
+### Frontend API Query Parameter Types
+**Context**: When passing filter parameters to Django REST Framework backend
+**Rule**: Always use boolean literals (false/true), NOT string literals ('false'/'true')
+```javascript
+// CORRECT - boolean literal
+params.is_active = false
+params.is_staff = true
+
+// WRONG - string literal (filter will be ignored)
+params.is_active = 'false'  // becomes truthy string 'false'
+params.is_staff = 'true'     // becomes truthy string 'true'
+```
+**Why**: DRF boolean filters treat string 'false' as truthy, so filtering breaks silently
+
+---
+
 ## Frontend Patterns
 
 ### Flattened Serializer Fields
@@ -293,6 +340,21 @@ thumbnails.map(cr => cr.recipe_thumbnail)
 // SAI - backend không return nested object
 cr.recipe?.thumbnail
 ```
+
+### Serializer Field Exposure
+**Context**: Sensitive fields like is_superuser should not be in UserSerializer
+**Rule**: Only expose is_superuser in dedicated admin serializers, never in general UserSerializer
+```python
+# UserSerializer - public API
+fields = ('id', 'email', 'full_name', 'avatar_url', 'bio', 'created_at', 'is_staff', 'is_active')
+# NOTE: is_superuser intentionally excluded
+
+# AdminUserSerializer - admin panel only
+fields = ('id', 'email', 'full_name', 'is_staff', 'is_superuser', 'is_active', ...)
+```
+**Why**: Exposing is_superuser to all API consumers is unnecessary and creates security risk if API is used by third parties
+
+---
 
 ### Tailwind max-w Constraints
 **Context**: Dialogs/confirmation modals với error messages

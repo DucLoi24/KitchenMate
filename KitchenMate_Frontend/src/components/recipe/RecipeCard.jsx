@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Star, ChefHat, Heart, Library } from 'lucide-react'
+import { Clock, Star, Heart, Library } from 'lucide-react'
 import { Badge } from '@/components/ui'
-import { cn } from '@/components/ui/Button'
+import { cn } from '@/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { socialApi } from '@/api/socialApi'
 import { GuestCTA } from '@/components/auth/GuestCTA'
@@ -40,7 +40,6 @@ export function RecipeCard({
   const [inCollection, setInCollection] = useState(!!is_in_collection)
   const [showGuestCTA, setShowGuestCTA] = useState(false)
   const [showCollectionModal, setShowCollectionModal] = useState(false)
-  const [toast, setToast] = useState('')
   const debounceRef = useRef(null)
 
   // Sync state when prop changes (e.g., after page refresh)

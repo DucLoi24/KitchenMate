@@ -19,7 +19,7 @@ const inputVariants = {
   },
 }
 
-export function cn(...inputs) {
+function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 

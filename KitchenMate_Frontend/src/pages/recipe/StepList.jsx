@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion, AnimatePresence, Reorder } from 'framer-motion'
-import { Plus, Trash2, GripVertical, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react'
+import { Plus, Trash2, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/utils'
 
 export function StepList({ steps = [], onChange, errors = {} }) {

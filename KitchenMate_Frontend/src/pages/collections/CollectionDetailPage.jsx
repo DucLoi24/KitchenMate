@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Trash2, Loader2, RefreshCw, Bookmark, Heart, Share2 } from 'lucide-react'
+import { ArrowLeft, Trash2, RefreshCw, Bookmark, Heart } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { socialApi } from '@/api/socialApi'
@@ -140,14 +139,10 @@ export function CollectionDetailPage() {
       await socialApi.deleteCollection(id)
       toast.success('Đã xóa danh sách')
       navigate('/collections')
-    } catch (err) {
-      toast.error(err?.response?.data?.error?.message || 'Không thể xóa danh sách')
+    } catch {
+      toast.error('Không thể xóa danh sách')
     }
     setShowDeleteDialog(false)
-  }
-
-  const handleRecipeDeleted = () => {
-    loadCollection(id)
   }
 
   if (loading) return <LoadingSkeleton />

@@ -1,5 +1,5 @@
 import { Star } from 'lucide-react'
-import { cn } from './Button'
+import { cn } from '@/utils'
 
 const sizes = {
   sm: { star: 'w-4 h-4', gap: 'gap-0.5' },
@@ -15,12 +15,6 @@ export function StarRatingInput({
   showError = false,
 }) {
   const { star: starSize, gap } = sizes[size] || sizes.md
-
-  const handleClick = (rating) => {
-    if (!readonly && onChange) {
-      onChange(rating)
-    }
-  }
 
   return (
     <div className="flex flex-col gap-1">

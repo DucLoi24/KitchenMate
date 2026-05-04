@@ -10,10 +10,9 @@ import {
   Bookmark,
   User,
   Settings,
-  HelpCircle,
 } from 'lucide-react'
-import { useAuth } from '@/components/auth/AuthContext'
-import { cn } from '@/components/ui/Button'
+import { useAuth } from '@/components/auth/useAuth'
+import { cn } from '@/utils'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },

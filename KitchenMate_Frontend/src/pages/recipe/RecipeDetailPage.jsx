@@ -15,7 +15,7 @@ import { useAddToShoppingList, useShoppingList, usePantry } from '@/hooks/useKit
 import { useAuth } from '@/hooks/useAuth'
 import { socialApi } from '@/api/socialApi'
 import { Badge, Button } from '@/components/ui'
-import { cn } from '@/components/ui/Button'
+import { cn } from '@/utils'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 import { recipeApi } from '@/api/recipeApi'

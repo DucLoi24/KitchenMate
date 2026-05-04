@@ -2,7 +2,6 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { ChefHat, Lock, UtensilsCrossed, ShoppingCart, Lightbulb, Bookmark, User } from 'lucide-react'
 import { Button } from '@/components/ui'
-import { cn } from '@/components/ui/Button'
 
 const contextConfig = {
   pantry: {

@@ -16,6 +16,7 @@
  * - User List: GET /api/admin/users/list/
  * - User Block: POST /api/admin/users/{id}/block/
  * - User Unblock: POST /api/admin/users/{id}/unblock/
+ * - User Set Admin: POST /api/admin/users/{id}/set-admin/
  *
  * MISSING endpoints (documented, not implemented):
  * - Dashboard Stats: GET /api/admin/dashboard/stats/
@@ -153,6 +154,33 @@ export const adminApi = {
   unblockUser: async (id) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post(`/admin/users/${id}/unblock/`)
+    return data
+  },
+
+  /**
+   * Set admin role for a user (assign or remove admin privileges)
+   * POST /api/admin/users/{id}/set-admin/
+   * Body: { is_admin: boolean }
+   * Response: { success, message }
+   */
+  setAdminRole: async (id, isAdmin) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/admin/users/${id}/set-admin/`, { is_admin: isAdmin })
+    return data
+  },
+
+  /**
+   * Get dashboard charts data
+   * GET /api/admin/dashboard/charts/?days=7
+   * Response: {
+   *   user_growth: [{date, new_users}, ...],
+   *   recipe_submissions: [{date, new_recipes, public_recipes}, ...],
+   *   total_views: [{date, views}, ...]
+   * }
+   */
+  getCharts: async (days = 7) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get('/admin/dashboard/charts/', { params: { days } })
     return data
   },
 
