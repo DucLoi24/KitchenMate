@@ -6,7 +6,7 @@ Tat ca deu yeu cau is_staff=True.
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.shortcuts import get_object_or_404
-from rest_framework import viewsets, status
+from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
@@ -20,14 +20,21 @@ from apps.accounts.serializers import UserSerializer
 User = get_user_model()
 
 
-class AdminRecipeViewSet(viewsets.GenericViewSet):
+class AdminRecipeViewSet(viewsets.GenericViewSet,
+                        mixins.ListModelMixin):
     """
     ViewSet quan tri cong thuc.
+    list: danh sach tat ca cong thuc
     pending: danh sach PENDING
     approve: chuyen sang PUBLIC
     reject: chuyen ve PRIVATE
     """
     permission_classes = [IsAdminUser]
+
+    def list(self, request):
+        recipes = Recipe.objects.select_related('user').order_by('-created_at')
+        page = self._paginate(request, recipes, RecipeListSerializer)
+        return page
 
     @action(detail=False, methods=['get'], url_path='pending')
     def pending(self, request):
@@ -64,14 +71,21 @@ class AdminRecipeViewSet(viewsets.GenericViewSet):
         return Response({'success': True, 'data': serializer.data})
 
 
-class AdminIngredientViewSet(viewsets.GenericViewSet):
+class AdminIngredientViewSet(viewsets.GenericViewSet,
+                              mixins.ListModelMixin):
     """
     ViewSet quan tri nguyen lieu.
+    list: danh sach tat ca nguyen lieu
     pending: danh sach PENDING
     approve: chuyen sang APPROVED
     reject: chuyen sang REJECTED
     """
     permission_classes = [IsAdminUser]
+
+    def list(self, request):
+        ingredients = Ingredient.objects.all().order_by('created_at')
+        page = self._paginate(request, ingredients, IngredientSerializer)
+        return page
 
     @action(detail=False, methods=['get'], url_path='pending')
     def pending(self, request):
