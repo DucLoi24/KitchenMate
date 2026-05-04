@@ -1,4 +1,5 @@
-export { AuthProvider, useAuth } from './AuthContext'
+export { AuthProvider } from './AuthContext'
+export { useAuth } from './useAuth'
 export { AuthGuard } from './AuthGuard'
 export { AdminGuard } from './AdminGuard'
 export { GoogleOAuthButton } from './GoogleOAuthButton'

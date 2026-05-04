@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom'
-import { useAuth } from './AuthContext'
+import { useAuth } from './useAuth'
 import { GuestCTA } from './GuestCTA'
 
 export function AuthGuard({ children, fallback = 'modal' }) {
