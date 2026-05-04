@@ -175,11 +175,21 @@ export function DashboardPage() {
 
       const [usersRes, recipesRes, pendingRecipesRes, ingredientsRes, pendingIngredientsRes] = results
 
-      const userCount = usersRes.status === 'fulfilled' ? usersRes.value.data?.count ?? 0 : 0
-      const recipeCount = recipesRes.status === 'fulfilled' ? recipesRes.value.data?.count ?? 0 : 0
-      const pendingRecipeCount = pendingRecipesRes.status === 'fulfilled' ? pendingRecipesRes.value.data?.count ?? 0 : 0
-      const ingredientCount = ingredientsRes.status === 'fulfilled' ? ingredientsRes.value.data?.count ?? 0 : 0
-      const pendingIngredientCount = pendingIngredientsRes.status === 'fulfilled' ? pendingIngredientsRes.value.data?.count ?? 0 : 0
+      const userCount = usersRes.status === 'fulfilled'
+        ? usersRes.value?.data?.data?.count ?? usersRes.value?.data?.count ?? 0
+        : 0
+      const recipeCount = recipesRes.status === 'fulfilled'
+        ? recipesRes.value?.data?.data?.count ?? recipesRes.value?.data?.count ?? 0
+        : 0
+      const pendingRecipeCount = pendingRecipesRes.status === 'fulfilled'
+        ? pendingRecipesRes.value?.data?.data?.count ?? pendingRecipesRes.value?.data?.count ?? 0
+        : 0
+      const ingredientCount = ingredientsRes.status === 'fulfilled'
+        ? ingredientsRes.value?.data?.data?.count ?? ingredientsRes.value?.data?.count ?? 0
+        : 0
+      const pendingIngredientCount = pendingIngredientsRes.status === 'fulfilled'
+        ? pendingIngredientsRes.value?.data?.data?.count ?? pendingIngredientsRes.value?.data?.count ?? 0
+        : 0
 
       setStats({
         users: userCount,
@@ -203,11 +213,11 @@ export function DashboardPage() {
     try {
       const { adminApi: api } = await import('@/api/adminApi')
       const response = await api.getCharts(7)
-      if (response?.success && response?.data) {
+      if (response) {
         setChartData({
-          user_growth: response.data.user_growth || [],
-          recipe_submissions: response.data.recipe_submissions || [],
-          total_views: response.data.total_views || [],
+          user_growth: response.user_growth || [],
+          recipe_submissions: response.recipe_submissions || [],
+          total_views: response.total_views || [],
         })
       }
     } catch (err) {
