@@ -72,7 +72,7 @@ export function ExplorePage() {
 
     if (search) params.q = search
     if (difficulty) params.difficulty = difficulty
-    if (cookingTimeMax) params.cooking_time_max = cookingTimeMax
+    if (cookingTimeMax) params.prep_time_max = cookingTimeMax
 
     // Map sort to API ordering
     const orderingMap = {
@@ -122,7 +122,7 @@ export function ExplorePage() {
     const newParams = {}
     if (search) newParams.q = search
     if (difficulty) newParams.difficulty = difficulty
-    if (cookingTimeMax) newParams.cooking_time_max = cookingTimeMax
+    if (cookingTimeMax) newParams.prep_time_max = cookingTimeMax
     if (sort && sort !== 'newest') newParams.sort = sort
 
     setSearchParams(newParams, { replace: true })
