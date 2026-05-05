@@ -123,9 +123,9 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 className="flex items-center gap-2 p-1.5 rounded-[var(--radius-full)] hover:bg-[var(--color-background-alt)] transition-colors"
               >
-                {user?.avatar ? (
+                {user?.avatar_url ? (
                   <img
-                    src={user.avatar}
+                    src={user.avatar_url}
                     alt={user.full_name}
                     className="w-8 h-8 rounded-full object-cover ring-2 ring-[var(--color-border)]"
                   />
