@@ -22,14 +22,30 @@ const SORT_OPTIONS = [
 ]
 
 export function FilterSidebar({
-  difficulty,
-  cookingTimeMax,
+  difficulties,
+  cookingTime,
   sort,
-  onDifficultyChange,
+  onDifficultiesChange,
   onTimeChange,
   onSortChange,
   className
 }) {
+  const toggleDifficulty = (value) => {
+    if (difficulties.includes(value)) {
+      onDifficultiesChange(difficulties.filter(d => d !== value))
+    } else {
+      onDifficultiesChange([...difficulties, value])
+    }
+  }
+
+  const toggleTime = (value) => {
+    if (cookingTime.includes(value)) {
+      onTimeChange(cookingTime.filter(t => t !== value))
+    } else {
+      onTimeChange([...cookingTime, value])
+    }
+  }
+
   return (
     <div className={cn(
       'bg-[var(--color-surface)] rounded-[var(--radius-xl)] p-6 shadow-[var(--shadow-md)]',
@@ -52,12 +68,10 @@ export function FilterSidebar({
               className="flex items-center gap-3 cursor-pointer group"
             >
               <input
-                type="radio"
-                name="difficulty"
-                value={value}
-                checked={difficulty === value}
-                onChange={() => onDifficultyChange(difficulty === value ? null : value)}
-                className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer"
+                type="checkbox"
+                checked={difficulties.includes(value)}
+                onChange={() => toggleDifficulty(value)}
+                className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer rounded"
               />
               <Badge variant={variant} size="sm">{label}</Badge>
               <span className="text-[var(--color-text-secondary)] text-sm group-hover:text-[var(--color-text)] transition-colors">
@@ -85,12 +99,14 @@ export function FilterSidebar({
               className="flex items-center gap-3 cursor-pointer group"
             >
               <input
-                type="radio"
-                name="cookingTime"
-                value={value}
-                checked={cookingTimeMax === value}
-                onChange={() => onTimeChange(cookingTimeMax === value ? null : value)}
-                className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer"
+                type="checkbox"
+                checked={cookingTime.includes(value)}
+                onChange={() => onTimeChange(
+                  cookingTime.includes(value)
+                    ? cookingTime.filter(t => t !== value)
+                    : [...cookingTime, value]
+                )}
+                className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer rounded"
               />
               <span className="text-[var(--color-text-secondary)] group-hover:text-[var(--color-text)] transition-colors">
                 {label}

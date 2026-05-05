@@ -26,15 +26,31 @@ const SORT_OPTIONS = [
 export function FilterBottomSheet({
   isOpen,
   onClose,
-  difficulty,
-  cookingTimeMax,
+  difficulties,
+  cookingTime,
   sort,
-  onDifficultyChange,
+  onDifficultiesChange,
   onTimeChange,
   onSortChange,
   onApply,
   onClear
 }) {
+  const toggleDifficulty = (value) => {
+    if (difficulties.includes(value)) {
+      onDifficultiesChange(difficulties.filter(d => d !== value))
+    } else {
+      onDifficultiesChange([...difficulties, value])
+    }
+  }
+
+  const toggleTime = (value) => {
+    if (cookingTime.includes(value)) {
+      onTimeChange(cookingTime.filter(t => t !== value))
+    } else {
+      onTimeChange([...cookingTime, value])
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -88,12 +104,10 @@ export function FilterBottomSheet({
                 {DIFFICULTIES.map(({ value, label, variant, description }) => (
                   <label key={value} className="flex items-center gap-3 cursor-pointer group">
                     <input
-                      type="radio"
-                      name="difficulty-mobile"
-                      value={value}
-                      checked={difficulty === value}
-                      onChange={() => onDifficultyChange(difficulty === value ? null : value)}
-                      className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer"
+                      type="checkbox"
+                      checked={difficulties.includes(value)}
+                      onChange={() => toggleDifficulty(value)}
+                      className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer rounded"
                     />
                     <Badge variant={variant} size="sm">{label}</Badge>
                     <span className="text-[var(--color-text-secondary)] text-sm group-hover:text-[var(--color-text)]">
@@ -113,12 +127,10 @@ export function FilterBottomSheet({
                 {TIME_RANGES.map(({ value, label }) => (
                   <label key={value} className="flex items-center gap-3 cursor-pointer group">
                     <input
-                      type="radio"
-                      name="cookingTime-mobile"
-                      value={value}
-                      checked={cookingTimeMax === value}
-                      onChange={() => onTimeChange(cookingTimeMax === value ? null : value)}
-                      className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer"
+                      type="checkbox"
+                      checked={cookingTime.includes(value)}
+                      onChange={() => toggleTime(value)}
+                      className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer rounded"
                     />
                     <span className="text-[var(--color-text-secondary)] group-hover:text-[var(--color-text)]">
                       {label}
