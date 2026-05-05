@@ -351,9 +351,11 @@ Filter theo `category` qua `DjangoFilterBackend`.
 | `retrieve` | GET | `/api/recipes/{id}/` | Custom (PUBLIC=All, PRIVATE=Owner) |
 | `update` | PUT | `/api/recipes/{id}/` | IsOwner |
 | `partial_update` | PATCH | `/api/recipes/{id}/` | IsOwner |
-| `destroy` | DELETE | `/api/recipes/{id}/` | IsOwner |
+| `destroy` | DELETE | `/api/recipes/{id}/` | IsOwner (soft delete) |
 | `my_recipes` | GET | `/api/recipes/my-recipes/` | IsAuthenticated |
 | `publish` | POST | `/api/recipes/{id}/publish/` | IsOwner |
+| `trash` | GET | `/api/recipes/trash/` | IsAuthenticated |
+| `restore` | POST | `/api/recipes/{id}/restore/` | IsOwner |
 
 ### `filters.py` — `RecipeFilter`
 

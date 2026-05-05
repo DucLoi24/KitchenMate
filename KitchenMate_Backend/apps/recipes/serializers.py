@@ -80,7 +80,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'user_name', 'user_avatar',
             'categories', 'avg_rating', 'save_count', 'view_count',
-            'is_favorited', 'created_at'
+            'is_favorited', 'is_deleted', 'deleted_at', 'created_at'
         )
 
 
@@ -119,6 +119,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             'thumbnail_url', 'visibility', 'user', 'categories',
             'recipe_ingredients', 'steps', 'avg_rating',
             'is_favorited', 'ai_moderation_attempted',
+            'is_deleted', 'deleted_at',
             'created_at', 'updated_at'
         )
 

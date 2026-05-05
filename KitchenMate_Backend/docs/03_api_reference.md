@@ -480,11 +480,77 @@ Cập nhật công thức. Chỉ cho phép khi `visibility=PRIVATE`.
 ---
 
 ### DELETE `/api/recipes/{id}/`
-Xóa công thức.
+Xóa công thức (soft delete — đưa vào thùng rác).
 
 **Permission:** IsOwner
 
-**Response:** `204 No Content`
+**Điều kiện:** Công thức không ở trạng thái `PENDING` (đang chờ duyệt).
+
+**Flow:**
+1. Set `is_deleted=True` và `deleted_at=now`
+2. Recipe được đưa vào trash
+3. Auto-hard-delete sau 14 ngày (qua `cleanup_trash` command)
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Công thức đã được đưa vào thùng rác.",
+  "data": { ... }
+}
+```
+
+**Error Response (400):** Khi công thức đang ở trạng thái PENDING.
+```json
+{
+  "success": false,
+  "error": { "message": "Không thể xóa công thức đang chờ duyệt." }
+}
+```
+
+---
+
+### GET `/api/recipes/trash/`
+Lấy danh sách công thức trong thùng rác của user hiện tại.
+
+**Permission:** IsAuthenticated
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "data": {
+    "count": 2,
+    "next": null,
+    "previous": null,
+    "results": [
+      {
+        "id": "...",
+        "title": "...",
+        "is_deleted": true,
+        "deleted_at": "2026-05-05T10:00:00Z",
+        ...
+      }
+    ]
+  }
+}
+```
+
+---
+
+### POST `/api/recipes/{id}/restore/`
+Khôi phục công thức từ thùng rác.
+
+**Permission:** IsOwner
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Công thức đã được khôi phục.",
+  "data": { ... }
+}
+```
 
 ---
 

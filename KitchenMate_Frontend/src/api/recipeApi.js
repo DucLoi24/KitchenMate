@@ -43,6 +43,24 @@ export const recipeApi = {
     const { data } = await axiosInstance.get('/recipes/my-recipes/')
     return data
   },
+
+  publishRecipe: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/recipes/${id}/publish/`)
+    return data
+  },
+
+  getTrashRecipes: async () => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get('/recipes/trash/')
+    return data
+  },
+
+  restoreRecipe: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/recipes/${id}/restore/`)
+    return data
+  },
 }
 
 export default recipeApi

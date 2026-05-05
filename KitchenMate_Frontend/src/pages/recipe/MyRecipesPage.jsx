@@ -1,20 +1,21 @@
 import { useState, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Utensils, RefreshCw, Pencil, Lock, Globe } from 'lucide-react'
+import { Utensils, RefreshCw, Pencil, Lock, Globe, Trash2, RotateCcw } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
-import { useMyRecipes, useUpdateRecipe } from '@/hooks/useRecipes'
+import { useMyRecipes, useUpdateRecipe, useDeleteRecipe, useTrashRecipes, useRestoreRecipe } from '@/hooks/useRecipes'
 import recipeApi from '@/api/recipeApi'
 
 const TABS = {
   ALL: { label: 'Tất cả', value: 'ALL' },
   PUBLIC: { label: 'Công khai', value: 'PUBLIC' },
   PRIVATE: { label: 'Riêng tư', value: 'PRIVATE' },
+  TRASH: { label: 'Đã xóa', value: 'TRASH' },
 }
 
 const visibilityConfig = {
@@ -67,11 +68,12 @@ function FilterTabs({ activeTab, onTabChange, counts }) {
   )
 }
 
-function RecipeItem({ recipe, onClick, onMakePrivate, onMakePublic }) {
+function RecipeItem({ recipe, onClick, onMakePrivate, onMakePublic, onDelete, onRestore, isTrash }) {
   const visibility = visibilityConfig[recipe.visibility] || visibilityConfig.PRIVATE
-  const canEdit = recipe.visibility === 'PRIVATE'
-  const canMakePrivate = recipe.visibility === 'PUBLIC' || recipe.visibility === 'PENDING'
-  const canMakePublic = recipe.visibility === 'PRIVATE'
+  const canEdit = recipe.visibility === 'PRIVATE' && !isTrash
+  const canMakePrivate = (recipe.visibility === 'PUBLIC' || recipe.visibility === 'PENDING') && !isTrash
+  const canMakePublic = recipe.visibility === 'PRIVATE' && !isTrash
+  const canDelete = recipe.visibility !== 'PENDING' && !isTrash
 
   return (
     <motion.div
@@ -102,6 +104,12 @@ function RecipeItem({ recipe, onClick, onMakePrivate, onMakePublic }) {
           </p>
         )}
 
+        {isTrash && recipe.deleted_at && (
+          <p className="text-xs text-[var(--color-text-secondary)]">
+            Xóa ngày: {new Date(recipe.deleted_at).toLocaleDateString('vi-VN')}
+          </p>
+        )}
+
         {recipe.visibility === 'PUBLIC' && recipe.moderation_status && (
           <Badge variant={moderationConfig[recipe.moderation_status]?.variant || 'muted'} size="sm">
             {moderationConfig[recipe.moderation_status]?.label || recipe.moderation_status}
@@ -110,7 +118,17 @@ function RecipeItem({ recipe, onClick, onMakePrivate, onMakePublic }) {
       </div>
 
       <div className="flex flex-col gap-2 flex-shrink-0" onClick={(e) => e.stopPropagation()}>
-        {canEdit && (
+        {isTrash && (
+          <Button
+            variant="primary"
+            size="sm"
+            onClick={() => onRestore(recipe)}
+          >
+            <RotateCcw className="w-3 h-3" />
+            Khôi phục
+          </Button>
+        )}
+        {!isTrash && canEdit && (
           <Link to={`/recipe/${recipe.id}/edit`}>
             <Button variant="outline" size="sm">
               <Pencil className="w-3 h-3" />
@@ -118,7 +136,7 @@ function RecipeItem({ recipe, onClick, onMakePrivate, onMakePublic }) {
             </Button>
           </Link>
         )}
-        {canMakePrivate && (
+        {!isTrash && canMakePrivate && (
           <Button
             variant="outline"
             size="sm"
@@ -127,13 +145,22 @@ function RecipeItem({ recipe, onClick, onMakePrivate, onMakePublic }) {
             <Lock className="w-3 h-3" />
           </Button>
         )}
-        {canMakePublic && (
+        {!isTrash && canMakePublic && (
           <Button
             variant="primary"
             size="sm"
             onClick={() => onMakePublic(recipe)}
           >
             <Globe className="w-3 h-3" />
+          </Button>
+        )}
+        {!isTrash && canDelete && (
+          <Button
+            variant="danger"
+            size="sm"
+            onClick={() => onDelete(recipe)}
+          >
+            <Trash2 className="w-3 h-3" />
           </Button>
         )}
       </div>
@@ -191,24 +218,34 @@ function EmptyState() {
 
 export function MyRecipesPage() {
   const { data, isLoading, error, refetch } = useMyRecipes()
+  const { data: trashData, refetch: refetchTrash } = useTrashRecipes()
   const updateRecipe = useUpdateRecipe()
+  const deleteRecipe = useDeleteRecipe()
+  const restoreRecipe = useRestoreRecipe()
   const navigate = useNavigate()
+
   const recipes = data?.data?.results || data?.results || data || []
+  const trashRecipes = trashData?.data?.results || trashData?.results || trashData || []
 
   const [visibilityFilter, setVisibilityFilter] = useState('ALL')
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, recipe: null, type: null })
   const [isUpdating, setIsUpdating] = useState(false)
 
+  const isTrashView = visibilityFilter === 'TRASH'
+  const currentRecipes = isTrashView ? trashRecipes : recipes
+
   const filteredRecipes = useMemo(() => {
-    if (visibilityFilter === 'ALL') return recipes
-    return recipes.filter(r => r.visibility === visibilityFilter)
-  }, [recipes, visibilityFilter])
+    if (visibilityFilter === 'ALL') return currentRecipes
+    if (visibilityFilter === 'TRASH') return currentRecipes
+    return currentRecipes.filter(r => r.visibility === visibilityFilter)
+  }, [currentRecipes, visibilityFilter])
 
   const tabCounts = useMemo(() => ({
     ALL: recipes.length,
     PUBLIC: recipes.filter(r => r.visibility === 'PUBLIC').length,
     PRIVATE: recipes.filter(r => r.visibility === 'PRIVATE').length,
-  }), [recipes])
+    TRASH: trashRecipes.length,
+  }), [recipes, trashRecipes])
 
   const handleMakePrivate = async () => {
     if (!confirmDialog.recipe) return
@@ -257,6 +294,47 @@ export function MyRecipesPage() {
     }
   }
 
+  const handleDelete = async () => {
+    if (!confirmDialog.recipe) return
+    setIsUpdating(true)
+    try {
+      await deleteRecipe.mutateAsync(confirmDialog.recipe.id)
+      toast.success('Đã đưa công thức vào thùng rác')
+      setConfirmDialog({ isOpen: false, recipe: null, type: null })
+      refetch()
+      refetchTrash()
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 401) {
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+      } else if (status === 403) {
+        toast.error('Bạn không có quyền thực hiện thao tác này.')
+      } else {
+        toast.error('Không thể xóa công thức. Vui lòng thử lại.')
+      }
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
+  const handleRestore = async (recipe) => {
+    try {
+      await restoreRecipe.mutateAsync(recipe.id)
+      toast.success('Đã khôi phục công thức thành công')
+      refetchTrash()
+      refetch()
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 401) {
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+      } else if (status === 403) {
+        toast.error('Bạn không có quyền thực hiện thao tác này.')
+      } else {
+        toast.error('Không thể khôi phục công thức. Vui lòng thử lại.')
+      }
+    }
+  }
+
   if (isLoading) return <LoadingSkeleton />
 
   if (error) {
@@ -283,7 +361,7 @@ export function MyRecipesPage() {
     )
   }
 
-  if (recipes.length === 0) return <EmptyState />
+  if (recipes.length === 0 && trashRecipes.length === 0) return <EmptyState />
 
   return (
     <motion.div
@@ -294,8 +372,13 @@ export function MyRecipesPage() {
     >
       <div className="px-4 py-4">
         <h1 className="font-display text-2xl font-bold text-[var(--color-text)]">
-          Công thức của tôi
+          {isTrashView ? 'Thùng rác' : 'Công thức của tôi'}
         </h1>
+        {isTrashView && (
+          <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+            Công thức trong thùng rác sẽ tự động xóa vĩnh viễn sau 14 ngày
+          </p>
+        )}
       </div>
 
       <FilterTabs
@@ -311,18 +394,21 @@ export function MyRecipesPage() {
           className="flex flex-col items-center justify-center py-16 px-6 text-center"
         >
           <p className="text-[var(--color-text-secondary)] text-sm">
-            Không có công thức nào trong mục này
+            {isTrashView ? 'Thùng rác trống' : 'Không có công thức nào trong mục này'}
           </p>
         </motion.div>
-) : (
+      ) : (
         <div className="space-y-3 px-4 pb-4">
           {filteredRecipes.map((recipe, index) => (
             <RecipeItem
               key={recipe.id}
               recipe={recipe}
-              onClick={() => navigate(`/recipe/${recipe.id}`)}
+              isTrash={isTrashView}
+              onClick={isTrashView ? undefined : () => navigate(`/recipe/${recipe.id}`)}
               onMakePrivate={(r) => setConfirmDialog({ isOpen: true, recipe: r, type: 'private' })}
               onMakePublic={(r) => setConfirmDialog({ isOpen: true, recipe: r, type: 'public' })}
+              onDelete={(r) => setConfirmDialog({ isOpen: true, recipe: r, type: 'delete' })}
+              onRestore={isTrashView ? handleRestore : undefined}
             />
           ))}
         </div>
@@ -330,17 +416,36 @@ export function MyRecipesPage() {
 
       <ConfirmDialog
         isOpen={confirmDialog.isOpen}
-        title={confirmDialog.type === 'public' ? 'Đăng công khai công thức' : 'Chuyển sang chế độ riêng tư'}
-        message={confirmDialog.type === 'public'
-          ? `Bạn có chắc muốn đăng công khai công thức "${confirmDialog.recipe?.title}"? Công thức sẽ được gửi để duyệt trước khi hiển thị với người khác.`
-          : `Bạn có chắc muốn chuyển công thức "${confirmDialog.recipe?.title}" sang chế độ riêng tư? Công thức sẽ không còn hiển thị với người khác.`
+        title={
+          confirmDialog.type === 'public' ? 'Đăng công khai công thức' :
+          confirmDialog.type === 'private' ? 'Chuyển sang chế độ riêng tư' :
+          'Xóa công thức'
         }
-        onConfirm={confirmDialog.type === 'public' ? handleMakePublic : handleMakePrivate}
+        message={
+          confirmDialog.type === 'public'
+            ? `Bạn có chắc muốn đăng công khai công thức "${confirmDialog.recipe?.title}"? Công thức sẽ được gửi để duyệt trước khi hiển thị với người khác.`
+            : confirmDialog.type === 'private'
+            ? `Bạn có chắc muốn chuyển công thức "${confirmDialog.recipe?.title}" sang chế độ riêng tư? Công thức sẽ không còn hiển thị với người khác.`
+            : `Bạn có chắc muốn xóa công thức "${confirmDialog.recipe?.title}"? Công thức sẽ được đưa vào thùng rác và tự động xóa vĩnh viễn sau 14 ngày.`
+        }
+        onConfirm={
+          confirmDialog.type === 'public' ? handleMakePublic :
+          confirmDialog.type === 'private' ? handleMakePrivate :
+          handleDelete
+        }
         onCancel={() => setConfirmDialog({ isOpen: false, recipe: null, type: null })}
         loading={isUpdating}
-        confirmText={confirmDialog.type === 'public' ? 'Đăng công khai' : 'Chuyển sang riêng tư'}
+        confirmText={
+          confirmDialog.type === 'public' ? 'Đăng công khai' :
+          confirmDialog.type === 'private' ? 'Chuyển sang riêng tư' :
+          'Xóa'
+        }
         cancelText="Hủy"
-        variant={confirmDialog.type === 'public' ? 'primary' : 'warning'}
+        variant={
+          confirmDialog.type === 'public' ? 'primary' :
+          confirmDialog.type === 'private' ? 'warning' :
+          'danger'
+        }
       />
     </motion.div>
   )

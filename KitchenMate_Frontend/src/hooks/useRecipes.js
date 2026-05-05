@@ -55,6 +55,29 @@ export function useDeleteRecipe() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
       queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
+      queryClient.invalidateQueries({ queryKey: ['trash-recipes'] })
+    },
+  })
+}
+
+export function useTrashRecipes() {
+  return useQuery({
+    queryKey: ['trash-recipes'],
+    queryFn: recipeApi.getTrashRecipes,
+    retry: false,
+    throwOnError: false,
+  })
+}
+
+export function useRestoreRecipe() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: recipeApi.restoreRecipe,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['recipes'] })
+      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
+      queryClient.invalidateQueries({ queryKey: ['trash-recipes'] })
     },
   })
 }
@@ -87,5 +110,7 @@ export default {
   useCreateRecipe,
   useUpdateRecipe,
   useDeleteRecipe,
+  useTrashRecipes,
+  useRestoreRecipe,
   useRecipesInfinite,
 }

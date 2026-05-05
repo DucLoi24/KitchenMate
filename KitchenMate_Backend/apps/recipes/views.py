@@ -187,8 +187,55 @@ class RecipeViewSet(viewsets.GenericViewSet):
         err = self._check_owner(request, recipe)
         if err:
             return err
-        recipe.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        if recipe.visibility == 'PENDING':
+            return Response(
+                {'success': False, 'error': {'message': 'Khong the xoa cong thuc dang cho duyet.'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        recipe.soft_delete()
+        return Response({
+            'success': True,
+            'message': 'Cong thuc da duoc dua vao thung rac.',
+            'data': RecipeDetailSerializer(recipe).data
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['get'], url_path='trash', permission_classes=[IsAuthenticated])
+    def trash(self, request):
+        """
+        Lấy danh sách công thức đã xóa của user hiện tại.
+        Endpoint: GET /api/recipes/trash/
+        """
+        queryset = Recipe.objects.deleted().filter(user=request.user)
+        page = self.paginate_queryset(queryset)
+        if page is not None:
+            serializer = RecipeListSerializer(page, many=True)
+            paginated = self.get_paginated_response(serializer.data)
+            return Response({'success': True, 'data': paginated.data})
+        serializer = RecipeListSerializer(queryset, many=True)
+        return Response({'success': True, 'data': serializer.data})
+
+    @action(detail=True, methods=['post'], url_path='restore', permission_classes=[IsAuthenticated])
+    def restore(self, request, pk=None):
+        """
+        Khôi phục công thức từ thùng rác.
+        Endpoint: POST /api/recipes/{id}/restore/
+        """
+        try:
+            recipe = Recipe.objects.deleted().get(pk=pk)
+        except Recipe.DoesNotExist:
+            return Response(
+                {'success': False, 'error': {'message': 'Cong thuc khong ton tai trong thung rac.'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        err = self._check_owner(request, recipe)
+        if err:
+            return err
+        recipe.restore()
+        return Response({
+            'success': True,
+            'message': 'Cong thuc da duoc khoi phuc.',
+            'data': RecipeDetailSerializer(recipe).data
+        })
 
     @action(detail=False, methods=['get'], url_path='my-recipes', permission_classes=[IsAuthenticated])
     def my_recipes(self, request):
