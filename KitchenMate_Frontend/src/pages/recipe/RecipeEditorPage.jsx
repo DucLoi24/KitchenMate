@@ -167,12 +167,12 @@ export function RecipeEditorPage() {
         prep_time: formData.prep_time ? parseInt(formData.prep_time, 10) : null,
         thumbnail_url: formData.thumbnail_url || null,
         visibility: formData.visibility,
-        ingredients: formData.ingredients.map((ing) => ({
+        ingredients: (formData.ingredients || []).map((ing) => ({
           ingredient: ing.ingredient,
           quantity: parseFloat(ing.quantity) || 0,
           unit: ing.unit,
         })),
-        steps: formData.steps.map((step, index) => ({
+        steps: (formData.steps || []).map((step, index) => ({
           step_number: index + 1,
           instruction: step.instruction,
           media_url: step.media_url || null,
@@ -208,6 +208,7 @@ export function RecipeEditorPage() {
       const message =
         error.response?.data?.message ||
         error.response?.data?.error ||
+        error.message ||
         'Đã xảy ra lỗi khi lưu công thức'
       toast.error(message)
     } finally {

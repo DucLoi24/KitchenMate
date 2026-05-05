@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, Search } from 'lucide-react'
 import { cn } from '@/utils'
 import { CATEGORY_COLORS, UNITS } from '@/hooks/useRecipeDraft'
 import { IngredientSearchInput } from '@/components/ui'
 
-export function IngredientList({ ingredients = [], onChange, errors = {} }) {
+export function IngredientList({ onChange, data, errors = {} }) {
+  const ingredients = data?.ingredients || []
   const [searchOpen, setSearchOpen] = useState(false)
 
   const handleAddIngredient = (ingredient) => {
@@ -17,19 +18,20 @@ export function IngredientList({ ingredients = [], onChange, errors = {} }) {
       quantity: '',
       unit: 'g',
     }
-    // Pass as direct value - setFormData will merge with existing state
-    onChange({ ingredients: [...ingredients, newIngredient] })
+    const currentIngredients = data?.ingredients || []
+    onChange({ ...data, ingredients: [...currentIngredients, newIngredient] })
     setSearchOpen(false)
   }
 
   const handleUpdateIngredient = (index, field, value) => {
-    const updated = [...ingredients]
-    updated[index] = { ...updated[index], [field]: value }
-    onChange(updated)
+    const currentIngredients = [...(data?.ingredients || [])]
+    currentIngredients[index] = { ...currentIngredients[index], [field]: value }
+    onChange({ ...data, ingredients: currentIngredients })
   }
 
   const handleRemoveIngredient = (index) => {
-    onChange(ingredients.filter((_, i) => i !== index))
+    const currentIngredients = (data?.ingredients || []).filter((_, i) => i !== index)
+    onChange({ ...data, ingredients: currentIngredients })
   }
 
   return (
@@ -90,17 +92,11 @@ export function IngredientList({ ingredients = [], onChange, errors = {} }) {
           </p>
         </div>
       ) : (
-        <Reorder.Group
-          axis="y"
-          values={ingredients}
-          onReorder={(newOrder) => onChange(newOrder)}
-          className="space-y-2"
-        >
+        <div className="space-y-2">
           <AnimatePresence>
             {ingredients.map((ingredient, index) => (
-              <Reorder.Item
+              <motion.div
                 key={ingredient.id}
-                value={ingredient}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -159,10 +155,10 @@ export function IngredientList({ ingredients = [], onChange, errors = {} }) {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-              </Reorder.Item>
+              </motion.div>
             ))}
           </AnimatePresence>
-        </Reorder.Group>
+        </div>
       )}
 
       {errors.ingredients && (

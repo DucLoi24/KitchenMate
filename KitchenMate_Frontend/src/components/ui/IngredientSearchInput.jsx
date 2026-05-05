@@ -44,8 +44,8 @@ export function IngredientSearchInput({
     setIsLoading(true)
     try {
       const response = await searchIngredients(searchQuery)
-      const items = response?.data || []
-      setResults(items.slice(0, maxResults))
+      const items = response?.data?.data || response?.data || []
+      setResults(Array.isArray(items) ? items.slice(0, maxResults) : [])
     } catch {
       setResults([])
     } finally {
@@ -70,8 +70,9 @@ export function IngredientSearchInput({
 
   const handleSelect = (ingredient) => {
     setQuery(ingredient.name)
-    onChange?.(ingredient.name)
-    onSelect?.(ingredient)
+    if (typeof onSelect === 'function') {
+      onSelect(ingredient)
+    }
     setResults([])
     setIsOpen(false)
     setHighlightedIndex(-1)

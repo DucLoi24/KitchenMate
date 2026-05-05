@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { motion, AnimatePresence, Reorder } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react'
 import { cn } from '@/utils'
 
-export function StepList({ steps = [], onChange, errors = {} }) {
+export function StepList({ onChange, data, errors = {} }) {
+  const steps = data?.steps || []
   const [newInstruction, setNewInstruction] = useState('')
   const [newMediaUrl, setNewMediaUrl] = useState('')
 
@@ -16,7 +17,7 @@ export function StepList({ steps = [], onChange, errors = {} }) {
       instruction: newInstruction.trim(),
       media_url: newMediaUrl.trim() || null,
     }
-    onChange([...steps, newStep])
+    onChange({ ...data, steps: [...steps, newStep] })
     setNewInstruction('')
     setNewMediaUrl('')
   }
@@ -24,13 +25,13 @@ export function StepList({ steps = [], onChange, errors = {} }) {
   const handleUpdateStep = (index, field, value) => {
     const updated = [...steps]
     updated[index] = { ...updated[index], [field]: value }
-    onChange(updated)
+    onChange({ ...data, steps: updated })
   }
 
   const handleRemoveStep = (index) => {
     const updated = steps.filter((_, i) => i !== index)
       .map((step, i) => ({ ...step, step_number: i + 1 }))
-    onChange(updated)
+    onChange({ ...data, steps: updated })
   }
 
   const handleMoveStep = (index, direction) => {
@@ -43,7 +44,7 @@ export function StepList({ steps = [], onChange, errors = {} }) {
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     ;[newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]]
     const reordered = newSteps.map((step, i) => ({ ...step, step_number: i + 1 }))
-    onChange(reordered)
+    onChange({ ...data, steps: reordered })
   }
 
   return (
@@ -58,20 +59,11 @@ export function StepList({ steps = [], onChange, errors = {} }) {
       </div>
 
       {steps.length > 0 && (
-        <Reorder.Group
-          axis="y"
-          values={steps}
-          onReorder={(newOrder) => {
-            const reordered = newOrder.map((step, i) => ({ ...step, step_number: i + 1 }))
-            onChange(reordered)
-          }}
-          className="space-y-3"
-        >
+        <div className="space-y-3">
           <AnimatePresence>
             {steps.map((step, index) => (
-              <Reorder.Item
+              <motion.div
                 key={step.id}
-                value={step}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, x: -20 }}
@@ -155,10 +147,10 @@ export function StepList({ steps = [], onChange, errors = {} }) {
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
-              </Reorder.Item>
+              </motion.div>
             ))}
           </AnimatePresence>
-        </Reorder.Group>
+        </div>
       )}
 
       {steps.length === 0 && (
