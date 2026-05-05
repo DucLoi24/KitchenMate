@@ -40,6 +40,24 @@ export const authApi = {
     return data
   },
 
+  getPublicProfile: async (userId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/accounts/${userId}/`)
+    return data
+  },
+
+  getUserStats: async (userId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/accounts/${userId}/stats/`)
+    return data
+  },
+
+  getUserRecipes: async (userId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/accounts/${userId}/recipes/`)
+    return data
+  },
+
   updateProfile: async (profileData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.patch('/accounts/me/', profileData)

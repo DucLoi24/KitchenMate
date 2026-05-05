@@ -6,6 +6,7 @@ import { useAuth } from '@/components/auth/useAuth'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
+import { authApi } from '@/api/authApi'
 import toast from 'react-hot-toast'
 
 const containerVariants = {
@@ -26,61 +27,30 @@ export function PublicProfilePage() {
   const { userId } = useParams()
   const { user: currentUser } = useAuth()
   const [profile, setProfile] = useState(null)
+  const [stats, setStats] = useState(null)
   const [recipes, setRecipes] = useState([])
   const [collections, setCollections] = useState([])
   const [activeTab, setActiveTab] = useState('recipes')
   const [isLoading, setIsLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
 
-  const isOwnProfile = currentUser?.id === parseInt(userId) || currentUser?.id === userId
+  const isOwnProfile = currentUser?.id === userId || currentUser?.uuid === userId
 
   useEffect(() => {
     const fetchProfileData = async () => {
       setIsLoading(true)
       try {
-        // Simulate API call - in real app, use authApi.getPublicProfile(userId)
-        await new Promise(resolve => setTimeout(resolve, 600))
+        const [profileRes, statsRes] = await Promise.all([
+          authApi.getPublicProfile(userId),
+          authApi.getUserStats(userId)
+        ])
 
-        // Mock data - replace with real API response
-        setProfile({
-          id: userId,
-          full_name: userId === '1' ? 'Nguyễn Văn A' : 'Trần Thị B',
-          bio: userId === '1'
-            ? 'Yêu thích nấu ăn và khám phá ẩm thực Việt Nam. Đặc biệt thích các món từ miền Nam.'
-            : 'Food blogger & recipe creator. Chuyên các món ăn healthy và quick meals.',
-          avatar: null,
-          created_at: '2024-06-15',
-          recipe_count: userId === '1' ? 12 : 8,
-          collection_count: userId === '1' ? 3 : 5,
-          follower_count: userId === '1' ? 156 : 89,
-          following_count: userId === '1' ? 42 : 38
-        })
+        setProfile(profileRes.data)
+        setStats(statsRes.data)
 
-        setRecipes(
-          userId === '1'
-            ? [
-                { id: 1, title: 'Cơm tấm sườn bì chả', thumbnail: null, avg_rating: 4.8, rating_count: 24, prep_time: 45, difficulty: 'Trung bình' },
-                { id: 2, title: 'Bún bò Huế', thumbnail: null, avg_rating: 4.6, rating_count: 18, prep_time: 90, difficulty: 'Khó' },
-                { id: 3, title: 'Bánh xèo miền Nam', thumbnail: null, avg_rating: 4.9, rating_count: 32, prep_time: 60, difficulty: 'Trung bình' }
-              ]
-            : [
-                { id: 4, title: 'Salad rau trộn', thumbnail: null, avg_rating: 4.5, rating_count: 12, prep_time: 15, difficulty: 'Dễ' },
-                { id: 5, title: 'Smoothie bowl', thumbnail: null, avg_rating: 4.7, rating_count: 15, prep_time: 10, difficulty: 'Dễ' }
-              ]
-        )
-
-        setCollections(
-          userId === '1'
-            ? [
-                { id: 1, name: 'Món Việt Nam', recipe_count: 5 },
-                { id: 2, name: 'Món miền Nam', recipe_count: 4 },
-                { id: 3, name: 'Món ăn gia đình', recipe_count: 3 }
-              ]
-            : [
-                { id: 4, name: 'Healthy Recipes', recipe_count: 4 },
-                { id: 5, name: 'Quick Meals', recipe_count: 4 }
-              ]
-        )
+        const recipesRes = await authApi.getUserRecipes(userId)
+        setRecipes(recipesRes.data?.results || [])
+        setCollections(recipesRes.data?.collections || [])
       } catch {
         toast.error('Không thể tải thông tin người dùng')
       } finally {
@@ -161,8 +131,8 @@ export function PublicProfilePage() {
                 <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                   {/* Avatar */}
                   <div className="w-24 h-24 rounded-full overflow-hidden bg-[var(--color-background-alt)] border-4 border-[var(--color-border)] flex-shrink-0">
-                    {profile.avatar ? (
-                      <img src={profile.avatar} alt={profile.full_name} className="w-full h-full object-cover" />
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt={profile.full_name} className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">
                         <User className="w-10 h-10 text-[var(--color-text-muted)]" />
@@ -211,17 +181,19 @@ export function PublicProfilePage() {
 
                     <div className="flex flex-wrap justify-center sm:justify-start gap-4">
                       <div className="text-center sm:text-left">
-                        <span className="font-bold text-lg text-[var(--color-text)]">{profile.recipe_count}</span>
+                        <span className="font-bold text-lg text-[var(--color-text)]">{stats?.recipe_count || 0}</span>
                         <span className="text-sm text-[var(--color-text-muted)] ml-1">công thức</span>
                       </div>
                       <div className="text-center sm:text-left">
-                        <span className="font-bold text-lg text-[var(--color-text)]">{profile.follower_count}</span>
-                        <span className="text-sm text-[var(--color-text-muted)] ml-1">người theo dõi</span>
+                        <span className="font-bold text-lg text-[var(--color-text)]">{stats?.total_likes || 0}</span>
+                        <span className="text-sm text-[var(--color-text-muted)] ml-1">lượt thích</span>
                       </div>
-                      <div className="text-center sm:text-left">
-                        <span className="font-bold text-lg text-[var(--color-text)]">{profile.following_count}</span>
-                        <span className="text-sm text-[var(--color-text-muted)] ml-1">đang theo dõi</span>
-                      </div>
+                      {stats?.average_rating && (
+                        <div className="text-center sm:text-left">
+                          <span className="font-bold text-lg text-[var(--color-text)]">{stats.average_rating.toFixed(1)}</span>
+                          <span className="text-sm text-[var(--color-text-muted)] ml-1">đánh giá</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

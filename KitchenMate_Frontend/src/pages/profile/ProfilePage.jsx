@@ -1,10 +1,11 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Camera, User, Mail, BookOpen, FolderOpen, Save, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { authApi } from '@/api/authApi'
 import toast from 'react-hot-toast'
 
 const containerVariants = {
@@ -25,13 +26,28 @@ export function ProfilePage() {
   const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [stats, setStats] = useState({ recipe_count: 0, total_likes: 0, average_rating: null })
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
     bio: user?.bio || '',
     avatar: null
   })
-  const [avatarPreview, setAvatarPreview] = useState(user?.avatar || null)
+  const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null)
   const fileInputRef = useRef(null)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      if (user?.id) {
+        try {
+          const res = await authApi.getUserStats(user.id)
+          setStats(res.data)
+        } catch (e) {
+          console.error('Failed to fetch stats', e)
+        }
+      }
+    }
+    fetchStats()
+  }, [user?.id])
 
   const handleAvatarClick = () => {
     fileInputRef.current?.click()
@@ -84,7 +100,7 @@ export function ProfilePage() {
       bio: user?.bio || '',
       avatar: null
     })
-    setAvatarPreview(user?.avatar || null)
+    setAvatarPreview(user?.avatar_url || null)
     setIsEditing(false)
   }
 
@@ -176,11 +192,11 @@ export function ProfilePage() {
                     <div className="flex flex-wrap justify-center sm:justify-start gap-2">
                       <Badge variant="muted" size="md">
                         <BookOpen className="w-3.5 h-3.5 mr-1" />
-                        {user?.recipe_count || 0} công thức
+                        {stats.recipe_count || 0} công thức
                       </Badge>
                       <Badge variant="muted" size="md">
                         <FolderOpen className="w-3.5 h-3.5 mr-1" />
-                        {user?.collection_count || 0} bộ sưu tập
+                        {stats.total_likes || 0} lượt thích
                       </Badge>
                     </div>
                   </div>
@@ -293,10 +309,10 @@ export function ProfilePage() {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
-                    { label: 'Công thức', value: user?.recipe_count || 0, icon: BookOpen },
-                    { label: 'Bộ sưu tập', value: user?.collection_count || 0, icon: FolderOpen },
-                    { label: 'Đánh giá', value: user?.review_count || 0, icon: '★' },
-                    { label: 'Ngày tham gia', value: user?.joined_days || '—', icon: '📅' }
+                    { label: 'Công thức', value: stats.recipe_count || 0, icon: BookOpen },
+                    { label: 'Lượt thích', value: stats.total_likes || 0, icon: FolderOpen },
+                    { label: 'Đánh giá', value: stats.average_rating ? stats.average_rating.toFixed(1) : '—', icon: '★' },
+                    { label: 'Ngày tham gia', value: user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' }) : '—', icon: '📅' }
                   ].map((stat) => (
                     <div
                       key={stat.label}
