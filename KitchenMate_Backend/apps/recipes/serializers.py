@@ -118,7 +118,8 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'categories',
             'recipe_ingredients', 'steps', 'avg_rating',
-            'is_favorited', 'created_at', 'updated_at'
+            'is_favorited', 'ai_moderation_attempted',
+            'created_at', 'updated_at'
         )
 
 

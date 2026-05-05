@@ -174,10 +174,11 @@ Sử dụng **Hypothesis** để kiểm tra các tính chất bất biến của
 
 Kiểm tra các workflow phức tạp end-to-end:
 
-1. **Recipe lifecycle (AI=YES):** Tạo recipe → publish → AI trả YES → visibility=PUBLIC.
-2. **Recipe lifecycle (AI=SUSPECT):** Tạo recipe → publish → AI trả SUSPECT → visibility=PENDING.
-3. **Recipe lifecycle (AI=NO):** Tạo recipe → publish → AI trả NO → 400, visibility vẫn PRIVATE.
-4. **Check-to-Pantry workflow:** Thêm vào shopping list → mark_purchased → Pantry được cập nhật.
+1. **Recipe lifecycle (AI=YES):** Tạo recipe → publish → lập tức PENDING → AI xử lý async → visibility=PUBLIC.
+2. **Recipe lifecycle (AI=SUSPECT):** Tạo recipe → publish → lập tức PENDING → AI xử lý async → giữ PENDING.
+3. **Recipe lifecycle (AI=NO):** Tạo recipe → publish → lập tức PENDING → AI xử lý async → visibility=PRIVATE + reason.
+4. **Admin approve PENDING:** Admin approve recipe PENDING → visibility=PUBLIC.
+5. **Check-to-Pantry workflow:** Thêm vào shopping list → mark_purchased → Pantry được cập nhật.
 5. **Recommendation workflow:** Thêm nguyên liệu vào pantry → gọi suggest → nhận kết quả phù hợp.
 6. **Social Review + Stats:** Tạo review → gọi stats → average_rating được tính đúng.
 7. **AI unavailable graceful degradation:** Ollama down → ingredient create vẫn thành công (PENDING).

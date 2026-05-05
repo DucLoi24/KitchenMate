@@ -130,6 +130,32 @@ def _normalize_result(raw: str) -> str
     """Strip, uppercase, validate. Fallback về 'SUSPECT'."""
 ```
 
+### `core/services/recipe_moderation_task.py` — Background AI Moderation
+
+Background task chạy trong thread riêng để không blocking request.
+
+```python
+def run_ai_moderation(recipe_id: int)
+    """
+    1. Skip if ai_moderation_attempted == True
+    2. Set ai_moderation_attempted = True
+    3. Build text: title + description + steps
+    4. Call moderate_text()
+    5. Update visibility:
+       - YES  → PUBLIC
+       - NO   → PRIVATE + moderation_reason
+       - SUSPECT → keep PENDING
+    """
+
+def trigger_async_moderation(recipe_id: int)
+    """Spawn daemon thread chạy run_ai_moderation()."""
+```
+
+**Moderation flow mới:**
+- `publish()` → set PENDING → `trigger_async_moderation()` → return 200 ngay
+- AI chạy nền → cập nhật visibility theo kết quả
+- Admin và AI cùng share một "rổ PENDING"
+
 ---
 
 ### `core/utils/file_validator.py`

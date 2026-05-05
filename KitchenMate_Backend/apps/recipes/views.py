@@ -12,6 +12,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 
 from core.permissions import IsOwner
 from core.services.ai_moderator import moderate_text, ModerationTimeoutError, ModerationServiceError
+from core.services.recipe_moderation_task import trigger_async_moderation
 from .models import Recipe
 from .serializers import RecipeListSerializer, RecipeDetailSerializer, RecipeCreateSerializer
 from .filters import RecipeFilter
@@ -203,28 +204,22 @@ class RecipeViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=['post'], url_path='publish')
     def publish(self, request, pk=None):
         """
-        Gửi công thức PRIVATE qua AI moderation để công khai.
+        Gửi công thức PRIVATE sang PENDING và trigger AI moderation async.
 
         Endpoint: POST /api/recipes/{id}/publish/
         Permission: IsOwner — chỉ chủ sở hữu công thức mới được gọi.
 
-        Điều kiện tiên quyết:
-            - Công thức phải đang ở trạng thái PRIVATE.
-              Nếu đang PENDING hoặc PUBLIC → trả về 400.
-
-        AI Moderation Flow:
-            1. Ghép text kiểm duyệt: title + description + các bước (theo step_number).
-            2. Gửi text tới Local LLM service (moderate_text).
-            3. Xử lý kết quả:
-                • YES     → Đặt visibility=PUBLIC, trả về 200 kèm dữ liệu công thức.
-                • NO      → Không lưu, trả về 400 "Nội dung không phù hợp".
-                • SUSPECT → Đặt visibility=PENDING (chờ Admin duyệt), trả về 200.
+        Flow:
+            1. Validate: recipe.visibility == 'PRIVATE'
+            2. Set visibility='PENDING', ai_moderation_attempted=False
+            3. Save to DB
+            4. Trigger background thread: run_ai_moderation(recipe_id)
+            5. Return 200 "Đã gửi duyệt thành công"
 
         Returns:
-            200: Công thức đã PUBLIC hoặc chuyển sang PENDING chờ duyệt.
-            400: Công thức không ở trạng thái PRIVATE, hoặc nội dung vi phạm (AI trả NO).
+            200: Công thức đã được gửi duyệt (đang chờ AI/Admin).
+            400: Công thức không ở trạng thái PRIVATE.
             404: Công thức không tồn tại.
-            503: Dịch vụ AI moderation tạm thời không khả dụng.
         """
         try:
             recipe = self.get_queryset().get(pk=pk)
@@ -243,46 +238,15 @@ class RecipeViewSet(viewsets.GenericViewSet):
                 }},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        # Ghép text kiểm duyệt: title + description + các bước theo step_number
-        steps_text = '\n'.join(
-            step.instruction
-            for step in recipe.steps.order_by('step_number')
-        )
-        text_to_moderate = f"{recipe.title}\n{recipe.description}\n{steps_text}".strip()
-
-        try:
-            result = moderate_text(text_to_moderate)
-        except (ModerationTimeoutError, ModerationServiceError):
-            return Response(
-                {'success': False, 'error': {
-                    'message': 'Dịch vụ kiểm duyệt tạm thời không khả dụng. Vui lòng thử lại sau.'
-                }},
-                status=status.HTTP_503_SERVICE_UNAVAILABLE
-            )
-
-        if result == 'YES':
-            recipe.visibility = 'PUBLIC'
-            recipe.save(update_fields=['visibility'])
-            return Response({
-                'success': True,
-                'message': 'Công thức đã được công khai thành công.',
-                'data': RecipeDetailSerializer(recipe).data
-            })
-        elif result == 'NO':
-            return Response(
-                {'success': False, 'error': {
-                    'message': 'Nội dung không phù hợp với tiêu chuẩn cộng đồng.'
-                }},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        else:  # SUSPECT
-            recipe.visibility = 'PENDING'
-            recipe.save(update_fields=['visibility'])
-            return Response({
-                'success': True,
-                'message': 'Công thức đang chờ Admin xem xét.',
-                'data': RecipeDetailSerializer(recipe).data
-            })
+        recipe.visibility = 'PENDING'
+        recipe.ai_moderation_attempted = False
+        recipe.save(update_fields=['visibility', 'ai_moderation_attempted'])
+        trigger_async_moderation(recipe.id)
+        return Response({
+            'success': True,
+            'message': 'Đã gửi công thức đi duyệt. Vui lòng chờ kết quả.',
+            'data': RecipeDetailSerializer(recipe).data
+        })
 
 
 class RecipeStatsView(APIView):

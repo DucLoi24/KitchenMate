@@ -90,6 +90,7 @@ class Recipe(models.Model):
     deleted_at = models.DateTimeField(null=True, blank=True)
     rejection_reason = models.TextField(blank=True, null=True)
     has_invalid_ingredients = models.BooleanField(default=False)
+    ai_moderation_attempted = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'recipes'

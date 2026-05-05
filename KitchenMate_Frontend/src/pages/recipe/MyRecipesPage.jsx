@@ -240,7 +240,7 @@ export function MyRecipesPage() {
     setIsUpdating(true)
     try {
       await recipeApi.publishRecipe(confirmDialog.recipe.id)
-      toast.success('Đã đăng công khai công thức. Công thức đang chờ duyệt.')
+      toast.success('Đã gửi công thức đi duyệt. Vui lòng chờ kết quả.')
       setConfirmDialog({ isOpen: false, recipe: null, type: null })
       refetch()
     } catch (err) {

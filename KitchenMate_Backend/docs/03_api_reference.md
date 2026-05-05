@@ -496,23 +496,34 @@ Tất cả công thức của user hiện tại (bao gồm PRIVATE, PENDING, PUB
 ---
 
 ### POST `/api/recipes/{id}/publish/`
-Gửi công thức PRIVATE qua AI moderation để công khai.
+Gửi công thức PRIVATE sang PENDING và trigger AI moderation async.
 
 **Permission:** IsOwner
 
 **Điều kiện:** Công thức phải đang ở trạng thái `PRIVATE`.
 
-**AI Moderation Flow:**
-1. Ghép text: `title + description + các bước (theo step_number)`.
-2. Gửi tới Ollama Local LLM.
-3. Xử lý kết quả:
+**Flow:**
+1. Recipe lập tức chuyển `visibility=PENDING`
+2. Background thread gọi AI moderation
+3. Trả về 200 ngay lập tức (không chờ AI)
 
-| Kết quả AI | Hành động | HTTP Status |
+**Response:**
+
+| Kết quả AI | HTTP | Recipe visibility |
 |---|---|---|
-| `YES` | `visibility=PUBLIC` | 200 |
-| `NO` | Không lưu, trả lỗi | 400 |
-| `SUSPECT` | `visibility=PENDING` | 200 |
-| AI lỗi | Không thay đổi trạng thái | 503 |
+| `YES` | 200 | `PUBLIC` (sau khi AI xử lý) |
+| `NO` | 200 | `PRIVATE` + `moderation_reason` |
+| `SUSPECT` | 200 | `PENDING` (Admin duyệt) |
+| AI đang xử lý | 200 | `PENDING` (chờ kết quả) |
+
+**Success Response (200):**
+```json
+{
+  "success": true,
+  "message": "Đã gửi công thức đi duyệt. Vui lòng chờ kết quả.",
+  "data": { ... }
+}
+```
 
 ---
 
