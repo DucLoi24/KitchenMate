@@ -10,6 +10,7 @@ import {
   Bookmark,
   User,
   Settings,
+  CircleDot,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { cn } from '@/utils'
@@ -18,7 +19,8 @@ const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },
   { to: '/explore', icon: Compass, label: 'Khám phá' },
   { to: '/recipe/new', icon: PlusCircle, label: 'Tạo công thức' },
-  { to: '/pantry', icon: UtensilsCrossed, label: 'Tủ lạnh' },
+  { to: '/my-recipes', icon: UtensilsCrossed, label: 'Công thức của tôi' },
+  { to: '/pantry', icon: CircleDot, label: 'Tủ lạnh' },
   { to: '/shopping-list', icon: ShoppingCart, label: 'Danh sách đi chợ' },
   { to: '/suggest', icon: Lightbulb, label: 'Gợi ý món ăn' },
   { to: '/collections', icon: Bookmark, label: 'Bộ sưu tập' },
