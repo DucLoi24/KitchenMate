@@ -32,7 +32,22 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
     permission_classes = [IsAdminUser]
 
     def list(self, request):
-        recipes = Recipe.objects.select_related('user').order_by('-created_at')
+        recipes = Recipe.objects.select_related('user')
+
+        visibility = request.query_params.get('visibility')
+        if visibility in ('PUBLIC', 'PRIVATE', 'PENDING'):
+            recipes = recipes.filter(visibility=visibility)
+
+        search = request.query_params.get('search')
+        if search:
+            recipes = recipes.filter(
+                models.Q(title__icontains=search) |
+                models.Q(description__icontains=search)
+            )
+
+        ordering = request.query_params.get('ordering', '-created_at')
+        recipes = recipes.order_by(ordering)
+
         page = self._paginate(request, recipes, RecipeListSerializer)
         return page
 

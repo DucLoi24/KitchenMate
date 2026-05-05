@@ -13,6 +13,8 @@ import {
   Eye,
   ThumbsUp,
   XCircle,
+  Search,
+  X,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -479,6 +481,71 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
   )
 }
 
+// ============ Visibility Filter ============
+
+function VisibilityFilter({ visibility, onVisibilityChange }) {
+  const options = [
+    { value: '', label: 'Tất cả' },
+    { value: 'PUBLIC', label: 'Công khai' },
+    { value: 'PRIVATE', label: 'Riêng tư' },
+  ]
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-[var(--color-text-secondary)]">Lọc:</span>
+      <select
+        value={visibility}
+        onChange={e => onVisibilityChange(e.target.value)}
+        className={cn(
+          'h-9 px-3 rounded-[var(--radius-md)]',
+          'border border-[var(--color-border)]',
+          'bg-[var(--color-surface)]',
+          'text-[var(--color-text)] text-sm',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+          'cursor-pointer'
+        )}
+      >
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+    </div>
+  )
+}
+
+// ============ Search Input ============
+
+function SearchInput({ value, onChange }) {
+  return (
+    <div className="relative">
+      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+      <input
+        type="text"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        placeholder="Tìm kiếm công thức..."
+        className={cn(
+          'h-9 pl-9 pr-4 rounded-[var(--radius-md)]',
+          'border border-[var(--color-border)]',
+          'bg-[var(--color-surface)]',
+          'text-[var(--color-text)] text-sm',
+          'placeholder:text-[var(--color-text-muted)]',
+          'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+          'w-48'
+        )}
+      />
+      {value && (
+        <button
+          onClick={() => onChange('')}
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
+    </div>
+  )
+}
+
 // ============ Sort Control ============
 
 function SortControl({ sort, onSortChange }) {
@@ -585,6 +652,16 @@ export function RecipeManagementPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [sort, setSort] = useState('-created_at')
+  const [visibilityFilter, setVisibilityFilter] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
 
   const tabs = [
     { id: 'pending', label: 'Chờ duyệt', icon: Clock },
@@ -599,6 +676,14 @@ export function RecipeManagementPage() {
         page,
         page_size: PAGE_SIZE,
         ordering: sort,
+      }
+
+      if (activeTab === 'all' && visibilityFilter) {
+        params.visibility = visibilityFilter
+      }
+
+      if (debouncedSearch) {
+        params.search = debouncedSearch
       }
 
       const res = activeTab === 'pending'
@@ -634,7 +719,7 @@ export function RecipeManagementPage() {
         setLoading(false)
       }
     }
-  }, [activeTab, page, sort])
+  }, [activeTab, page, sort, visibilityFilter, debouncedSearch])
 
   useEffect(() => {
     let isMounted = true
@@ -642,7 +727,7 @@ export function RecipeManagementPage() {
     return () => {
       isMounted = false
     }
-  }, [loadRecipes])
+  }, [loadRecipes, debouncedSearch, activeTab])
 
   const handleApprove = (id) => {
     setRecipes(prev => prev.filter(r => r.id !== id))
@@ -670,6 +755,8 @@ export function RecipeManagementPage() {
     setActiveTab(tabId)
     setPage(1)
     setRecipes([])
+    setSearchQuery('')
+    setVisibilityFilter('')
   }
 
   return (
@@ -711,7 +798,15 @@ export function RecipeManagementPage() {
         <div className="text-sm text-[var(--color-text-secondary)]">
           {totalCount > 0 && `${totalCount} công thức`}
         </div>
-        <SortControl sort={sort} onSortChange={handleSortChange} />
+        <div className="flex items-center gap-3">
+          {activeTab === 'all' && (
+            <>
+              <SearchInput value={searchQuery} onChange={setSearchQuery} />
+              <VisibilityFilter visibility={visibilityFilter} onVisibilityChange={setVisibilityFilter} />
+            </>
+          )}
+          <SortControl sort={sort} onSortChange={handleSortChange} />
+        </div>
       </div>
 
       {/* Content */}
