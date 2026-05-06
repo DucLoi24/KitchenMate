@@ -39,17 +39,30 @@ PRIVATE ──── publish() ──── LẬP TỨC PENDING
 
 **Nguyên tắc:** AI và Admin cùng share một "rổ PENDING". AI xử lý trước, Admin là backup.
 
+**Sequential Queue:** Chỉ 1 công thức được AI xử lý tại một thời điểm. Các công thức khác đang chờ trong hàng đợi sẽ hiển thị trạng thái `PENDING` (không phải `PROCESSING`).
+
 | Kết quả AI | Hành vi |
 |---|---|
 | `YES` | Recipe tự động `PUBLIC` (AI duyệt trước) |
 | `NO` | Recipe về `PRIVATE` + lưu `moderation_reason` |
 | `SUSPECT` | Giữ `PENDING` để Admin duyệt thủ công |
 
+**Trạng thái AI Moderation:**
+
+| Trạng thái | Ý nghĩa |
+|---|---|
+| `PENDING` | Đang chờ trong hàng đợi |
+| `PROCESSING` | AI đang đọc và phân tích nội dung |
+| `APPROVED` | Đã duyệt (do AI hoặc Admin) |
+| `REJECTED` | Đã từ chối (do AI hoặc Admin) |
+
 **Cơ chế async:**
 1. User gọi `publish()` → Recipe **lập tức** chuyển `PENDING`
-2. Background thread gọi Ollama AI
-3. AI xử lý xong → cập nhật `visibility` theo kết quả
-4. User không blocked trong lúc chờ AI
+2. Background thread gọi Ollama AI (sequential - có lock đảm bảo 1 công thức tại một thời điểm)
+3. Khi AI bắt đầu đọc → `ai_moderation_status = 'PROCESSING'`
+4. AI xử lý xong → cập nhật `visibility` và `ai_moderation_status` theo kết quả
+5. Sau khi xong → tự động lấy công thức PENDING tiếp theo trong hàng đợi
+6. User không blocked trong lúc chờ AI
 
 ---
 

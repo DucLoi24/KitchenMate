@@ -102,7 +102,16 @@ class RecipeViewSet(viewsets.GenericViewSet):
                 {'success': False, 'error': {'message': 'Du lieu khong hop le.', 'details': serializer.errors}},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        recipe = serializer.save(user=request.user, visibility='PRIVATE')
+        recipe = serializer.save(user=request.user)
+
+        if recipe.visibility == 'PUBLIC':
+            recipe.save(update_fields=['visibility'])
+            trigger_async_moderation(recipe.id)
+            return Response(
+                {'success': True, 'message': 'Cong thuc da duoc gui kiem duyet. Vui long cho ket qua.', 'data': RecipeDetailSerializer(recipe).data},
+                status=status.HTTP_201_CREATED
+            )
+
         return Response(
             {'success': True, 'message': 'Tao cong thuc thanh cong.', 'data': RecipeDetailSerializer(recipe).data},
             status=status.HTTP_201_CREATED
@@ -156,10 +165,14 @@ class RecipeViewSet(viewsets.GenericViewSet):
         if err:
             return err
         if recipe.visibility != 'PRIVATE':
-            return Response(
-                {'success': False, 'error': {'message': 'Chi duoc chinh sua cong thuc o trang thai PRIVATE.'}},
-                status=status.HTTP_403_FORBIDDEN
-            )
+            # Nếu là partial update (PATCH) và chỉ thay đổi visibility, cho phép
+            if partial and request.data.keys() == {'visibility'}:
+                pass  # Cho phép visibility change
+            else:
+                return Response(
+                    {'success': False, 'error': {'message': 'Chi duoc chinh sua cong thuc o trang thai PRIVATE.'}},
+                    status=status.HTTP_403_FORBIDDEN
+                )
         serializer = RecipeCreateSerializer(recipe, data=request.data, partial=partial)
         if not serializer.is_valid():
             return Response(
@@ -167,6 +180,14 @@ class RecipeViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
         recipe = serializer.save()
+
+        # Issue 3: Khi visibility thay đổi sang PUBLIC, trigger AI moderation
+        if recipe.visibility == 'PUBLIC':
+            recipe.visibility = 'PENDING'
+            recipe.ai_moderation_attempted = False
+            recipe.save(update_fields=['visibility', 'ai_moderation_attempted'])
+            trigger_async_moderation(recipe.id)
+
         return Response({
             'success': True,
             'message': 'Cap nhat cong thuc thanh cong.',
@@ -285,9 +306,7 @@ class RecipeViewSet(viewsets.GenericViewSet):
                 }},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        recipe.visibility = 'PENDING'
-        recipe.ai_moderation_attempted = False
-        recipe.save(update_fields=['visibility', 'ai_moderation_attempted'])
+        recipe.save(update_fields=['visibility'])
         trigger_async_moderation(recipe.id)
         return Response({
             'success': True,

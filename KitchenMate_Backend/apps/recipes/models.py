@@ -113,6 +113,17 @@ class Recipe(models.Model):
     rejection_reason = models.TextField(blank=True, null=True)
     has_invalid_ingredients = models.BooleanField(default=False)
     ai_moderation_attempted = models.BooleanField(default=False)
+    ai_moderation_status = models.CharField(
+        max_length=20,
+        choices=[
+            ('PENDING', 'Chờ duyệt'),
+            ('PROCESSING', 'AI đang xử lý'),
+            ('APPROVED', 'Đã duyệt'),
+            ('REJECTED', 'Từ chối'),
+        ],
+        default='PENDING',
+        help_text='Trạng thái AI kiểm duyệt: PENDING=chờ, PROCESSING=AI đang xử lý, APPROVED=đã duyệt, REJECTED=từ chối'
+    )
 
     class Meta:
         db_table = 'recipes'

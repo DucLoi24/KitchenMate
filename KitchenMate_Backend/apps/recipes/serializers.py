@@ -46,6 +46,12 @@ class RecipeListSerializer(serializers.ModelSerializer):
     view_count = serializers.IntegerField(read_only=True, default=0)
     thumbnail_url = serializers.SerializerMethodField()
     is_favorited = serializers.BooleanField(read_only=True, default=False)
+    ai_moderation_attempted = serializers.BooleanField(read_only=True, default=False)
+    ai_moderation_status = serializers.CharField(read_only=True, default='PENDING')
+    ai_processing = serializers.SerializerMethodField()
+
+    def get_ai_processing(self, obj):
+        return obj.ai_moderation_status == 'PROCESSING'
 
     def get_user_avatar(self, obj):
         avatar = getattr(obj.user, 'avatar', None)
@@ -80,7 +86,8 @@ class RecipeListSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'user_name', 'user_avatar',
             'categories', 'avg_rating', 'save_count', 'view_count',
-            'is_favorited', 'is_deleted', 'deleted_at', 'created_at'
+            'is_favorited', 'ai_moderation_attempted', 'ai_moderation_status', 'ai_processing',
+            'is_deleted', 'deleted_at', 'created_at'
         )
 
 
@@ -118,7 +125,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'categories',
             'recipe_ingredients', 'steps', 'avg_rating',
-            'is_favorited', 'ai_moderation_attempted',
+            'is_favorited', 'ai_moderation_attempted', 'ai_moderation_status',
             'is_deleted', 'deleted_at',
             'created_at', 'updated_at'
         )
@@ -146,10 +153,16 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
         - difficulty (str): Độ khó (EASY / MEDIUM / HARD).
         - prep_time (int): Thời gian chuẩn bị (phút).
         - thumbnail_url (str): URL ảnh đại diện.
+        - visibility (str): Chế độ hiển thị (PRIVATE / PUBLIC).
         - categories (list): Nested list category IDs.
         - ingredients (list, write_only): Nested list nguyên liệu.
         - steps (list, write_only): Nested list các bước thực hiện.
     """
+    visibility = serializers.ChoiceField(
+        choices=[('PRIVATE', 'Riêng tư'), ('PUBLIC', 'Công khai')],
+        required=False,
+        default='PRIVATE'
+    )
     categories = serializers.PrimaryKeyRelatedField(
         queryset=RecipeCategory.objects.filter(is_active=True),
         many=True,
@@ -160,7 +173,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('title', 'description', 'difficulty', 'prep_time', 'thumbnail_url', 'categories', 'ingredients', 'steps')
+        fields = ('title', 'description', 'difficulty', 'prep_time', 'thumbnail_url', 'categories', 'ingredients', 'steps', 'visibility')
 
     def create(self, validated_data):
         categories_data = validated_data.pop('categories', [])

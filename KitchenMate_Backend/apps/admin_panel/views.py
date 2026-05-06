@@ -63,15 +63,34 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
     def approve(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         recipe.visibility = 'PUBLIC'
-        recipe.save(update_fields=['visibility'])
+        recipe.ai_moderation_status = 'APPROVED'
+        recipe.save(update_fields=['visibility', 'ai_moderation_status'])
         return Response({'success': True, 'message': 'Cong thuc da duoc duyet va cong khai.'})
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
         recipe.visibility = 'PRIVATE'
-        recipe.save(update_fields=['visibility'])
+        recipe.ai_moderation_status = 'REJECTED'
+        recipe.save(update_fields=['visibility', 'ai_moderation_status'])
         return Response({'success': True, 'message': 'Cong thuc da bi tu choi, chuyen ve PRIVATE.'})
+
+    @action(detail=True, methods=['post'], url_path='unpublish')
+    def unpublish(self, request, pk=None):
+        if not request.user.is_superuser:
+            return Response(
+                {'success': False, 'message': 'Ban khong co quyen thuc hien hanh dong nay. Chi superuser moi co the thuc hien.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        recipe = get_object_or_404(Recipe, pk=pk)
+        reason = request.data.get('reason', '')
+        recipe.visibility = 'PRIVATE'
+        recipe.ai_moderation_status = 'REJECTED'
+        recipe.save(update_fields=['visibility', 'ai_moderation_status'])
+        message = 'Cong thuc da duoc chuyen ve che do rieng tu.'
+        if reason:
+            message += f' Ly do: {reason}'
+        return Response({'success': True, 'message': message})
 
     def _paginate(self, request, queryset, serializer_class):
         from rest_framework.pagination import PageNumberPagination
