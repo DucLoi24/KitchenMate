@@ -1,34 +1,29 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Pencil, Trash2, Check, X, Beef, Wheat, Leaf, Flame, MoreHorizontal } from 'lucide-react'
+import { Pencil, Trash2, Check, X } from 'lucide-react'
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 
 const CATEGORY_CONFIG = {
   PROTEIN: {
     label: 'Đạm',
-    color: 'bg-red-100 text-red-700 border-red-200',
-    icon: Beef,
+    stripeColor: 'bg-red-500',
   },
   CARB: {
     label: 'Tinh bột',
-    color: 'bg-amber-100 text-amber-700 border-amber-200',
-    icon: Wheat,
+    stripeColor: 'bg-amber-500',
   },
   VEG: {
     label: 'Rau',
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-    icon: Leaf,
+    stripeColor: 'bg-emerald-500',
   },
   SPICE: {
     label: 'Gia vị',
-    color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-    icon: Flame,
+    stripeColor: 'bg-violet-500',
   },
   OTHER: {
     label: 'Khác',
-    color: 'bg-gray-100 text-gray-600 border-gray-200',
-    icon: MoreHorizontal,
+    stripeColor: 'bg-gray-400',
   },
 }
 
@@ -52,7 +47,6 @@ export function PantryItem({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const category = CATEGORY_CONFIG[item.ingredient_category] || CATEGORY_CONFIG.OTHER
-  const CategoryIcon = category.icon
 
   const handleSaveEdit = () => {
     if (editQuantity > 0 && editQuantity !== item.quantity) {
@@ -83,59 +77,59 @@ export function PantryItem({
     <>
       <motion.div
         layout
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -10 }}
-        transition={{ duration: 0.2 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.15 }}
         className={cn(
-          'bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-4',
+          'relative bg-[var(--color-surface)] rounded-[var(--radius-md)]',
           'border border-[var(--color-border)]',
           'shadow-[var(--shadow-sm)]',
-          'hover:shadow-[var(--shadow-md)] transition-shadow duration-[var(--transition-base)]',
+          'hover:shadow-[var(--shadow-md)] transition-shadow duration-[var(--transition-fast)]',
+          'group',
           isDeleting && 'opacity-50'
         )}
       >
-        {/* Category badge */}
-        <div className="flex items-center justify-between mb-3">
-          <div className={cn(
-            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full',
-            'text-xs font-medium border',
-            category.color
-          )}>
-            <CategoryIcon className="w-3 h-3" />
-            {category.label}
-          </div>
+        {/* Category stripe */}
+        <div className={cn(
+          'absolute left-0 top-3 bottom-3 w-[3px] rounded-full',
+          category.stripeColor
+        )} />
 
-          {/* Action buttons */}
-          {!isEditing && (
-            <div className="flex items-center gap-1">
+        {/* Content */}
+        <div className="p-3 pl-4">
+          {/* Header row */}
+          <div className="flex items-start justify-between gap-2 mb-1.5">
+            <h4 className="text-sm font-medium text-[var(--color-text)] line-clamp-1 flex-1">
+              {item.ingredient_name}
+            </h4>
+
+            {/* Actions - visible on hover for desktop, always on mobile */}
+            <div className={cn(
+              'flex items-center gap-0.5',
+              'lg:opacity-0 lg:group-hover:opacity-100',
+              'transition-opacity duration-[var(--transition-fast)]'
+            )}>
               <button
                 onClick={() => setIsEditing(true)}
                 className="p-1.5 rounded-md hover:bg-[var(--color-background-alt)] transition-colors"
                 disabled={isUpdating || isDeleting}
               >
-                <Pencil className="w-4 h-4 text-[var(--color-text-secondary)]" />
+                <Pencil className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
               </button>
               <button
                 onClick={handleDeleteClick}
                 className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
                 disabled={isUpdating || isDeleting}
               >
-                <Trash2 className="w-4 h-4 text-red-500" />
+                <Trash2 className="w-3.5 h-3.5 text-red-500" />
               </button>
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Ingredient name */}
-        <h4 className="font-display text-base font-semibold text-[var(--color-text)] mb-2 line-clamp-1">
-          {item.ingredient_name}
-        </h4>
-
-        {/* Quantity */}
-        <div className="flex items-center justify-between">
+          {/* Quantity */}
           {isEditing ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 mt-2">
               <input
                 type="number"
                 value={editQuantity}
@@ -143,49 +137,33 @@ export function PantryItem({
                 min="0.1"
                 step="0.1"
                 className={cn(
-                  'w-20 h-9 px-3 rounded-[var(--radius-md)]',
+                  'w-20 h-8 px-2.5 rounded-[var(--radius-sm)]',
                   'border border-[var(--color-border)]',
-                  'text-[var(--color-text)] font-medium',
+                  'text-sm text-[var(--color-text)] font-medium tabular-nums',
                   'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
                 )}
                 autoFocus
               />
-              <span className="text-sm text-[var(--color-text-secondary)]">
+              <span className="text-xs text-[var(--color-text-secondary)]">
                 {UNIT_LABELS[item.unit] || item.unit}
               </span>
+              <div className="flex items-center gap-0.5 ml-auto">
+                <Button size="sm" variant="primary" onClick={handleSaveEdit} isLoading={isUpdating} className="h-7 w-7 p-0">
+                  <Check className="w-3.5 h-3.5" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={handleCancelEdit} disabled={isUpdating} className="h-7 w-7 p-0">
+                  <X className="w-3.5 h-3.5" />
+                </Button>
+              </div>
             </div>
           ) : (
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-2xl font-display font-bold text-[var(--color-primary)]">
+            <div className="flex items-baseline gap-1">
+              <span className="text-xs font-medium tabular-nums text-[var(--color-text-secondary)]">
                 {item.quantity}
               </span>
-              <span className="text-sm text-[var(--color-text-secondary)]">
+              <span className="text-xs text-[var(--color-text-muted)]">
                 {UNIT_LABELS[item.unit] || item.unit}
               </span>
-            </div>
-          )}
-
-          {/* Edit action buttons */}
-          {isEditing && (
-            <div className="flex items-center gap-1">
-              <Button
-                size="sm"
-                variant="primary"
-                onClick={handleSaveEdit}
-                isLoading={isUpdating}
-                className="h-8 w-8 p-0"
-              >
-                <Check className="w-4 h-4" />
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={handleCancelEdit}
-                disabled={isUpdating}
-                className="h-8 w-8 p-0"
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </div>
           )}
         </div>

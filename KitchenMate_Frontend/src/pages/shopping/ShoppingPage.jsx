@@ -46,7 +46,7 @@ function ErrorState({ onRetry }) {
       <h3 className="font-display text-lg font-semibold text-[var(--color-text)] mb-2">
         Không thể tải danh sách
       </h3>
-      <p className="text-[var(--color-text-secondary)] text-sm mb-6 max-w-xs">
+      <p className="text-[var(--color-text-secondary)] text-sm mb-6 max-w-[20rem]">
         Đã xảy ra lỗi khi tải danh sách đi chợ. Vui lòng thử lại.
       </p>
       <Button variant="outline" onClick={onRetry}>
