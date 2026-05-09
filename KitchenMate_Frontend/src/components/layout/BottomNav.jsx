@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Home, Compass, PlusCircle, UtensilsCrossed, Lightbulb, Bookmark, Settings } from 'lucide-react'
+import { Home, Compass, PlusCircle, UtensilsCrossed, Lightbulb, Bookmark, Settings, ChefHat } from 'lucide-react'
 import { cn } from '@/utils'
 import { useAuth } from '@/components/auth/useAuth'
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },
   { to: '/explore', icon: Compass, label: 'Khám phá' },
   { to: '/recipe/new', icon: PlusCircle, label: 'Tạo', isCreate: true },
+  { to: '/my-recipes', icon: ChefHat, label: 'Công thức' },
   { to: '/pantry', icon: UtensilsCrossed, label: 'Tủ lạnh' },
   { to: '/collections', icon: Bookmark, label: 'Bộ sưu tập' },
   { to: '/suggest', icon: Lightbulb, label: 'Gợi ý' },

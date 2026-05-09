@@ -3,7 +3,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **KitchenMate** (3152 symbols, 5316 relationships, 90 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **KitchenMate** (3569 symbols, 5982 relationships, 104 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -293,3 +293,59 @@ cr.recipe?.thumbnail
 ### Tailwind max-w Constraints
 **Context**: Dialogs/confirmation modals với error messages
 **Rule**: KHÔNG dùng `max-w-sm`, `max-w-xs`, `max-w-md`, `max-w-lg` cho text content — gây text bị ép chen lại.
+
+### Multi-Step Form State Management
+**Context**: Khi implement multi-step form (VD: recipe editor) với các step components
+**Pattern**: Components nhận `data` (formData object) thay vì props riêng biệt. Dùng `data.steps`/`data.ingredients` trực tiếp thay vì nhận `steps`/`ingredients` như separate props
+```javascript
+// IngredientList - CORRECT
+export function IngredientList({ onChange, data, errors = {} }) {
+  const steps = data?.steps || []
+  const handleAddIngredient = (ingredient) => {
+    onChange({ ...data, ingredients: [...(data.ingredients || []), newIngredient] })
+  }
+}
+
+// IngredientList - WRONG (state inconsistency)
+export function IngredientList({ ingredients = [], onChange, errors = {} }) {
+  // ingredients prop có thể không đồng bộ với formData
+}
+```
+**Why**: Khi component nhận `ingredients` prop riêng, nó có thể không đồng bộ với formData gốc nếu parent re-render với state cũ. Nhận `data` và dùng `data.ingredients` đảm bảo luôn đọc từ nguồn đúng.
+
+### Framer Motion Reorder State Conflict
+**Context**: Khi dùng `Reorder.Group`/`Reorder.Item` trong multi-step form với React state management
+**Pattern**: Thay `Reorder.Group`/`Reorder.Item` bằng `motion.div` để tránh conflict
+```javascript
+// WRONG - Reorder quản lý state nội bộ, gây conflict
+<Reorder.Group values={ingredients} onReorder={(newOrder) => onChange(newOrder)}>
+  <Reorder.Item key={item.id} value={item}>...</Reorder.Item>
+</Reorder.Group>
+
+// CORRECT - motion.div không quản lý state
+<div className="space-y-2">
+  <AnimatePresence>
+    {ingredients.map((item) => (
+      <motion.div key={item.id} ...>...</motion.div>
+    ))}
+  </AnimatePresence>
+</div>
+```
+**Why**: `Reorder.Group` dùng internal state tracking không tương thích với React's external state management.
+
+---
+
+## Backend Model-DB Consistency
+
+### Model Fields Must Match Database Schema
+**Context**: Khi PostgreSQL báo `null value in column "X" violates not-null constraint`
+**Root Cause**: Model thiếu định nghĩa trường mà database đã có sẵn
+**Pattern**: Kiểm tra database schema khi lỗi xảy ra
+```bash
+# Check all columns in table
+SELECT column_name FROM information_schema.columns WHERE table_name='recipes'
+```
+**Fix**: Thêm các trường thiếu vào model, generate migration, và apply. Nếu columns đã tồn tại trong DB, dùng `--fake` để tránh lỗi duplicate column.
+```bash
+python manage.py migrate recipes --fake
+```

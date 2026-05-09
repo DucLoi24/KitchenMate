@@ -43,6 +43,7 @@ export function useUpdateRecipe() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
       queryClient.invalidateQueries({ queryKey: ['recipe', data.id] })
+      queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
     },
   })
 }

@@ -10,12 +10,12 @@ from .category_views import RecipeCategoryViewSet
 router = DefaultRouter()
 router.register(r'', RecipeViewSet, basename='recipe')
 
-# Category router — nested under /recipes/categories/
 category_router = DefaultRouter()
 category_router.register(r'categories', RecipeCategoryViewSet, basename='category')
+category_router.include_root_view = False
 
 urlpatterns = [
-    path('', include(router.urls)),
     path('', include(category_router.urls)),
+    path('', include(router.urls)),
     path('<uuid:pk>/stats/', RecipeStatsView.as_view(), name='recipe-stats'),
 ]

@@ -7,7 +7,7 @@ import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
 import { ProfilePage, PublicProfilePage } from '@/pages/profile'
 import { HomePage } from '@/pages/home'
 import { ExplorePage } from '@/pages/explore'
-import { RecipeDetailPage, RecipeEditorPage } from '@/pages/recipe'
+import { RecipeDetailPage, RecipeEditorPage, MyRecipesPage } from '@/pages/recipe'
 import { PantryPage } from '@/pages/pantry'
 import { ShoppingPage } from '@/pages/shopping'
 import { SuggestionPage } from '@/pages/suggestion'
@@ -25,6 +25,7 @@ const DashboardPage = lazy(() => import('@/pages/admin/DashboardPage').then(m =>
 const RecipeManagementPage = lazy(() => import('@/pages/admin/RecipeManagementPage').then(m => ({ default: m.default || m.RecipeManagementPage })))
 const IngredientManagementPage = lazy(() => import('@/pages/admin/IngredientManagementPage').then(m => ({ default: m.default || m.IngredientManagementPage })))
 const UserManagementPage = lazy(() => import('@/pages/admin/UserManagementPage').then(m => ({ default: m.default || m.UserManagementPage })))
+const CategoryManagementPage = lazy(() => import('@/pages/admin/CategoryManagementPage').then(m => ({ default: m.default || m.CategoryManagementPage })))
 
 // Loading fallback
 function PageLoader() {
@@ -82,6 +83,9 @@ function App() {
                 <Route path="/recipe/new" element={
                   <AuthGuard><RecipeEditorPage /></AuthGuard>
                 } />
+                <Route path="/my-recipes" element={
+                  <AuthGuard><MyRecipesPage /></AuthGuard>
+                } />
                 <Route path="/recipe/:id/edit" element={
                   <AuthGuard><RecipeEditorPage /></AuthGuard>
                 } />
@@ -102,6 +106,9 @@ function App() {
                 } />
                 <Route path="/admin/users" element={
                   <AdminGuard><Suspense fallback={<PageLoader />}><UserManagementPage /></Suspense></AdminGuard>
+                } />
+                <Route path="/admin/categories" element={
+                  <AdminGuard><Suspense fallback={<PageLoader />}><CategoryManagementPage /></Suspense></AdminGuard>
                 } />
               </Routes>
             </main>

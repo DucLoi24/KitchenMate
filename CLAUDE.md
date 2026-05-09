@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 <!-- gitnexus:start -->
 # GitNexus — Code Intelligence
 
-This project is indexed by GitNexus as **KitchenMate** (3152 symbols, 5316 relationships, 90 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
+This project is indexed by GitNexus as **KitchenMate** (3569 symbols, 5982 relationships, 104 execution flows). Use the GitNexus MCP tools to understand code, assess impact, and navigate safely.
 
 > If any GitNexus tool warns the index is stale, run `npx gitnexus analyze` in terminal first.
 
@@ -248,8 +248,34 @@ with transaction.atomic():
       - Email: `aitesterkm@kitchenmate.vn`
       - Password: `Tester1234@`
   4. Nếu không có test infrastructure sẵn có → tạo minimal test script để verify
+- **Sau khi sửa code frontend (React/Vite), PHẢI chạy `npm run build` để verify code compile đúng** — không chỉ chạy dev server vì build sẽ catch syntax errors và import errors mà dev server có thể bỏ qua
 - Test phải pass trước khi mark task là completed
 - Không được commit code mới nếu test infrastructure không setup — phải setup trước
+
+### Test File Locations
+
+#### Backend (KitchenMate_Backend/)
+
+| Loại test | Đường dẫn |
+|-----------|-----------|
+| Unit tests (per app) | `apps/{app}/tests/test_*.py` |
+| Integration tests | `tests/test_*.py` |
+| Fixtures | `tests/fixtures/` |
+
+- Dùng pytest — chạy `pytest` hoặc `pytest -m unit/integration` từ KitchenMate_Backend/
+- Mỗi app Django có thể có `tests/` riêng hoặc dùng root `tests/`
+
+#### Frontend (KitchenMate_Frontend/)
+
+| Loại test | Đường dẫn |
+|-----------|-----------|
+| Unit tests | `src/{component}/*.test.{js,jsx}` (co-located) |
+| Integration tests | `src/{feature}/__tests__/*.test.{js,jsx}` |
+| E2E tests | `tests/e2e/*.spec.{js,ts}` |
+
+- Dùng Vitest cho unit/integration — chạy `npm test`
+- Dùng Playwright cho E2E — chạy `npx playwright test`
+- **Co-locate** unit test ngay cạnh component đang test
 
 ---
 
@@ -264,6 +290,7 @@ with transaction.atomic():
 
 - Luôn update MEMORY khi có sự thay đổi, và luôn verify lại những thông tin mà bạn định đưa vào MEMORY. (Hoặc CLAUDE.md, AGENTS.md khi cần thiết)
 - Không được dùng Icon dạng text khi design, phải dùng của thư viện.
+- Luôn luôn confirm lại mọi thứ trước khi sửa code !
 
 ---
 
@@ -359,3 +386,71 @@ fields = ('id', 'email', 'full_name', 'is_staff', 'is_superuser', 'is_active', .
 ### Tailwind max-w Constraints
 **Context**: Dialogs/confirmation modals với error messages
 **Rule**: KHÔNG dùng `max-w-sm`, `max-w-xs`, `max-w-md`, `max-w-lg` cho text content — gây text bị ép chen lại.
+
+### Multi-Step Form State Management
+**Context**: Khi implement multi-step form (VD: recipe editor) với các step components
+**Pattern**: Components nhận `data` (formData object) thay vì props riêng biệt. Dùng `data.steps`/`data.ingredients` trực tiếp thay vì nhận `steps`/`ingredients` như separate props
+```javascript
+// IngredientList - CORRECT
+export function IngredientList({ onChange, data, errors = {} }) {
+  const steps = data?.steps || []
+  const handleAddIngredient = (ingredient) => {
+    onChange({ ...data, ingredients: [...(data.ingredients || []), newIngredient] })
+  }
+}
+
+// IngredientList - WRONG (state inconsistency)
+export function IngredientList({ ingredients = [], onChange, errors = {} }) {
+  // ingredients prop có thể không đồng bộ với formData
+}
+```
+**Why**: Khi component nhận `ingredients` prop riêng, nó có thể không đồng bộ với formData gốc nếu parent re-render với state cũ. Nhận `data` và dùng `data.ingredients` đảm bảo luôn đọc từ nguồn đúng.
+**Validation**: Debug log kiểm tra `formData.ingredients` trong `renderStep` phải match với `ingredients` prop nhận được
+
+### Framer Motion Reorder State Conflict
+**Context**: Khi dùng `Reorder.Group`/`Reorder.Item` trong multi-step form với React state management
+**Pattern**: Thay `Reorder.Group`/`Reorder.Item` bằng `motion.div` để tránh conflict
+```javascript
+// WRONG - Reorder quản lý state nội bộ, gây conflict
+<Reorder.Group values={ingredients} onReorder={(newOrder) => onChange(newOrder)}>
+  <Reorder.Item key={item.id} value={item}>...</Reorder.Item>
+</Reorder.Group>
+
+// CORRECT - motion.div không quản lý state
+<div className="space-y-2">
+  <AnimatePresence>
+    {ingredients.map((item) => (
+      <motion.div key={item.id} ...>...</motion.div>
+    ))}
+  </AnimatePresence>
+</div>
+```
+**Why**: `Reorder.Group` dùng internal state tracking không tương thích với React's external state management. Khi user reorder, internal state update nhưng external state (formData) không được sync đúng cách.
+
+---
+
+## Backend Model-DB Consistency
+
+### Model Fields Must Match Database Schema
+**Context**: Khi PostgreSQL báo `null value in column "X" violates not-null constraint`
+**Root Cause**: Model thiếu định nghĩa trường mà database đã có sẵn
+**Pattern**: Kiểm tra database schema khi lỗi xảy ra
+```bash
+# Check all columns in table
+SELECT column_name FROM information_schema.columns WHERE table_name='recipes'
+# Compare with model fields in apps/recipes/models.py
+```
+**Fix**: Thêm các trường thiếu vào model:
+```python
+class Recipe(models.Model):
+    # ... existing fields ...
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
+    rejection_reason = models.TextField(blank=True, null=True)
+    has_invalid_ingredients = models.BooleanField(default=False)
+```
+**Then**: Generate migration (`makemigrations`) và apply. Nếu columns đã tồn tại trong DB, dùng `--fake` để tránh lỗi duplicate column.
+```bash
+python manage.py migrate recipes --fake
+```
+**Validation**: Sau khi fix, test lại thao tác tạo/update để xác nhận không còn IntegrityError

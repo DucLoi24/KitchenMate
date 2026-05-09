@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Clock,
@@ -242,12 +242,92 @@ function RejectDialog({ isOpen, item, onConfirm, onCancel, loading }) {
   )
 }
 
+// ============ Unpublish Dialog ============
+
+function UnpublishDialog({ isOpen, item, onConfirm, onCancel, loading }) {
+  const [reason, setReason] = useState('')
+
+  const handleConfirm = async () => {
+    try {
+      await onConfirm(reason)
+    } catch {
+      // Error handled by caller
+    }
+  }
+
+  useEffect(() => {
+    if (!isOpen) setReason('')
+  }, [isOpen])
+
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onCancel}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          >
+            <div className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-xl)] p-6 max-w-md w-full">
+              <h3 className="font-display text-lg font-semibold text-[var(--color-text)] mb-2">
+                Chuyển về riêng tư "{item?.title}"?
+              </h3>
+              <p className="text-sm text-[var(--color-text-secondary)] mb-4">
+                Công thức này sẽ không còn hiển thị công khai. Lý do là tùy chọn.
+              </p>
+              <textarea
+                value={reason}
+                onChange={e => setReason(e.target.value)}
+                placeholder="Lý do (tùy chọn)..."
+                rows={3}
+                className={cn(
+                  'w-full px-4 py-3 rounded-[var(--radius-md)]',
+                  'border border-[var(--color-border)]',
+                  'bg-[var(--color-surface)]',
+                  'text-[var(--color-text)] text-sm',
+                  'placeholder:text-[var(--color-text-muted)]',
+                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+                  'transition-all duration-[var(--transition-fast)] mb-4',
+                  'resize-none'
+                )}
+              />
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={onCancel} disabled={loading}>
+                  Hủy
+                </Button>
+                <Button
+                  variant="danger"
+                  className="flex-1"
+                  onClick={handleConfirm}
+                  disabled={loading}
+                  isLoading={loading}
+                >
+                  Xác nhận
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  )
+}
+
 // ============ Recipe List Item ============
 
-function RecipeListItem({ recipe, onApprove, onReject }) {
+function RecipeListItem({ recipe, onApprove, onReject, onUnpublish }) {
   const [expanded, setExpanded] = useState(false)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
+  const [showUnpublishDialog, setShowUnpublishDialog] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
 
   const handleApprove = async () => {
@@ -302,6 +382,29 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
     }
   }
 
+  const handleUnpublish = async (reason) => {
+    setActionLoading(true)
+    try {
+      await adminApi.unpublishRecipe(recipe.id, reason)
+      toast.success('Đã chuyển công thức về chế độ riêng tư')
+      onUnpublish(recipe.id)
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 401) {
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+      } else if (status === 403) {
+        toast.error('Bạn không có quyền thực hiện thao tác này.')
+      } else if (status === 500) {
+        toast.error('Lỗi server. Vui lòng thử lại.')
+      } else {
+        toast.error(err?.response?.data?.message || 'Không thể chuyển công thức về riêng tư.')
+      }
+      throw err
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   const statusBadge = {
     PENDING: { variant: 'warning', label: 'Chờ duyệt' },
     PUBLIC: { variant: 'success', label: 'Đã duyệt' },
@@ -310,6 +413,9 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
   }
 
   const badge = statusBadge[recipe.visibility] || { variant: 'muted', label: recipe.visibility }
+
+  // AI Processing state - show special badge when recipe is being processed by AI
+  const isAiProcessing = recipe.ai_processing === true
 
   const difficultyLabels = {
     EASY: 'Dễ',
@@ -371,9 +477,22 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
 
           {/* Status & expand */}
           <div className="flex flex-col items-end gap-2">
-            <Badge variant={badge.variant} size="sm">
-              {badge.label}
-            </Badge>
+            {/* AI Processing Badge - pulsing animation when AI is working */}
+            {isAiProcessing ? (
+              <motion.div
+                initial={{ opacity: 0.6 }}
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-blue-50 border border-blue-200"
+              >
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                <span className="text-xs font-medium text-blue-600">AI đang xử lý</span>
+              </motion.div>
+            ) : (
+              <Badge variant={badge.variant} size="sm">
+                {badge.label}
+              </Badge>
+            )}
             <div className="text-[var(--color-text-muted)]">
               {expanded ? (
                 <ChevronUp className="w-5 h-5" />
@@ -427,7 +546,7 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
                   <span>{recipe.save_count || 0} lượt lưu</span>
                 </div>
 
-                {/* Actions for PENDING recipes */}
+                {/* Actions for PENDING recipes - can approve or reject */}
                 {recipe.visibility === 'PENDING' && (
                   <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
                     <Button
@@ -456,6 +575,23 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
                     </Button>
                   </div>
                 )}
+
+                {/* Actions for PUBLIC recipes - can unpublish */}
+                {recipe.visibility === 'PUBLIC' && (
+                  <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowUnpublishDialog(true)
+                      }}
+                      disabled={actionLoading}
+                    >
+                      Chuyển về riêng tư
+                    </Button>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -475,6 +611,13 @@ function RecipeListItem({ recipe, onApprove, onReject }) {
         item={recipe}
         onConfirm={handleReject}
         onCancel={() => setShowRejectDialog(false)}
+        loading={actionLoading}
+      />
+      <UnpublishDialog
+        isOpen={showUnpublishDialog}
+        item={recipe}
+        onConfirm={handleUnpublish}
+        onCancel={() => setShowUnpublishDialog(false)}
         loading={actionLoading}
       />
     </>
@@ -655,6 +798,7 @@ export function RecipeManagementPage() {
   const [visibilityFilter, setVisibilityFilter] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
+  const pollingRef = useRef(null)
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -729,6 +873,103 @@ export function RecipeManagementPage() {
     }
   }, [loadRecipes, debouncedSearch, activeTab])
 
+  // 2-second polling for real-time updates - only on pending tab
+  useEffect(() => {
+    const startPolling = () => {
+      if (pollingRef.current) return
+
+      pollingRef.current = setInterval(async () => {
+        if (!document.hidden && activeTab === 'pending') {
+          try {
+            const params = {
+              page: 1,
+              page_size: PAGE_SIZE,
+              ordering: sort,
+            }
+            const res = await adminApi.getRecipePending(params)
+            const results = res.data?.results || res.data?.data || res.data || []
+
+            // Diff-based update: only update if recipes actually changed
+            const newIds = new Set(results.map(r => r.id))
+            const currentIds = new Set(recipes.map(r => r.id))
+
+            // Check if anything changed by comparing IDs
+            const hasChanges =
+              newIds.size !== currentIds.size ||
+              [...newIds].some(id => !currentIds.has(id)) ||
+              [...currentIds].some(id => !newIds.has(id))
+
+            if (hasChanges) {
+              setRecipes(results)
+            }
+          } catch {
+            // Silent fail - polling should not disrupt user
+          }
+        }
+      }, 2000)  // 2-second interval for responsive AI status updates
+    }
+
+    const stopPolling = () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+
+    if (activeTab === 'pending') {
+      startPolling()
+    } else {
+      stopPolling()
+    }
+
+    return () => stopPolling()
+  }, [activeTab, sort, recipes])
+
+  // Pause polling when tab is hidden (Page Visibility API)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current)
+          pollingRef.current = null
+        }
+      } else if (activeTab === 'pending') {
+        // Resume polling when tab becomes visible again
+        pollingRef.current = setInterval(async () => {
+          if (!document.hidden && activeTab === 'pending') {
+            try {
+              const params = {
+                page: 1,
+                page_size: PAGE_SIZE,
+                ordering: sort,
+              }
+              const res = await adminApi.getRecipePending(params)
+              const results = res.data?.results || res.data?.data || res.data || []
+
+              // Diff-based update
+              const newIds = new Set(results.map(r => r.id))
+              const currentIds = new Set(recipes.map(r => r.id))
+
+              const hasChanges =
+                newIds.size !== currentIds.size ||
+                [...newIds].some(id => !currentIds.has(id)) ||
+                [...currentIds].some(id => !newIds.has(id))
+
+              if (hasChanges) {
+                setRecipes(results)
+              }
+            } catch {
+              // Silent fail
+            }
+          }
+        }, 2000)  // 2-second interval
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [activeTab, sort, recipes])
+
   const handleApprove = (id) => {
     setRecipes(prev => prev.filter(r => r.id !== id))
     // Refresh to update counts
@@ -738,6 +979,11 @@ export function RecipeManagementPage() {
   const handleReject = (id) => {
     setRecipes(prev => prev.filter(r => r.id !== id))
     // Refresh to update counts
+    loadRecipes()
+  }
+
+  const handleUnpublish = (id) => {
+    setRecipes(prev => prev.filter(r => r.id !== id))
     loadRecipes()
   }
 
@@ -757,7 +1003,21 @@ export function RecipeManagementPage() {
     setRecipes([])
     setSearchQuery('')
     setVisibilityFilter('')
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current)
+      pollingRef.current = null
+    }
   }
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current)
+        pollingRef.current = null
+      }
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
@@ -825,6 +1085,7 @@ export function RecipeManagementPage() {
                 recipe={recipe}
                 onApprove={handleApprove}
                 onReject={handleReject}
+                onUnpublish={handleUnpublish}
               />
             ))}
           </div>

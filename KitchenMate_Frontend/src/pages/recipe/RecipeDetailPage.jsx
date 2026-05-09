@@ -14,7 +14,7 @@ import { useRecipe } from '@/hooks/useRecipes'
 import { useAddToShoppingList, useShoppingList, usePantry } from '@/hooks/useKitchen'
 import { useAuth } from '@/hooks/useAuth'
 import { socialApi } from '@/api/socialApi'
-import { Badge, Button } from '@/components/ui'
+import { Badge, Button, CategoryBadge } from '@/components/ui'
 import { cn } from '@/utils'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
@@ -711,16 +711,19 @@ export function RecipeDetailPage() {
           className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-[var(--shadow-xl)] p-6 md:p-8"
         >
           <header className="mb-6">
-            <div className="flex flex-wrap gap-3 mb-4">
-              {recipe.categories?.map((cat) => (
-                <span
-                  key={cat.id}
-                  className="px-3 py-1 rounded-full bg-[var(--color-background-alt)] text-[var(--color-text-secondary)] text-sm"
-                >
-                  {cat.name}
-                </span>
-              ))}
-            </div>
+            {recipe.categories?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {recipe.categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => navigate(`/explore?categories=${cat.slug}`)}
+                    className="transition-colors duration-200 cursor-pointer hover:opacity-80"
+                  >
+                    <CategoryBadge category={cat} size="md" />
+                  </button>
+                ))}
+              </div>
+            )}
 
             <h1 className="font-display text-3xl md:text-4xl font-semibold text-[var(--color-text)] mb-4">
               {recipe.title}

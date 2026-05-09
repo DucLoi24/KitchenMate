@@ -1,9 +1,13 @@
-import { useState, useRef } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Input } from '@/components/ui/Input'
-import { ChefHat, Clock, BookOpen, Upload, X } from 'lucide-react'
+import { ChefHat, Clock, BookOpen, Upload, X, ChevronDown, Check } from 'lucide-react'
 import { DIFFICULTY_CONFIG } from '@/hooks/useRecipeDraft'
+import { categoryApi, FALLBACK_CATEGORIES } from '@/api/categoryApi'
 import toast from 'react-hot-toast'
+import { cn } from '@/utils'
+
+const CATEGORY_TIMEOUT = 3000
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -21,6 +25,66 @@ const itemVariants = {
 export function StepBasicInfo({ data, onChange, errors = {} }) {
   const [dragActive, setDragActive] = useState(false)
   const inputRef = useRef(null)
+  const [categories, setCategories] = useState([])
+  const [selectedCategories, setSelectedCategories] = useState([])
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+
+  // Fetch categories on mount with timeout fallback
+  useEffect(() => {
+    const timeoutPromise = new Promise((resolve) => {
+      setTimeout(() => resolve({ data: { results: FALLBACK_CATEGORIES } }), CATEGORY_TIMEOUT)
+    })
+
+    Promise.race([categoryApi.getCategories(), timeoutPromise])
+      .then((res) => {
+        const cats = res.results || res.data?.results || []
+        setCategories(cats)
+      })
+      .catch((err) => {
+        console.warn('Category fetch failed, using fallback:', err)
+        setCategories(FALLBACK_CATEGORIES)
+      })
+  }, [])
+
+  // Restore selected categories from formData when categories are loaded
+  useEffect(() => {
+    if (categories.length > 0 && data.categories && data.categories.length > 0) {
+      const restored = categories.filter((cat) => data.categories.includes(cat.id))
+      setSelectedCategories(restored)
+    }
+  }, [categories, data.categories])
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsDropdownOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleCategorySelect = (category) => {
+    const currentIds = data.categories || []
+    const exists = currentIds.includes(category.id)
+    const newCategories = exists
+      ? currentIds.filter((id) => id !== category.id)
+      : [...currentIds, category.id]
+    onChange((prev) => ({ ...prev, categories: newCategories }))
+  }
+
+  const handleWheel = (e) => e.stopPropagation()
+
+  const selectedLabel = () => {
+    if (!data.categories || data.categories.length === 0) return 'Chọn danh mục'
+    if (data.categories.length === 1) {
+      const cat = categories.find((c) => c.id === data.categories[0])
+      return cat?.name || '1 danh mục'
+    }
+    return `${data.categories.length} danh mục đã chọn`
+  }
 
   const handleChange = (field) => (e) => {
     onChange((prev) => ({ ...prev, [field]: e.target.value }))
@@ -39,7 +103,6 @@ export function StepBasicInfo({ data, onChange, errors = {} }) {
       return
     }
 
-    // Create local preview immediately
     const localPreview = URL.createObjectURL(file)
     onChange((prev) => ({ ...prev, thumbnail_url: localPreview, thumbnail_file: file }))
     toast.success('Đã chọn ảnh. Ảnh sẽ được upload khi lưu công thức.')
@@ -159,6 +222,80 @@ export function StepBasicInfo({ data, onChange, errors = {} }) {
             )
           })}
         </div>
+      </motion.div>
+
+      <motion.div variants={itemVariants} ref={dropdownRef}>
+        <label className="text-sm font-medium text-[var(--color-text)] flex items-center gap-1 mb-3">
+          Danh mục
+        </label>
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+            className={cn(
+              'w-full flex items-center justify-between px-4 py-3 rounded-[var(--radius-md)] border transition-all duration-[var(--transition-base)]',
+              'bg-[var(--color-surface)] text-[var(--color-text)]',
+              isDropdownOpen
+                ? 'border-[var(--color-primary)] ring-2 ring-[var(--color-primary)] ring-offset-0'
+                : 'border-[var(--color-border)] hover:border-[var(--color-border-strong)]'
+            )}
+          >
+            <span className={data.categories?.length ? 'text-[var(--color-text)]' : 'text-[var(--color-text-muted)]'}>
+              {selectedLabel()}
+            </span>
+            <motion.div
+              animate={{ rotate: isDropdownOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-4 h-4 text-[var(--color-text-muted)]" />
+            </motion.div>
+          </button>
+
+          <AnimatePresence>
+            {isDropdownOpen && (
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                transition={{ duration: 0.15 }}
+                onWheel={handleWheel}
+                className="absolute z-50 w-full mt-2 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-lg max-h-64 overflow-y-auto"
+              >
+                {categories.map((cat) => {
+                  const isSelected = (data.categories || []).includes(cat.id)
+                  return (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => handleCategorySelect(cat)}
+                      className={cn(
+                        'w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors',
+                        'hover:bg-[var(--color-background-alt)]',
+                        isSelected ? 'text-[var(--color-primary)]' : 'text-[var(--color-text)]'
+                      )}
+                    >
+                      <span className="text-sm">{cat.name}</span>
+                      <AnimatePresence>
+                        {isSelected && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            exit={{ scale: 0 }}
+                          >
+                            <Check className="w-4 h-4 text-[var(--color-primary)]" />
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </button>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+        {errors.categories && (
+          <p className="text-sm text-red-500 mt-1">{errors.categories}</p>
+        )}
       </motion.div>
 
       <motion.div variants={itemVariants}>

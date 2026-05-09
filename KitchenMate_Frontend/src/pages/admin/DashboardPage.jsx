@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Construction } from 'lucide-react'
+import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Construction, FolderOpen } from 'lucide-react'
 
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
@@ -327,6 +327,12 @@ export function DashboardPage() {
             description="Xem và quản lý tài khoản người dùng"
             icon={Users}
             to="/admin/users"
+          />
+          <QuickActionCard
+            title="Quản lý danh mục"
+            description="Thêm, sửa, xóa danh mục công thức"
+            icon={FolderOpen}
+            to="/admin/categories"
           />
         </div>
       </div>

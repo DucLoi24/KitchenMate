@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Clock, Star, Heart, Library } from 'lucide-react'
 import { Badge } from '@/components/ui'
+import { CategoryBadge } from '@/components/ui/CategoryBadge'
 import { cn } from '@/utils'
 import { useAuth } from '@/hooks/useAuth'
 import { socialApi } from '@/api/socialApi'
@@ -34,6 +35,7 @@ export function RecipeCard({
     save_count,
     is_favorited,
     is_in_collection,
+    categories = [],
   } = recipe
 
   const [favorited, setFavorited] = useState(!!is_favorited)
@@ -122,6 +124,19 @@ export function RecipeCard({
             {difficultyInfo.label}
           </Badge>
         </div>
+
+        {/* Category Badge(s) Overlay - top-right, opposite difficulty badge */}
+        {categories.length > 0 && (
+          <div className={cn(
+            'absolute top-3 flex gap-1 flex-wrap justify-end',
+            showFavoriteButton ? 'right-16' : 'right-3',
+            'max-w-[60%]'
+          )}>
+            {categories.slice(0, 2).map((cat) => (
+              <CategoryBadge key={cat.id || cat.slug} category={cat} size="sm" />
+            ))}
+          </div>
+        )}
 
         {/* Action Buttons (Heart + Collection) */}
         {showFavoriteButton && (

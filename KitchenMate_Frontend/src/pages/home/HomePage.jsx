@@ -21,11 +21,13 @@ import { useAuth } from '@/components/auth/useAuth'
 import { useRecipes } from '@/hooks/useRecipes'
 import { useSuggestion } from '@/hooks/useSuggestion'
 import { usePantry } from '@/hooks/useKitchen'
+import { categoryApi, FALLBACK_CATEGORIES } from '@/api/categoryApi'
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { RecipeCardSkeleton } from '@/components/recipe/RecipeCardSkeleton'
-import { cn } from '@/utils'
+import { cn, getEmojiForCategory } from '@/utils'
+
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger)
@@ -618,10 +620,7 @@ export function HomePage() {
             title="Khám phá theo danh mục"
             subtitle="Tìm công thức theo sở thích"
           />
-          <div className="flex flex-col items-center justify-center py-12 text-center bg-[var(--color-surface)] rounded-[var(--radius-lg)] border border-[var(--color-border)]">
-            <TrendingUp className="w-12 h-12 text-[var(--color-text-muted)] mb-3" />
-            <p className="text-[var(--color-text-secondary)]">Bổ sung trong tương lai</p>
-          </div>
+          <CategoriesSection />
         </section>
 
         {/* Guest CTA */}
@@ -685,6 +684,57 @@ export function HomePage() {
 
       {/* Bottom padding for mobile nav */}
       <div className="lg:hidden h-20" />
+    </div>
+  )
+}
+
+// Categories section with API fetch and 3000ms timeout fallback (AC-10 compliance)
+function CategoriesSection() {
+  const [categories, setCategories] = useState([])
+  const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    // Promise.race with 3000ms timeout
+    const categoryPromise = categoryApi.getCategories()
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 3000)
+    )
+
+    Promise.race([categoryPromise, timeoutPromise])
+      .then(res => {
+        // API returns { success, data: { count, next, previous, results } }
+        setCategories(res.data?.results || [])
+      })
+      .catch(err => {
+        console.error('Failed to load categories:', err)
+        setCategories(FALLBACK_CATEGORIES)
+      })
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        {[...Array(FALLBACK_CATEGORIES.length)].map((_, i) => (
+          <div key={i} className="h-24 bg-[var(--color-surface)] animate-pulse rounded-[var(--radius-lg)]" />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      {categories.map(cat => (
+        <button
+          key={cat.id}
+          onClick={() => navigate(`/explore?categories=${cat.slug}`)}
+          className="flex flex-col items-center p-4 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors"
+        >
+          <span className="text-3xl mb-2">{getEmojiForCategory(cat.slug)}</span>
+          <span className="text-sm font-medium text-[var(--color-text)]">{cat.name}</span>
+        </button>
+      ))}
     </div>
   )
 }

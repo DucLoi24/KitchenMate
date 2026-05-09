@@ -78,6 +78,10 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error)
 )
 
+// Module-level refresh promise — ensures only ONE refresh runs at a time.
+// All concurrent 401 requests share the same promise.
+let refreshPromise = null
+
 // Response interceptor - Handle 401 and token refresh
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -88,19 +92,44 @@ axiosInstance.interceptors.response.use(
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
-      const refreshToken = getRefreshToken()
-      if (refreshToken) {
+      // If a refresh is already in-flight, wait for it instead of spawning another
+      if (refreshPromise) {
         try {
-          const { data } = await axios.post(`${BASE_URL}/auth/refresh/`, {
-            refresh: refreshToken,
-          })
-          setAccessToken(data.access)
-          originalRequest.headers.Authorization = `Bearer ${data.access}`
+          await refreshPromise
+          // Refresh succeeded — retry original request with new token
+          originalRequest.headers.Authorization = `Bearer ${getAccessToken()}`
           return axiosInstance(originalRequest)
         } catch (refreshError) {
-          // Refresh failed - clear tokens and redirect to login
+          // Refresh also failed — clear tokens and redirect
           clearAuthStorage()
-          window.location.href = '/login'
+          window.location.assign('/login')
+          return Promise.reject(refreshError)
+        }
+      }
+
+      // No refresh in-flight — start one
+      const refreshToken = getRefreshToken()
+      if (refreshToken) {
+        refreshPromise = axios.post(`${BASE_URL}/auth/refresh/`, {
+          refresh: refreshToken,
+        })
+          .then(({ data }) => {
+            setAccessToken(data.access)
+            return data.access
+          })
+          .finally(() => {
+            refreshPromise = null
+          })
+
+        try {
+          await refreshPromise
+          // Refresh succeeded — retry with new token
+          originalRequest.headers.Authorization = `Bearer ${getAccessToken()}`
+          return axiosInstance(originalRequest)
+        } catch (refreshError) {
+          // Refresh failed — clear tokens and redirect
+          clearAuthStorage()
+          window.location.assign('/login')
           return Promise.reject(refreshError)
         }
       }

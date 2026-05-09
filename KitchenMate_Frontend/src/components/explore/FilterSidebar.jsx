@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { cn } from '@/utils'
 import { Badge } from '@/components/ui/Badge'
+import { CategoryFilter } from './CategoryFilter'
 
 const DIFFICULTIES = [
   { value: 'EASY', label: 'Dễ', variant: 'success', description: 'Cho người mới bắt đầu' },
@@ -22,27 +23,21 @@ const SORT_OPTIONS = [
 ]
 
 export function FilterSidebar({
+  categories,
   difficulties,
   cookingTime,
   sort,
+  onCategoriesChange,
   onDifficultiesChange,
   onTimeChange,
   onSortChange,
   className
 }) {
-  const toggleDifficulty = (value) => {
+  const handleToggleDifficulty = (value) => {
     if (difficulties.includes(value)) {
       onDifficultiesChange(difficulties.filter(d => d !== value))
     } else {
       onDifficultiesChange([...difficulties, value])
-    }
-  }
-
-  const toggleTime = (value) => {
-    if (cookingTime.includes(value)) {
-      onTimeChange(cookingTime.filter(t => t !== value))
-    } else {
-      onTimeChange([...cookingTime, value])
     }
   }
 
@@ -51,6 +46,19 @@ export function FilterSidebar({
       'bg-[var(--color-surface)] rounded-[var(--radius-xl)] p-6 shadow-[var(--shadow-md)]',
       className
     )}>
+      {/* Category Section */}
+      <motion.div
+        className="mb-8"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+      >
+        <h3 className="font-display text-lg font-semibold mb-4 text-[var(--color-text)]">
+          Danh mục
+        </h3>
+        <CategoryFilter active={categories} onChange={onCategoriesChange} className="w-full" />
+      </motion.div>
+
       {/* Difficulty Section */}
       <motion.div
         className="mb-8"
@@ -70,7 +78,7 @@ export function FilterSidebar({
               <input
                 type="checkbox"
                 checked={difficulties.includes(value)}
-                onChange={() => toggleDifficulty(value)}
+                onChange={() => handleToggleDifficulty(value)}
                 className="w-4 h-4 accent-[var(--color-primary)] cursor-pointer rounded"
               />
               <Badge variant={variant} size="sm">{label}</Badge>

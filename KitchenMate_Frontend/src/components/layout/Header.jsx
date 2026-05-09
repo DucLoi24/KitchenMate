@@ -9,6 +9,8 @@ import {
   Settings,
   LogOut,
   ChefHat,
+  Bookmark,
+  UtensilsCrossed,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui'
@@ -165,13 +167,21 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
                         <User className="w-4 h-4" />
                         <span>Trang cá nhân</span>
                       </Link>
-                      <Link
-                        to="/settings"
+<Link
+                        to="/collections"
                         onClick={() => setIsUserMenuOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-[var(--color-text)] hover:bg-[var(--color-background-alt)] transition-colors"
                       >
-                        <Settings className="w-4 h-4" />
-                        <span>Cài đặt</span>
+                        <Bookmark className="w-4 h-4" />
+                        <span>Bộ sưu tập</span>
+                      </Link>
+                      <Link
+                        to="/my-recipes"
+                        onClick={() => setIsUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-[var(--color-text)] hover:bg-[var(--color-background-alt)] transition-colors"
+                      >
+                        <UtensilsCrossed className="w-4 h-4" />
+                        <span>Công thức của tôi</span>
                       </Link>
                     </div>
 

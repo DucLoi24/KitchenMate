@@ -3,6 +3,7 @@ import { X, SlidersHorizontal } from 'lucide-react'
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
+import { CategoryFilter } from './CategoryFilter'
 
 const DIFFICULTIES = [
   { value: 'EASY', label: 'Dễ', variant: 'success', description: 'Cho người mới bắt đầu' },
@@ -26,9 +27,11 @@ const SORT_OPTIONS = [
 export function FilterBottomSheet({
   isOpen,
   onClose,
+  categories,
   difficulties,
   cookingTime,
   sort,
+  onCategoriesChange,
   onDifficultiesChange,
   onTimeChange,
   onSortChange,
@@ -93,6 +96,14 @@ export function FilterBottomSheet({
               >
                 <X className="w-5 h-5 text-[var(--color-text-secondary)]" />
               </button>
+            </div>
+
+            {/* Category Section */}
+            <div className="mb-8">
+              <h3 className="font-display text-lg font-semibold mb-4 text-[var(--color-text)]">
+                Danh mục
+              </h3>
+              <CategoryFilter active={categories} onChange={onCategoriesChange} className="w-full" />
             </div>
 
             {/* Difficulty Section */}

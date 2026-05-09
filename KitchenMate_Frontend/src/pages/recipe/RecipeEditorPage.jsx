@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -49,19 +49,29 @@ export function RecipeEditorPage() {
   const { data: existingRecipe, isLoading: isLoadingRecipe } = useRecipe(isEditMode ? id : null)
 
   const [currentStep, setCurrentStep] = useState(1)
-  const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { formData: draftData, lastSaved, hasDraft, updateFormData, clearAllDraft, initializeForm } =
-    useRecipeDraft(user?.id, isEditMode ? id : null)
+  // Use ONLY the hook's formData - don't create a separate local state
+  // This prevents the infinite loop bug where local formData was empty (not updated)
+  // while hook's formData had the recipe data, causing auto-save to wipe out the loaded data
+  const {
+    formData,
+    lastSaved,
+    hasDraft,
+    updateFormData,
+    clearAllDraft,
+    initializeForm,
+  } = useRecipeDraft(user?.id, isEditMode ? id : null)
 
   const createRecipe = useCreateRecipe()
   const updateRecipe = useUpdateRecipe()
 
   // Load existing recipe data or draft
+  // Only run on mount and when these values change
   useEffect(() => {
     if (isEditMode && existingRecipe?.data) {
+      // Load from existing recipe - call initializeForm to set hook's formData
       const recipe = existingRecipe.data
       const formattedData = {
         title: recipe.title || '',
@@ -69,6 +79,7 @@ export function RecipeEditorPage() {
         difficulty: recipe.difficulty || 'EASY',
         prep_time: recipe.prep_time || '',
         thumbnail_url: recipe.thumbnail_url || '',
+        categories: recipe.categories?.map((c) => c.id) || [],
         ingredients: recipe.recipe_ingredients?.map((ri) => ({
           id: ri.id,
           ingredient: ri.ingredient,
@@ -86,19 +97,17 @@ export function RecipeEditorPage() {
         visibility: recipe.visibility || 'PRIVATE',
       }
       initializeForm(formattedData)
-    } else if (hasDraft && draftData) {
-      setFormData(draftData)
-    } else {
+    } else if (hasDraft && formData) {
+      // Use draft from localStorage - already loaded in hook's formData
+      // No need to call initializeForm since hook auto-loads draft
+    } else if (!isEditMode) {
+      // New recipe - initialize with empty form
       initializeForm(initialFormData)
     }
-  }, [isEditMode, existingRecipe, hasDraft, draftData])
+  }, [isEditMode, existingRecipe, hasDraft])
 
-  // Auto-save draft
-  useEffect(() => {
-    if (formData && (formData.title || formData.description || (formData.ingredients?.length > 0) || (formData.steps?.length > 0))) {
-      updateFormData(formData)
-    }
-  }, [formData])
+  // NOTE: Auto-save is handled internally by useRecipeDraft hook
+  // No need for a redundant auto-save effect here
 
   const validateStep = (step) => {
     const newErrors = {}
@@ -167,6 +176,7 @@ export function RecipeEditorPage() {
         prep_time: formData.prep_time ? parseInt(formData.prep_time, 10) : null,
         thumbnail_url: formData.thumbnail_url || null,
         visibility: formData.visibility,
+        categories: formData.categories || [],
         ingredients: (formData.ingredients || []).map((ing) => ({
           ingredient: ing.ingredient,
           quantity: parseFloat(ing.quantity) || 0,
@@ -207,7 +217,7 @@ export function RecipeEditorPage() {
       console.error('Submit error:', error)
       const message =
         error.response?.data?.message ||
-        error.response?.data?.error ||
+        error.response?.data?.error?.message ||
         error.message ||
         'Đã xảy ra lỗi khi lưu công thức'
       toast.error(message)
@@ -217,13 +227,14 @@ export function RecipeEditorPage() {
   }
 
   const handleVisibilityChange = (visibility) => {
-    updateFormData((prev) => ({ ...prev, visibility }))
+    // Update formData via the hook's updateFormData
+    updateFormData({ visibility })
   }
 
   const renderStep = () => {
     const stepProps = {
       data: formData,
-      onChange: setFormData,
+      onChange: updateFormData, // Use hook's updateFormData, not local setFormData
       errors,
     }
 

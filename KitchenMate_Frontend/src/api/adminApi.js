@@ -75,6 +75,18 @@ export const adminApi = {
     return data
   },
 
+  /**
+   * Unpublish a recipe (set back to PRIVATE)
+   * POST /api/admin/recipes/{id}/unpublish/
+   * Body: { reason } (optional)
+   * Response: { success, message }
+   */
+  unpublishRecipe: async (id, reason) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/admin/recipes/${id}/unpublish/`, { reason })
+    return data
+  },
+
   // ===== Ingredient Management =====
 
   /**

@@ -76,7 +76,9 @@ function clearDraft(key) {
 
 export function useRecipeDraft(userId, recipeId = null) {
   const draftKey = getDraftKey(userId, recipeId)
-  const [formData, setFormData] = useState(null)
+  // Start with empty object instead of null to prevent crashes when
+  // components access data.categories before initializeForm is called
+  const [formData, setFormData] = useState({})
   const [lastSaved, setLastSaved] = useState(null)
   const [hasDraft, setHasDraft] = useState(false)
 
@@ -90,9 +92,26 @@ export function useRecipeDraft(userId, recipeId = null) {
     }
   }, [draftKey])
 
+  // Initialize formData with categories field if not already loaded
+  useEffect(() => {
+    // Only add categories if formData exists and doesn't have categories
+    if (formData && typeof formData === 'object' && !('categories' in formData)) {
+      setFormData((prev) => ({
+        ...prev,
+        categories: [],  // UUID array for backend PrimaryKeyRelatedField
+      }))
+    }
+  }, [formData])
+
   // Auto-save effect with debounce
   useEffect(() => {
-    if (!formData) return
+    // Only auto-save if there's actual content to save
+    const hasContent = formData && (
+      formData.title || formData.description ||
+      (formData.ingredients?.length > 0) ||
+      (formData.steps?.length > 0)
+    )
+    if (!hasContent) return
 
     const timer = setTimeout(() => {
       const dataToSave = {
@@ -117,7 +136,7 @@ export function useRecipeDraft(userId, recipeId = null) {
 
   const clearAllDraft = useCallback(() => {
     clearDraft(draftKey)
-    setFormData(null)
+    setFormData({})
     setLastSaved(null)
     setHasDraft(false)
   }, [draftKey])

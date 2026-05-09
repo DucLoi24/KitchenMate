@@ -22,29 +22,49 @@ from apps.social.models import Collection, CollectionRecipe
 class RecipeViewSet(viewsets.GenericViewSet):
     """
     ViewSet quản lý công thức nấu ăn (Recipe).
-
-    Visibility States:
-        PRIVATE  — Trạng thái mặc định khi mới tạo. Chỉ owner mới xem/sửa được.
-        PENDING  — Đang chờ Admin xem xét (sau khi AI moderation trả về SUSPECT).
-                   Chỉ owner mới xem được, không thể sửa.
-        PUBLIC   — Đã được công khai. Ai cũng xem được, view_count tăng mỗi lần xem.
-
-    Actions:
-        list            — AllowAny. Chỉ trả về công thức PUBLIC. Hỗ trợ filter qua RecipeFilter.
-        create          — IsAuthenticated. Tạo công thức mới với visibility=PRIVATE.
-        retrieve        — Custom permission:
-                            • PRIVATE/PENDING: chỉ owner mới xem được (trả về 404 cho người khác).
-                            • PUBLIC: ai cũng xem được, tự động tăng view_count (atomic F() update).
-        update          — IsOwner. Chỉ cho phép khi visibility=PRIVATE.
-        partial_update  — IsOwner. Chỉ cho phép khi visibility=PRIVATE.
-        destroy         — IsOwner. Xóa công thức bất kể trạng thái.
-        my_recipes      — IsAuthenticated. Trả về tất cả công thức của user hiện tại
-                          (bao gồm PRIVATE, PENDING, PUBLIC).
-        publish         — IsOwner. Gửi công thức PRIVATE qua AI moderation để công khai.
-                          Kết quả: PUBLIC (YES), PENDING (SUSPECT), hoặc 400 (NO).
     """
     filter_backends = [DjangoFilterBackend]
     filterset_class = RecipeFilter
+
+    def retrieve(self, request, pk=None, slug=None):
+        """
+        Retrieve recipe by UUID (pk) or slug.
+        Tries UUID first, falls back to slug lookup.
+        """
+        queryset = self.get_queryset()
+        recipe = None
+
+        # Try UUID lookup first
+        if pk:
+            try:
+                import uuid
+                uuid.UUID(pk)
+                recipe = queryset.filter(pk=pk).first()
+            except ValueError:
+                pass
+
+        # Fall back to slug lookup if no UUID match
+        if not recipe and slug:
+            recipe = queryset.filter(slug=slug).first()
+
+        if not recipe:
+            return Response(
+                {'success': False, 'error': {'message': 'Cong thuc khong ton tai.'}},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+        if recipe.visibility in ('PRIVATE', 'PENDING'):
+            if not request.user.is_authenticated or recipe.user != request.user:
+                return Response(
+                    {'success': False, 'error': {'message': 'Cong thuc khong ton tai.'}},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            serializer = RecipeDetailSerializer(recipe)
+            return Response({'success': True, 'data': serializer.data})
+
+        Recipe.objects.filter(pk=recipe.pk).update(view_count=F('view_count') + 1)
+        serializer = RecipeDetailSerializer(recipe)
+        return Response({'success': True, 'data': serializer.data})
 
     def get_queryset(self):
         base_qs = Recipe.objects.select_related('user').prefetch_related(
@@ -116,29 +136,6 @@ class RecipeViewSet(viewsets.GenericViewSet):
             {'success': True, 'message': 'Tao cong thuc thanh cong.', 'data': RecipeDetailSerializer(recipe).data},
             status=status.HTTP_201_CREATED
         )
-
-    def retrieve(self, request, pk=None):
-        try:
-            recipe = self.get_queryset().get(pk=pk)
-        except Recipe.DoesNotExist:
-            return Response(
-                {'success': False, 'error': {'message': 'Cong thuc khong ton tai.'}},
-                status=status.HTTP_404_NOT_FOUND
-            )
-        if recipe.visibility in ('PRIVATE', 'PENDING'):
-            # PRIVATE/PENDING: chỉ owner mới xem được, không tăng view_count
-            if not request.user.is_authenticated or recipe.user != request.user:
-                return Response(
-                    {'success': False, 'error': {'message': 'Cong thuc khong ton tai.'}},
-                    status=status.HTTP_404_NOT_FOUND
-                )
-            serializer = RecipeDetailSerializer(recipe)
-            return Response({'success': True, 'data': serializer.data})
-
-        # Chỉ tăng view_count khi PUBLIC — dùng F() để atomic increment, tránh race condition
-        Recipe.objects.filter(pk=pk).update(view_count=F('view_count') + 1)
-        serializer = RecipeDetailSerializer(recipe)
-        return Response({'success': True, 'data': serializer.data})
 
     def _check_owner(self, request, recipe):
         if not request.user.is_authenticated:

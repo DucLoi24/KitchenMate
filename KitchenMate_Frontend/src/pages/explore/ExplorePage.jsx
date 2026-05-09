@@ -58,7 +58,9 @@ export function ExplorePage() {
 
   // Filter state from URL
   const [search, setSearch] = useState(searchParams.get('q') || '')
-  const [category, setCategory] = useState('all')
+  const [categories, setCategories] = useState(
+    searchParams.get('categories') ? searchParams.get('categories').split(',') : []
+  )
   const [difficulties, setDifficulties] = useState(
     searchParams.get('difficulties') ? searchParams.get('difficulties').split(',') : []
   )
@@ -73,8 +75,8 @@ export function ExplorePage() {
     const params = {}
 
     if (search) params.q = search
+    if (categories.length > 0) params.categories = categories.join(',')
     if (difficulties.length > 0) params.difficulty = difficulties.join(',')
-
     if (cookingTime.length > 0) params.cooking_time = cookingTime.join(',')
 
     // Map sort to API ordering
@@ -86,7 +88,7 @@ export function ExplorePage() {
     if (sort) params.ordering = orderingMap[sort]
 
     return params
-  }, [search, difficulties, cookingTime, sort])
+  }, [search, categories, difficulties, cookingTime, sort])
 
   // Fetch recipes with infinite scroll
   const {
@@ -116,6 +118,7 @@ export function ExplorePage() {
         avg_rating: recipe.avg_rating,
         save_count: recipe.save_count,
         is_favorited: false,
+        categories: recipe.categories || [],
       }))
     )
   }, [data])
@@ -124,12 +127,13 @@ export function ExplorePage() {
   useEffect(() => {
     const newParams = {}
     if (search) newParams.q = search
+    if (categories.length > 0) newParams.categories = categories.join(',')
     if (difficulties.length > 0) newParams.difficulties = difficulties.join(',')
     if (cookingTime.length > 0) newParams.cooking_time = cookingTime.join(',')
     if (sort && sort !== 'newest') newParams.sort = sort
 
     setSearchParams(newParams, { replace: true })
-  }, [search, difficulties, cookingTime, sort, setSearchParams])
+  }, [search, categories, difficulties, cookingTime, sort, setSearchParams])
 
   // Parallax for hero
   const heroY = useTransform(scrollYProgress, [0, 0.3], [0, -80])
@@ -159,14 +163,14 @@ export function ExplorePage() {
 
   const handleClearFilters = () => {
     setSearch('')
-    setCategory('all')
+    setCategories([])
     setDifficulties([])
     setCookingTime([])
     setSort('newest')
   }
 
   // Check if any filters are active
-  const hasActiveFilters = search || difficulties.length > 0 || cookingTime.length > 0 || sort !== 'newest'
+  const hasActiveFilters = search || categories.length > 0 || difficulties.length > 0 || cookingTime.length > 0 || sort !== 'newest'
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
@@ -266,7 +270,7 @@ export function ExplorePage() {
           transition={{ delay: 0.5 }}
           className="lg:hidden mb-6"
         >
-          <CategoryFilter active={category} onChange={setCategory} />
+          <CategoryFilter active={categories} onChange={setCategories} />
         </motion.div>
 
         {/* Controls Row */}
@@ -306,9 +310,11 @@ export function ExplorePage() {
           <aside className="hidden lg:block w-64 flex-shrink-0">
             <div className="sticky top-24">
               <FilterSidebar
+                categories={categories}
                 difficulties={difficulties}
                 cookingTime={cookingTime}
                 sort={sort}
+                onCategoriesChange={setCategories}
                 onDifficultiesChange={setDifficulties}
                 onTimeChange={setCookingTime}
                 onSortChange={setSort}
@@ -342,9 +348,11 @@ export function ExplorePage() {
       <FilterBottomSheet
         isOpen={isMobileFilterOpen}
         onClose={() => setIsMobileFilterOpen(false)}
+        categories={categories}
         difficulties={difficulties}
         cookingTime={cookingTime}
         sort={sort}
+        onCategoriesChange={setCategories}
         onDifficultiesChange={setDifficulties}
         onTimeChange={setCookingTime}
         onSortChange={setSort}
