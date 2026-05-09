@@ -461,22 +461,22 @@ class TestRecipeFilterByCategory:
         )
         assert sample_recipe_with_categories in filterset.qs
 
-    def test_filter_by_category_slug(self, sample_recipe_with_categories, categories):
-        """filter(categories='mon-viet-cat') → trả về recipe có category slug đó."""
+    def test_filter_by_category_uuid(self, sample_recipe_with_categories, categories):
+        """filter(categories=<uuid>) → trả về recipe có category id đó."""
         from apps.recipes.filters import RecipeFilter
         queryset = Recipe.objects.all()
         filterset = RecipeFilter(
-            data={'categories': 'mon-viet-cat'},
+            data={'categories': str(categories['mon_viet'].id)},
             queryset=queryset,
         )
         assert sample_recipe_with_categories in filterset.qs
 
-    def test_filter_by_multiple_category_slugs(self, sample_recipe_with_categories, categories):
-        """filter(categories='mon-viet-cat,mon-a-cat') → trả về recipes có ít nhất 1 category."""
+    def test_filter_by_multiple_category_uuids(self, sample_recipe_with_categories, categories):
+        """filter(categories='<uuid1>,<uuid2>') → trả về recipes có ít nhất 1 category."""
         from apps.recipes.filters import RecipeFilter
         queryset = Recipe.objects.all()
         filterset = RecipeFilter(
-            data={'categories': 'mon-viet-cat,mon-a-cat'},
+            data={'categories': f'{categories["mon_viet"].id},{categories["mon_a"].id}'},
             queryset=queryset,
         )
         assert sample_recipe_with_categories in filterset.qs
@@ -486,7 +486,7 @@ class TestRecipeFilterByCategory:
         from apps.recipes.filters import RecipeFilter
         queryset = Recipe.objects.all()
         filterset = RecipeFilter(
-            data={'categories': 'mon-cu-cat'},
+            data={'categories': str(inactive_category.id)},
             queryset=queryset,
         )
         assert list(filterset.qs) == []

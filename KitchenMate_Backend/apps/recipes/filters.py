@@ -79,12 +79,12 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_by_categories(self, queryset, name, value):
         """
-        Tìm công thức theo category slug hoặc nhiều categories (comma-separated).
+        Tìm công thức theo category id hoặc nhiều categories (comma-separated UUIDs).
         """
         if not value:
             return queryset
-        slugs = [s.strip() for s in value.split(',')]
-        return queryset.filter(categories__slug__in=slugs, categories__is_active=True).distinct()
+        ids = [s.strip() for s in value.split(',')]
+        return queryset.filter(categories__id__in=ids, categories__is_active=True).distinct()
 
     class Meta:
         model = Recipe
