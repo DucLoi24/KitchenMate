@@ -10,7 +10,9 @@ const NOTIFICATION_ICONS = {
 }
 
 function NotificationItem({ notification, onMarkAsRead }) {
+  const [expanded, setExpanded] = useState(false)
   const icon = NOTIFICATION_ICONS[notification.type] || <Info className="w-4 h-4 text-blue-500" />
+  const isLongContent = notification.message && notification.message.length > 35
 
   return (
     <div
@@ -31,9 +33,20 @@ function NotificationItem({ notification, onMarkAsRead }) {
         )}>
           {notification.title}
         </h4>
-        <p className="text-sm text-[var(--color-text-secondary)] mt-0.5 line-clamp-2">
+        <p className={cn(
+          'text-sm text-[var(--color-text-secondary)] mt-0.5',
+          !expanded && 'line-clamp-2'
+        )}>
           {notification.message}
         </p>
+        {isLongContent && (
+          <button
+            onClick={() => setExpanded(!expanded)}
+            className="text-sm text-[var(--color-primary)] hover:underline mt-1"
+          >
+            {expanded ? 'Thu gọn' : 'Xem thêm'}
+          </button>
+        )}
         <p className="text-xs text-[var(--color-text-muted)] mt-1">
           {new Date(notification.created_at).toLocaleDateString('vi-VN', {
             day: 'numeric',
