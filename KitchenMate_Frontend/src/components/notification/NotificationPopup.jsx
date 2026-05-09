@@ -145,7 +145,7 @@ export function NotificationPopup({ isOpen, onClose }) {
             transition={{ duration: 0.2 }}
             onClick={onClose}
             onWheel={(e) => e.stopPropagation()}
-            className="fixed inset-0 z-[9998]"
+            className="fixed inset-0 !z-[9998]"
           />
 
           {/* Popup */}
@@ -156,12 +156,13 @@ export function NotificationPopup({ isOpen, onClose }) {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.2 }}
             className={cn(
-              'fixed top-16 right-4 z-[9999] w-80 max-h-[calc(100vh-8rem)]',
+              'fixed !z-[9999] w-80 max-h-[calc(100vh-8rem)]',
               'bg-[var(--color-surface)] rounded-[var(--radius-xl)]',
               'border border-[var(--color-border)] shadow-[var(--shadow-xl)]',
               'flex flex-col overflow-hidden',
-              'max-lg:bottom-20 max-lg:top-auto max-lg:max-h-[calc(100vh-10rem)]'
+              'max-lg:bottom-20 max-lg:max-h-[calc(100vh-10rem)]'
             )}
+            style={{ top: '4rem', right: '1rem' }}
           >
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
