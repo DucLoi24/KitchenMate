@@ -92,7 +92,7 @@ class ReportSerializer(serializers.ModelSerializer):
             from apps.social.models import Review
             try:
                 review = Review.objects.get(pk=int(obj.target_id))
-                return f'Đánh giá của {review.user.full_name}'
+                return review.comment or f'Đánh giá #{str(review.id)[:8]}'
             except (Review.DoesNotExist, ValueError):
                 return f'Đánh giá #{obj.target_id[:8]}'
         elif obj.target_type == TargetType.USER:

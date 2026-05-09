@@ -128,3 +128,69 @@ class ReportSerializerHumanReadableFieldsTest(TestCase):
             "ReportSerializer must include 'target_url' for admin navigation")
         self.assertEqual(data['target_url'], f'/recipe/{self.report.target_id}',
             "target_url for recipe should be /recipe/{target_id}")
+
+    def test_target_label_for_recipe_shows_title(self):
+        """For recipe reports, target_label should be the recipe's title."""
+        from apps.recipes.models import Recipe
+
+        recipe = Recipe.objects.create(
+            title='Công Thức Cá Kho Tộ',
+            description='Test description',
+            user=self.user,
+            visibility='PUBLIC',
+            ai_moderation_status='APPROVED',
+        )
+        self.report.target_type = TargetType.RECIPE
+        self.report.target_id = str(recipe.id)
+        self.report.save()
+
+        serializer = ReportSerializer(self.report, context={'request': self.request})
+        data = serializer.data
+        self.assertEqual(data['target_label'], 'Công Thức Cá Kho Tộ',
+            "target_label for recipe should show recipe title")
+
+    def test_target_label_for_review_shows_content(self):
+        """For review reports, target_label should be the review's comment content."""
+        from apps.recipes.models import Recipe
+        from apps.social.models import Review
+
+        recipe = Recipe.objects.create(
+            title='Bò Ngọt',
+            description='Test description',
+            user=self.user,
+            visibility='PUBLIC',
+            ai_moderation_status='APPROVED',
+        )
+        review = Review.objects.create(
+            user=self.user,
+            recipe=recipe,
+            rating=5,
+            comment='Món này ngon lắm, nấu lần sau sẽ cho thêm nước mắm!'
+        )
+        self.report.target_type = TargetType.REVIEW
+        self.report.target_id = str(review.id)
+        self.report.save()
+
+        serializer = ReportSerializer(self.report, context={'request': self.request})
+        data = serializer.data
+        self.assertEqual(data['target_label'], 'Món này ngon lắm, nấu lần sau sẽ cho thêm nước mắm!',
+            "target_label for review should show review comment content")
+
+    def test_target_label_for_user_shows_name(self):
+        """For user reports, target_label should be the user's full name."""
+        from apps.accounts.models import User
+
+        target_user = User.objects.create_user(
+            username='targetuser@test.com',
+            email='targetuser@test.com',
+            password='TestPass123@',
+            full_name='Nguyễn Văn A'
+        )
+        self.report.target_type = TargetType.USER
+        self.report.target_id = str(target_user.id)
+        self.report.save()
+
+        serializer = ReportSerializer(self.report, context={'request': self.request})
+        data = serializer.data
+        self.assertEqual(data['target_label'], 'Nguyễn Văn A',
+            "target_label for user should show user's full name")
