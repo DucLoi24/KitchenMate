@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -11,9 +12,12 @@ import {
   User,
   Settings,
   CircleDot,
+  Bell,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { cn } from '@/utils'
+import { NotificationPopup } from '@/components/notification/NotificationPopup'
+import { notificationApi } from '@/api/reportsApi'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },
@@ -35,10 +39,30 @@ export function Sidebar({ isOpen = true }) {
   const location = useLocation()
   const { isAuthenticated, user } = useAuth()
   const isAdmin = user?.is_staff || user?.is_superuser
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
 
   const allNavItems = isAdmin
     ? [...navItems, { to: '/admin', icon: Settings, label: 'Quản trị' }]
     : navItems
+
+  // Poll for unread notification count
+  useEffect(() => {
+    if (!isAuthenticated) return
+
+    const fetchUnreadCount = async () => {
+      try {
+        const res = await notificationApi.getUnreadCount()
+        setUnreadCount(res.data?.unread_count || 0)
+      } catch {
+        // Ignore errors
+      }
+    }
+
+    fetchUnreadCount()
+    const interval = setInterval(fetchUnreadCount, 30000)
+    return () => clearInterval(interval)
+  }, [isAuthenticated])
 
   return (
     <motion.aside
@@ -112,6 +136,36 @@ export function Sidebar({ isOpen = true }) {
           </ul>
         </div>
       )}
+
+      {/* Notification Bell */}
+      {isAuthenticated && (
+        <div className="border-t border-[var(--color-border)] py-4 px-3">
+          <button
+            onClick={() => setShowNotifications(true)}
+            className={cn(
+              'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] transition-all duration-[var(--transition-fast)] w-full',
+              'text-[var(--color-text-secondary)] hover:bg-[var(--color-background-alt)] hover:text-[var(--color-text)]'
+            )}
+          >
+            <div className="relative">
+              <Bell className={cn('w-5 h-5 flex-shrink-0', isOpen ? '' : 'mx-auto')} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </div>
+            {isOpen && (
+              <span className="font-medium truncate">Thông báo</span>
+            )}
+          </button>
+        </div>
+      )}
+
+      <NotificationPopup
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+      />
     </motion.aside>
   )
 }

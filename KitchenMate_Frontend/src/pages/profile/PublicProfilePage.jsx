@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useParams, Link } from 'react-router-dom'
-import { User, Calendar, BookOpen, FolderOpen, ArrowLeft, Settings, UserPlus, UserCheck } from 'lucide-react'
+import { User, Calendar, BookOpen, FolderOpen, ArrowLeft, Settings, UserPlus, UserCheck, Flag } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { authApi } from '@/api/authApi'
+import { ReportModal } from '@/components/report/ReportModal'
 import toast from 'react-hot-toast'
 
 const containerVariants = {
@@ -33,6 +34,7 @@ export function PublicProfilePage() {
   const [activeTab, setActiveTab] = useState('recipes')
   const [isLoading, setIsLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const isOwnProfile = currentUser?.id === userId || currentUser?.uuid === userId
 
@@ -156,6 +158,15 @@ export function PublicProfilePage() {
                         >
                           {isFollowing ? 'Đã theo dõi' : 'Theo dõi'}
                         </Button>
+                      )}
+                      {!isOwnProfile && (
+                        <button
+                          onClick={() => setShowReportModal(true)}
+                          className="p-2 rounded-full border border-red-200 text-red-500 hover:bg-red-50 transition-colors sm:ml-2"
+                          title="Báo cáo người dùng"
+                        >
+                          <Flag className="w-4 h-4" />
+                        </button>
                       )}
                       {isOwnProfile && (
                         <Link to="/profile" className="sm:ml-auto">
@@ -319,6 +330,14 @@ export function PublicProfilePage() {
           </motion.div>
         </motion.div>
       </main>
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetType="user"
+        targetId={userId}
+        targetLabel={profile?.full_name}
+      />
     </div>
   )
 }

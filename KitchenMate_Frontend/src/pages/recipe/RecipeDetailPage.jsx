@@ -5,7 +5,7 @@ import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
   Clock, Star, ChefHat, Heart, ArrowLeft, Play, Library,
-  ChevronLeft, ChevronRight, X, Utensils, ShoppingBasket
+  ChevronLeft, ChevronRight, X, Utensils, ShoppingBasket, Flag
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { createPortal } from 'react-dom'
@@ -20,6 +20,7 @@ import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 import { recipeApi } from '@/api/recipeApi'
 import { ReviewsSection } from '@/components/recipe/ReviewsSection'
+import { ReportModal } from '@/components/report/ReportModal'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -627,6 +628,7 @@ export function RecipeDetailPage() {
   const navigate = useNavigate()
   const [isCookMode, setIsCookMode] = useState(false)
   const [showCollectionModal, setShowCollectionModal] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const { data, isLoading, error } = useRecipe(id)
   const addToShoppingList = useAddToShoppingList()
@@ -765,6 +767,13 @@ export function RecipeDetailPage() {
               <Play className="w-5 h-5" />
               <span>Chế độ nấu</span>
             </button>
+            <button
+              onClick={() => setShowReportModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] hover:bg-[var(--color-background-alt)] transition-colors text-red-500"
+            >
+              <Flag className="w-5 h-5" />
+              <span>Báo cáo</span>
+            </button>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
@@ -794,6 +803,14 @@ export function RecipeDetailPage() {
         isOpen={showCollectionModal}
         onClose={() => setShowCollectionModal(false)}
         recipeId={id}
+      />
+
+      <ReportModal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        targetType="recipe"
+        targetId={id}
+        targetLabel={recipe?.title}
       />
 
       <div className="h-20 lg:h-0" />

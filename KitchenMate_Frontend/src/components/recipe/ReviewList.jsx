@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Pencil, Trash2, ChevronLeft, ChevronRight, MessageCircle } from 'lucide-react'
+import { Pencil, Trash2, ChevronLeft, ChevronRight, MessageCircle, Flag } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { StarRatingDisplay } from '@/components/ui/StarRatingInput'
 import { socialApi } from '@/api/socialApi'
+import { ReportModal } from '@/components/report/ReportModal'
 import { cn } from '@/utils'
 
 function formatDate(dateString) {
@@ -65,7 +66,7 @@ function DeleteConfirmDialog({ isOpen, onConfirm, onCancel }) {
   )
 }
 
-function ReviewItem({ review, isOwner, onEdit, onDelete }) {
+function ReviewItem({ review, isOwner, onEdit, onDelete, onReport }) {
   return (
     <div className="flex gap-4 p-4 bg-[var(--color-background-alt)] rounded-[var(--radius-lg)]">
       <Link to={`/profile/${review.user}`} className="flex-shrink-0">
@@ -89,24 +90,35 @@ function ReviewItem({ review, isOwner, onEdit, onDelete }) {
               </span>
             </div>
           </div>
-          {isOwner && (
-            <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1">
+            {isOwner && (
+              <>
+                <button
+                  onClick={() => onEdit(review)}
+                  className="p-2 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
+                  title="Chỉnh sửa"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+                <button
+                  onClick={() => onDelete(review)}
+                  className="p-2 rounded-full hover:bg-[var(--color-primary)]/10 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
+                  title="Xóa"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </>
+            )}
+            {!isOwner && onReport && (
               <button
-                onClick={() => onEdit(review)}
-                className="p-2 rounded-full hover:bg-[var(--color-border)] text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
-                title="Chỉnh sửa"
+                onClick={() => onReport(review)}
+                className="p-2 rounded-full hover:bg-red-50 text-[var(--color-text-secondary)] hover:text-red-500 transition-colors"
+                title="Báo cáo"
               >
-                <Pencil className="w-4 h-4" />
+                <Flag className="w-4 h-4" />
               </button>
-              <button
-                onClick={() => onDelete(review)}
-                className="p-2 rounded-full hover:bg-[var(--color-primary)]/10 text-[var(--color-text-secondary)] hover:text-[var(--color-primary)] transition-colors"
-                title="Xóa"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
         {review.comment && (
           <p className="text-[var(--color-text)] text-sm leading-relaxed whitespace-pre-wrap">
@@ -136,6 +148,7 @@ export function ReviewList({
   onReviewDeleted,
 }) {
   const [deleteTarget, setDeleteTarget] = useState(null)
+  const [reportTarget, setReportTarget] = useState(null)
 
   const handleDeleteClick = (review) => {
     setDeleteTarget(review)
@@ -190,6 +203,7 @@ export function ReviewList({
             isOwner={currentUserId === review.user}
             onEdit={(r) => onReviewUpdated?.(r)}
             onDelete={handleDeleteClick}
+            onReport={(r) => setReportTarget(r)}
           />
         ))}
       </div>
@@ -230,6 +244,14 @@ export function ReviewList({
         isOpen={!!deleteTarget}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
+      />
+
+      <ReportModal
+        isOpen={!!reportTarget}
+        onClose={() => setReportTarget(null)}
+        targetType="review"
+        targetId={reportTarget?.id}
+        targetLabel={`Đánh giá của ${reportTarget?.user_name || 'người dùng'}`}
       />
     </div>
   )

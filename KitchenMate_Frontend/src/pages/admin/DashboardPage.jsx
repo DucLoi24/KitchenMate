@@ -10,7 +10,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Construction, FolderOpen } from 'lucide-react'
+import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Construction, FolderOpen, Flag } from 'lucide-react'
 
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
@@ -333,6 +333,12 @@ export function DashboardPage() {
             description="Thêm, sửa, xóa danh mục công thức"
             icon={FolderOpen}
             to="/admin/categories"
+          />
+          <QuickActionCard
+            title="Quản lý báo cáo"
+            description="Xem và xử lý các báo cáo từ người dùng"
+            icon={Flag}
+            to="/admin/reports"
           />
         </div>
       </div>

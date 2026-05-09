@@ -196,6 +196,32 @@ export const adminApi = {
     return data
   },
 
+  // ===== Report Management =====
+
+  /**
+   * Get all reports
+   * GET /api/admin/reports/
+   * Query params: page, page_size, status
+   * Response: { success, data: { count, next, previous, results[] } }
+   */
+  getReports: async (params = {}) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get('/admin/reports/', { params })
+    return data
+  },
+
+  /**
+   * Review/process a report
+   * POST /api/admin/reports/{id}/review/
+   * Body: { action: 'dismiss'|'remove_content'|'warn_user', note: string }
+   * Response: { success, message, data: Report }
+   */
+  reviewReport: async (id, action, note = '') => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/admin/reports/${id}/review/`, { action, note })
+    return data
+  },
+
   // ===== MISSING endpoints - Backend not implemented yet =====
 
   /**

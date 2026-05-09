@@ -26,6 +26,7 @@ const RecipeManagementPage = lazy(() => import('@/pages/admin/RecipeManagementPa
 const IngredientManagementPage = lazy(() => import('@/pages/admin/IngredientManagementPage').then(m => ({ default: m.default || m.IngredientManagementPage })))
 const UserManagementPage = lazy(() => import('@/pages/admin/UserManagementPage').then(m => ({ default: m.default || m.UserManagementPage })))
 const CategoryManagementPage = lazy(() => import('@/pages/admin/CategoryManagementPage').then(m => ({ default: m.default || m.CategoryManagementPage })))
+const ReportManagementPage = lazy(() => import('@/pages/admin/ReportManagementPage').then(m => ({ default: m.default || m.ReportManagementPage })))
 
 // Loading fallback
 function PageLoader() {
@@ -109,6 +110,9 @@ function App() {
                 } />
                 <Route path="/admin/categories" element={
                   <AdminGuard><Suspense fallback={<PageLoader />}><CategoryManagementPage /></Suspense></AdminGuard>
+                } />
+                <Route path="/admin/reports" element={
+                  <AdminGuard><Suspense fallback={<PageLoader />}><ReportManagementPage /></Suspense></AdminGuard>
                 } />
               </Routes>
             </main>

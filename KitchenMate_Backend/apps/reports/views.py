@@ -289,3 +289,94 @@ class AdminReportViewSet(viewsets.GenericViewSet,
             return Response({'success': True, 'data': paginated.data})
         serializer = serializer_class(queryset, many=True)
         return Response({'success': True, 'data': serializer.data})
+
+
+class NotificationViewSet(viewsets.GenericViewSet,
+                         mixins.ListModelMixin):
+    """
+    ViewSet cho người dùng xem và quản lý thông báo.
+
+    list: Danh sách thông báo của user hiện tại (N1)
+    mark_as_read: Đánh dấu một thông báo đã đọc (N2)
+    mark_all_read: Đánh dấu tất cả thông báo đã đọc (N3)
+    get_unread_count: Lấy số thông báo chưa đọc (N4)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """Chỉ trả về thông báo của người dùng hiện tại."""
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
+
+    def get_serializer_class(self):
+        return NotificationSerializer
+
+    def list(self, request):
+        """
+        Danh sách thông báo của user hiện tại (N1).
+        Hỗ trợ filter theo is_read.
+        """
+        queryset = self.get_queryset()
+
+        # Filter by is_read if provided
+        is_read = request.query_params.get('is_read')
+        if is_read is not None:
+            if is_read.lower() in ('false', '0'):
+                queryset = queryset.filter(is_read=False)
+            elif is_read.lower() in ('true', '1'):
+                queryset = queryset.filter(is_read=True)
+
+        page = self._paginate(request, queryset, NotificationSerializer)
+        return page
+
+    @action(detail=True, methods=['patch'], url_path='read')
+    def mark_as_read(self, request, pk=None):
+        """
+        Đánh dấu một thông báo đã đọc (N2).
+        Chỉ user sở hữu notification mới có thể đánh dấu.
+        """
+        notification = get_object_or_404(
+            Notification.objects.filter(user=request.user),
+            pk=pk
+        )
+        notification.is_read = True
+        notification.save(update_fields=['is_read'])
+        serializer = NotificationSerializer(notification)
+        return Response({'success': True, 'data': serializer.data})
+
+    @action(detail=False, methods=['post'], url_path='mark-all-read')
+    def mark_all_read(self, request):
+        """
+        Đánh dấu tất cả thông báo của user đã đọc (N3).
+        """
+        updated = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).update(is_read=True)
+        return Response({
+            'success': True,
+            'message': f'Đã đánh dấu {updated} thông báo là đã đọc'
+        })
+
+    @action(detail=False, methods=['get'], url_path='unread-count')
+    def get_unread_count(self, request):
+        """
+        Lấy số thông báo chưa đọc (N4).
+        """
+        count = Notification.objects.filter(
+            user=request.user,
+            is_read=False
+        ).count()
+        return Response({'success': True, 'data': {'unread_count': count}})
+
+    def _paginate(self, request, queryset, serializer_class):
+        """Paginate query results."""
+        from rest_framework.pagination import PageNumberPagination
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        page = paginator.paginate_queryset(queryset, request)
+        if page is not None:
+            serializer = serializer_class(page, many=True)
+            paginated = paginator.get_paginated_response(serializer.data)
+            return Response({'success': True, 'data': paginated.data})
+        serializer = serializer_class(queryset, many=True)
+        return Response({'success': True, 'data': serializer.data})

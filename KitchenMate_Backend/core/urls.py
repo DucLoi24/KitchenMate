@@ -49,6 +49,9 @@ urlpatterns = [
     # Reports - User endpoints
     path('api/reports/', include('apps.reports.urls')),
 
+    # Notifications
+    path('api/notifications/', include('apps.reports.notification_urls')),
+
     # Reports - Admin endpoints
     path('api/admin/reports/', include('apps.reports.admin_urls')),
 
