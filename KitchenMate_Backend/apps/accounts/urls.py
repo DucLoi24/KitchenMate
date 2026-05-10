@@ -13,6 +13,8 @@ from .views import (
     UserPublicProfileView,
     ForgotPasswordView,
     ResetPasswordView,
+    GoogleOAuthView,
+    GoogleOAuthCallbackView,
 )
 
 app_name = 'accounts'
@@ -25,4 +27,6 @@ urlpatterns = [
     path('refresh/', TokenRefreshView.as_view(), name='token-refresh'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
+    path('google/', GoogleOAuthView.as_view(), name='google-auth'),
+    path('google/callback/', GoogleOAuthCallbackView.as_view(), name='google-auth-callback'),
 ]

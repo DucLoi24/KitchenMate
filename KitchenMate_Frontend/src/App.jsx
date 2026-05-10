@@ -3,7 +3,7 @@ import { lazy, Suspense } from 'react'
 import { AuthProvider } from '@/components/auth/AuthContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { AdminGuard } from '@/components/auth/AdminGuard'
-import { LoginPage, RegisterPage, ForgotPasswordPage } from '@/pages/auth'
+import { LoginPage, RegisterPage, ForgotPasswordPage, GoogleOAuthCallbackPage } from '@/pages/auth'
 import { ProfilePage, PublicProfilePage } from '@/pages/profile'
 import { HomePage } from '@/pages/home'
 import { ExplorePage } from '@/pages/explore'
@@ -57,6 +57,7 @@ function App() {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                <Route path="/auth/google/callback" element={<GoogleOAuthCallbackPage />} />
 
                 {/* Public routes */}
                 <Route path="/" element={<HomePage />} />

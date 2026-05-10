@@ -3,13 +3,23 @@ Views cho accounts app.
 Xử lý đăng ký, đăng nhập, logout, profile, đổi mật khẩu và password reset.
 """
 import logging
+import secrets
+import requests
+from urllib.parse import urlencode
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.conf import settings
-from django.shortcuts import get_object_or_404
+from django.http import JsonResponse, HttpResponse
+from django.views import View
+from django.utils.decorators import method_decorator
+from django.views.decorators.clickjacking import xframe_options_exempt
+from django.shortcuts import get_object_or_404, redirect
+
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 from rest_framework import status, generics
 from rest_framework.decorators import api_view, permission_classes
@@ -32,6 +42,321 @@ from .serializers import (
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+class GoogleOAuthView(APIView):
+    """
+    GET /api/auth/google/ → redirect to Google consent page
+    POST /api/auth/google/ → exchange code for JWT token
+    """
+    permission_classes = [AllowAny]
+    throttle_scope = 'oauth'
+
+    def get(self, request):
+        """Initiate OAuth flow - redirect to Google consent page."""
+        state = secrets.token_hex(16)
+        request.session['oauth_state'] = state
+
+        params = urlencode({
+            'client_id': settings.GOOGLE_CLIENT_ID,
+            'redirect_uri': settings.GOOGLE_REDIRECT_URI,
+            'response_type': 'code',
+            'scope': 'email profile',
+            'state': state,
+            'access_type': 'offline',
+            'prompt': 'select_account',
+        })
+        return redirect(f'https://accounts.google.com/o/oauth2/auth?{params}')
+
+    def post(self, request):
+        code = request.data.get('code')
+        redirect_uri = request.data.get('redirect_uri', settings.GOOGLE_REDIRECT_URI)
+
+        # Validate code presence
+        if not code:
+            return Response(
+                {'success': False, 'error': {'message': 'Thiếu mã xác thực Google'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        return self._handle_oauth_callback(code, redirect_uri)
+
+    def _handle_oauth_callback(self, code, redirect_uri):
+        # Exchange code for tokens
+        try:
+            tokens = self._exchange_code_for_tokens(code, redirect_uri)
+        except ValueError as e:
+            return Response(
+                {'success': False, 'error': {'message': 'Không thể trao đổi mã với Google'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        id_token_str = tokens.get('id_token')
+        if not id_token_str:
+            return Response(
+                {'success': False, 'error': {'message': 'Google không trả về id_token'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Verify id_token and extract user info
+        try:
+            user_info = id_token.verify_oauth2_token(
+                id_token_str,
+                google_requests.Request(),
+                audience=settings.GOOGLE_CLIENT_ID
+            )
+        except ValueError:
+            return Response(
+                {'success': False, 'error': {'message': 'Token không hợp lệ'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        google_sub = user_info['sub']
+        email = user_info['email'].lower()
+        name = user_info.get('name', '')
+        picture = user_info.get('picture', '')
+
+        # Check if user is blocked
+        if User.objects.filter(google_user_id=google_sub, is_active=False).exists():
+            return Response(
+                {'success': False, 'error': {'message': 'Tài khoản đã bị khóa'}},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Get or create user
+        user, is_new = self._get_or_create_google_user(email, name, google_sub, picture)
+
+        # Check if user is blocked after creation
+        if not user.is_active:
+            return Response(
+                {'success': False, 'error': {'message': 'Tài khoản đã bị khóa'}},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
+        # Generate JWT
+        refresh = RefreshToken.for_user(user)
+
+        return Response({
+            'success': True,
+            'is_new_user': is_new,
+            'data': {
+                'user': UserSerializer(user).data,
+                'tokens': {
+                    'access': str(refresh.access_token),
+                    'refresh': str(refresh),
+                }
+            }
+        })
+
+    def _exchange_code_for_tokens(self, code, redirect_uri):
+        """Exchange authorization code for tokens from Google."""
+        response = requests.post(
+            'https://oauth2.googleapis.com/token',
+            json={
+                'code': code,
+                'client_id': settings.GOOGLE_CLIENT_ID,
+                'client_secret': settings.GOOGLE_CLIENT_SECRET,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code',
+            }
+        )
+        if not response.ok:
+            raise ValueError(f"Token exchange failed: {response.text}")
+        return response.json()
+
+    def _get_or_create_google_user(self, email, name, google_sub, picture):
+        """Get existing user by google_user_id or link/create based on email."""
+        # Try to find by google_user_id first
+        try:
+            user = User.objects.get(google_user_id=google_sub)
+            return user, False
+        except User.DoesNotExist:
+            pass
+
+        # Check if email exists - link Google to existing account
+        try:
+            user = User.objects.get(email=email)
+            user.google_user_id = google_sub
+            user.is_google_user = True
+            if not user.avatar_url and picture:
+                user.avatar_url = picture
+            user.save()
+            return user, False
+        except User.DoesNotExist:
+            pass
+
+        # Create new user
+        user = User.objects.create(
+            username=email,
+            email=email,
+            full_name=name,
+            avatar_url=picture or '',
+            google_user_id=google_sub,
+            is_google_user=True,
+        )
+        return user, True
+
+
+@method_decorator(xframe_options_exempt, name='dispatch')
+class GoogleOAuthCallbackView(View):
+    """
+    GET /api/auth/google/callback/ — handles Google redirect after user consent.
+    Exchanges code for tokens, creates/links user, returns JWT to frontend popup.
+    """
+    def get(self, request):
+        from rest_framework_simplejwt.tokens import RefreshToken
+
+        code = request.GET.get('code')
+        state = request.GET.get('state')
+        error = request.GET.get('error')
+
+        # Handle user cancellation or error
+        if error:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': f'Google OAuth error: {error}'}
+            }, status=400)
+
+        if not code:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'Thiếu mã xác thực Google'}
+            }, status=400)
+
+        # Verify state to prevent CSRF
+        saved_state = request.session.get('oauth_state')
+        if saved_state and state != saved_state:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'OAuth state mismatch - possible CSRF'}
+            }, status=400)
+
+        # Exchange code for tokens
+        try:
+            tokens = self._exchange_code_for_tokens(code, settings.GOOGLE_REDIRECT_URI)
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'Không thể trao đổi mã với Google'}
+            }, status=400)
+
+        id_token_str = tokens.get('id_token')
+        if not id_token_str:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'Google không trả về id_token'}
+            }, status=400)
+
+        # Verify id_token
+        try:
+            user_info = id_token.verify_oauth2_token(
+                id_token_str,
+                google_requests.Request(),
+                audience=settings.GOOGLE_CLIENT_ID
+            )
+        except ValueError:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'Token không hợp lệ'}
+            }, status=400)
+
+        google_sub = user_info['sub']
+        email = user_info['email'].lower()
+        name = user_info.get('name', '')
+        picture = user_info.get('picture', '')
+
+        # Check if user is blocked
+        if User.objects.filter(google_user_id=google_sub, is_active=False).exists():
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'Tài khoản đã bị khóa'}
+            }, status=403)
+
+        # Get or create user
+        user, is_new = self._get_or_create_google_user(email, name, google_sub, picture)
+
+        if not user.is_active:
+            return JsonResponse({
+                'success': False,
+                'error': {'message': 'Tài khoản đã bị khóa'}
+            }, status=403)
+
+        # Generate JWT
+        refresh = RefreshToken.for_user(user)
+
+        # Build frontend callback URL - frontend handles postMessage to parent
+        # This avoids window.opener issues when redirecting from Google in same popup
+        from django.conf import settings as django_settings
+        frontend_callback = getattr(django_settings, 'FRONTEND_URL', 'http://localhost:5174')
+
+        # Encode user data as JSON for safe URL transmission
+        import json
+        from urllib.parse import quote
+        access_token = str(refresh.access_token)
+        refresh_token_str = str(refresh)
+        user_data = json.dumps({
+            'id': str(user.id),
+            'email': email,
+            'full_name': name,
+            'avatar_url': picture or ''
+        })
+        # URL-encode the user data for safe transmission
+        encoded_user_data = quote(user_data, safe='')
+
+        # Redirect to frontend OAuth callback page with tokens
+        # URL-encode all params to prevent URL parsing issues
+        from urllib.parse import quote
+        redirect_url = (
+            f"{frontend_callback}/auth/google/callback"
+            f"?access={quote(access_token, safe='')}"
+            f"&refresh={quote(refresh_token_str, safe='')}"
+            f"&user={encoded_user_data}"
+        )
+
+        return redirect(redirect_url)
+
+    def _exchange_code_for_tokens(self, code, redirect_uri):
+        response = requests.post(
+            'https://oauth2.googleapis.com/token',
+            json={
+                'code': code,
+                'client_id': settings.GOOGLE_CLIENT_ID,
+                'client_secret': settings.GOOGLE_CLIENT_SECRET,
+                'redirect_uri': redirect_uri,
+                'grant_type': 'authorization_code',
+            }
+        )
+        if not response.ok:
+            raise ValueError(f"Token exchange failed: {response.text}")
+        return response.json()
+
+    def _get_or_create_google_user(self, email, name, google_sub, picture):
+        try:
+            user = User.objects.get(google_user_id=google_sub)
+            return user, False
+        except User.DoesNotExist:
+            pass
+
+        try:
+            user = User.objects.get(email=email)
+            user.google_user_id = google_sub
+            user.is_google_user = True
+            if not user.avatar_url and picture:
+                user.avatar_url = picture
+            user.save()
+            return user, False
+        except User.DoesNotExist:
+            pass
+
+        user = User.objects.create(
+            username=email,
+            email=email,
+            full_name=name,
+            avatar_url=picture or '',
+            google_user_id=google_sub,
+            is_google_user=True,
+        )
+        return user, True
 
 
 class RegisterView(APIView):

@@ -6,39 +6,35 @@ export function GoogleOAuthButton({ onSuccess, onError }) {
   const [isLoading, setIsLoading] = useState(false)
   const setAuth = useAuthStore((state) => state.setAuth)
 
-  // Listen for OAuth callback from popup
+  // Listen for OAuth callback from current page URL (after redirect)
   useEffect(() => {
-    const handleMessage = async (event) => {
-      if (event.data?.type === 'google_oauth_success') {
-        setIsLoading(true)
-        try {
-          const { access, refresh, user } = event.data
-          setAuth(user, access, refresh)
-          onSuccess?.(user)
-        } catch (error) {
-          onError?.(error)
-        } finally {
-          setIsLoading(false)
-        }
+    const params = new URLSearchParams(window.location.search)
+    const access = params.get('access')
+    const refresh = params.get('refresh')
+    const userStr = params.get('user')
+
+    // If we have OAuth params in URL, process them
+    if (access && refresh && userStr) {
+      setIsLoading(true)
+      try {
+        const user = JSON.parse(decodeURIComponent(userStr))
+        setAuth(user, access, refresh)
+        onSuccess?.(user)
+
+        // Clean URL (remove OAuth params)
+        window.history.replaceState({}, '', '/')
+      } catch (error) {
+        onError?.(error)
+      } finally {
+        setIsLoading(false)
       }
     }
-
-    window.addEventListener('message', handleMessage)
-    return () => window.removeEventListener('message', handleMessage)
   }, [setAuth, onSuccess, onError])
 
   const handleGoogleLogin = () => {
     const backendOAuthUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/auth/google/`
-    const width = 500
-    const height = 600
-    const left = window.screenX + (window.outerWidth - width) / 2
-    const top = window.screenY + (window.outerHeight - height) / 2
-
-    window.open(
-      backendOAuthUrl,
-      'google_oauth',
-      `width=${width},height=${height},left=${left},top=${top},scrollbars=yes`
-    )
+    // Redirect current page to OAuth (will redirect back here after OAuth)
+    window.location.href = backendOAuthUrl
   }
 
   return (
