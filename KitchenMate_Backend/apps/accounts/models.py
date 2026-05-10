@@ -15,6 +15,17 @@ class User(AbstractUser):
     avatar_url = models.TextField(blank=True, null=True)
     bio = models.TextField(blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    google_user_id = models.CharField(
+        max_length=255,
+        unique=True,
+        null=True,
+        blank=True,
+        help_text="Google OAuth subject ID (sub claim)"
+    )
+    is_google_user = models.BooleanField(
+        default=False,
+        help_text="Whether user logged in via Google at least once"
+    )
 
     # Dùng email làm trường đăng nhập
     USERNAME_FIELD = 'email'
