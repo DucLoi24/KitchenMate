@@ -64,6 +64,14 @@ export const authApi = {
     return data
   },
 
+  uploadAvatar: async (formData) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post('/accounts/me/avatar/', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return data
+  },
+
   forgotPassword: async (email) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post('/auth/forgot-password/', { email })

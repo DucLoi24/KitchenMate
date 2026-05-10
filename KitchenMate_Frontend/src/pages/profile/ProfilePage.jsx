@@ -75,16 +75,31 @@ export function ProfilePage() {
   const handleSave = async () => {
     setIsLoading(true)
     try {
-      // Simulate API call - in real app, use authApi.updateProfile with FormData for avatar
-      await new Promise(resolve => setTimeout(resolve, 800))
+      let newAvatarUrl = user?.avatar_url
 
+      // 1. Upload avatar nếu có file mới
+      if (formData.avatar) {
+        const formDataImg = new FormData()
+        formDataImg.append('file', formData.avatar)
+        const res = await authApi.uploadAvatar(formDataImg)
+        newAvatarUrl = res.url
+      }
+
+      // 2. Update profile info (full_name, bio)
+      await authApi.updateProfile({
+        full_name: formData.full_name,
+        bio: formData.bio,
+      })
+
+      // 3. Sync lại user state
       const updatedUser = {
         ...user,
         full_name: formData.full_name,
         bio: formData.bio,
-        avatar: avatarPreview
+        avatar_url: newAvatarUrl,
       }
       updateUser(updatedUser)
+      setAvatarPreview(newAvatarUrl)
       setIsEditing(false)
       toast.success('Cập nhật thông tin thành công')
     } catch {
@@ -174,7 +189,7 @@ export function ProfilePage() {
                           className="hidden"
                           onChange={handleAvatarChange}
                         />
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" onClick={handleAvatarClick}>
                           <Camera className="w-8 h-8 text-white" />
                         </div>
                       </>
