@@ -13,7 +13,9 @@ import {
   ThumbsUp,
   XCircle,
   Carrot,
+  Scale,
 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
 
 import { cn } from '@/utils'
@@ -431,6 +433,30 @@ function IngredientListItem({ ingredient, onApprove, onReject }) {
                   </div>
                 </div>
 
+                {/* Unit info */}
+                {(ingredient.default_unit || ingredient.allowed_units?.length > 0) && (
+                  <div className="mb-4 p-3 bg-[var(--color-background-alt)] rounded-[var(--radius-md)]">
+                    <h4 className="text-sm font-medium text-[var(--color-text)] mb-2">Đơn vị</h4>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {ingredient.default_unit && (
+                        <span className="px-2 py-0.5 rounded text-xs bg-blue-100 text-blue-700">
+                          Mặc định: {ingredient.default_unit.name}
+                        </span>
+                      )}
+                      {ingredient.allowed_units?.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          <span className="text-xs text-[var(--color-text-muted)]">Đơn vị:</span>
+                          {ingredient.allowed_units.map(u => (
+                            <span key={u.id} className="px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-700">
+                              {u.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Actions for PENDING ingredients */}
                 {ingredient.status === 'PENDING' && (
                   <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
@@ -591,10 +617,12 @@ export function IngredientManagementPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [sort, setSort] = useState('-created_at')
+  const navigate = useNavigate()
 
   const tabs = [
     { id: 'pending', label: 'Chờ duyệt', icon: Clock },
     { id: 'all', label: 'Tất cả', icon: List },
+    { id: 'units', label: 'Đơn vị', icon: Scale, path: '/admin/units' },
   ]
 
   const loadIngredients = useCallback(async (isMounted = true) => {
@@ -676,9 +704,14 @@ export function IngredientManagementPage() {
   }
 
   const handleTabChange = (tabId) => {
-    setActiveTab(tabId)
-    setPage(1)
-    setIngredients([])
+    const tab = tabs.find(t => t.id === tabId)
+    if (tab?.path) {
+      navigate(tab.path)
+    } else {
+      setActiveTab(tabId)
+      setPage(1)
+      setIngredients([])
+    }
   }
 
   return (

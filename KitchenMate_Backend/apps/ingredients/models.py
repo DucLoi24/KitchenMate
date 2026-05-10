@@ -2,6 +2,30 @@ from django.db import models
 from django.conf import settings
 
 
+class Unit(models.Model):
+    """
+    Danh mục đơn vị đo lường cho nguyên liệu.
+    Admin quản lý danh sách đơn vị, có thể soft-delete.
+    """
+    name = models.CharField(max_length=50)
+    slug = models.SlugField(max_length=20, unique=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'units'
+        verbose_name = 'Đơn vị'
+        verbose_name_plural = 'Đơn vị'
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.slug})"
+
+    def delete(self, *args, **kwargs):
+        """Soft delete — chỉ set is_active=False."""
+        self.is_active = False
+        self.save(update_fields=['is_active'])
+
+
 class Ingredient(models.Model):
     """
     Danh mục nguyên liệu dùng chung toàn hệ thống.
@@ -41,6 +65,18 @@ class Ingredient(models.Model):
         related_name='contributed_ingredients'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    default_unit = models.ForeignKey(
+        'Unit',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='default_for_ingredients'
+    )
+    allowed_units = models.ManyToManyField(
+        'Unit',
+        related_name='used_in_ingredients',
+        blank=True
+    )
 
     class Meta:
         db_table = 'ingredients'

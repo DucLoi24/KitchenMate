@@ -222,6 +222,89 @@ export const adminApi = {
     return data
   },
 
+  // ===== Unit Management =====
+
+  /**
+   * Get all units
+   * GET /api/admin/units/
+   * Query params: include_inactive (optional)
+   * Response: { success, data: Unit[] }
+   */
+  getUnits: async (params = {}) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get('/admin/units/', { params })
+    return data
+  },
+
+  /**
+   * Get a single unit
+   * GET /api/admin/units/{id}/
+   * Response: { success, data: Unit }
+   */
+  getUnit: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/admin/units/${id}/`)
+    return data
+  },
+
+  /**
+   * Create a new unit
+   * POST /api/admin/units/
+   * Body: { name, slug }
+   * Response: { success, data: Unit }
+   */
+  createUnit: async (data) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data: response } = await axiosInstance.post('/admin/units/', data)
+    return response
+  },
+
+  /**
+   * Update a unit
+   * PATCH /api/admin/units/{id}/
+   * Body: { name, slug, is_active }
+   * Response: { success, data: Unit }
+   */
+  updateUnit: async (id, data) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data: response } = await axiosInstance.patch(`/admin/units/${id}/`, data)
+    return response
+  },
+
+  /**
+   * Delete (soft) a unit
+   * DELETE /api/admin/units/{id}/
+   * Response: 204 No Content
+   */
+  deleteUnit: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.delete(`/admin/units/${id}/`)
+    return data
+  },
+
+  /**
+   * Get units for an ingredient
+   * GET /api/ingredients/{id}/units/
+   * Response: { success, data: { default_unit, allowed_units[] } }
+   */
+  getIngredientUnits: async (ingredientId) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/ingredients/${ingredientId}/units/`)
+    return data
+  },
+
+  /**
+   * Update units for an ingredient
+   * PATCH /api/ingredients/{id}/units/
+   * Body: { default_unit_id, allowed_unit_ids[] }
+   * Response: { success, data: { default_unit, allowed_units[] } }
+   */
+  updateIngredientUnits: async (ingredientId, data) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data: response } = await axiosInstance.patch(`/ingredients/${ingredientId}/units/`, data)
+    return response
+  },
+
   // ===== MISSING endpoints - Backend not implemented yet =====
 
   /**

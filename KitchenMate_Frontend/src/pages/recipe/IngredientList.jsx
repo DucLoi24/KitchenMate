@@ -5,18 +5,38 @@ import { cn } from '@/utils'
 import { CATEGORY_COLORS, UNITS } from '@/hooks/useRecipeDraft'
 import { IngredientSearchInput } from '@/components/ui'
 
+// Fetch units for an ingredient from backend
+const fetchIngredientUnits = async (ingredientId) => {
+  const { default: axiosInstance } = await import('@/lib/axiosInstance')
+  try {
+    const response = await axiosInstance.get(`/ingredients/${ingredientId}/units/`)
+    return response.data?.data || { default_unit: null, allowed_units: [] }
+  } catch {
+    return { default_unit: null, allowed_units: [] }
+  }
+}
+
 export function IngredientList({ onChange, data, errors = {} }) {
   const ingredients = data?.ingredients || []
   const [searchOpen, setSearchOpen] = useState(false)
 
-  const handleAddIngredient = (ingredient) => {
+  const handleAddIngredient = async (ingredient) => {
+    // Fetch allowed units from backend
+    const unitsData = await fetchIngredientUnits(ingredient.id)
+    const allowedUnits = unitsData.allowed_units || []
+    const defaultUnit = unitsData.default_unit
+
+    // Get the default unit name or fallback to 'g'
+    const defaultUnitName = defaultUnit?.name || 'g'
+
     const newIngredient = {
       id: `temp-${Date.now()}`,
       ingredient: ingredient.id,
       ingredient_name: ingredient.name,
       ingredient_category: ingredient.category || 'OTHER',
       quantity: '',
-      unit: 'g',
+      unit: defaultUnitName,
+      allowed_units: allowedUnits.map(u => u.name), // Store allowed unit names for dropdown
     }
     const currentIngredients = data?.ingredients || []
     onChange({ ...data, ingredients: [...currentIngredients, newIngredient] })
@@ -32,6 +52,14 @@ export function IngredientList({ onChange, data, errors = {} }) {
   const handleRemoveIngredient = (index) => {
     const currentIngredients = (data?.ingredients || []).filter((_, i) => i !== index)
     onChange({ ...data, ingredients: currentIngredients })
+  }
+
+  // Get unit options for an ingredient - use allowed_units if available, otherwise fallback to UNITS
+  const getUnitOptions = (ingredient) => {
+    if (ingredient.allowed_units && ingredient.allowed_units.length > 0) {
+      return ingredient.allowed_units
+    }
+    return UNITS
   }
 
   return (
@@ -140,7 +168,7 @@ export function IngredientList({ onChange, data, errors = {} }) {
                     }
                     className="h-8 px-2 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--color-primary)] transition-colors cursor-pointer"
                   >
-                    {UNITS.map((unit) => (
+                    {getUnitOptions(ingredient).map((unit) => (
                       <option key={unit} value={unit}>
                         {unit}
                       </option>

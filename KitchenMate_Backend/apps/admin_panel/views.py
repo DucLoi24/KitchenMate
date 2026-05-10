@@ -95,7 +95,13 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
     def _paginate(self, request, queryset, serializer_class):
         from rest_framework.pagination import PageNumberPagination
         paginator = PageNumberPagination()
-        paginator.page_size = 20
+        page_size = request.query_params.get('page_size', 20)
+        try:
+            page_size = int(page_size)
+            page_size = min(page_size, 500)
+        except (ValueError, TypeError):
+            page_size = 20
+        paginator.page_size = page_size
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
             serializer = serializer_class(page, many=True)
@@ -117,7 +123,7 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
     permission_classes = [IsAdminUser]
 
     def list(self, request):
-        ingredients = Ingredient.objects.all().order_by('created_at')
+        ingredients = Ingredient.objects.select_related('default_unit').prefetch_related('allowed_units').order_by('created_at')
         page = self._paginate(request, ingredients, IngredientSerializer)
         return page
 
@@ -144,7 +150,13 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
     def _paginate(self, request, queryset, serializer_class):
         from rest_framework.pagination import PageNumberPagination
         paginator = PageNumberPagination()
-        paginator.page_size = 20
+        page_size = request.query_params.get('page_size', 20)
+        try:
+            page_size = int(page_size)
+            page_size = min(page_size, 500)
+        except (ValueError, TypeError):
+            page_size = 20
+        paginator.page_size = page_size
         page = paginator.paginate_queryset(queryset, request)
         if page is not None:
             serializer = serializer_class(page, many=True)

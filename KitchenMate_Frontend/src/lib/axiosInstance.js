@@ -36,13 +36,16 @@ function getRefreshToken() {
   }
 }
 
-function setAccessToken(newToken) {
+function syncStoreTokens(accessToken, refreshToken) {
   try {
     const raw = localStorage.getItem('auth-storage')
     if (!raw) return
     const parsed = JSON.parse(raw)
     if (parsed?.state) {
-      parsed.state.accessToken = newToken
+      parsed.state.accessToken = accessToken
+      if (refreshToken) {
+        parsed.state.refreshToken = refreshToken
+      }
       localStorage.setItem('auth-storage', JSON.stringify(parsed))
     }
   } catch {
@@ -114,8 +117,10 @@ axiosInstance.interceptors.response.use(
           refresh: refreshToken,
         })
           .then(({ data }) => {
-            setAccessToken(data.access)
-            return data.access
+            const newAccess = data.access
+            const newRefresh = data.refresh || null
+            syncStoreTokens(newAccess, newRefresh)
+            return newAccess
           })
           .finally(() => {
             refreshPromise = null

@@ -3,13 +3,79 @@ Views cho ingredients app.
 """
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .models import Ingredient
-from .serializers import IngredientSerializer
+from .models import Ingredient, Unit
+from .serializers import IngredientSerializer, UnitSerializer, IngredientUnitsSerializer
 from core.services.ai_moderator import moderate_text, ModerationTimeoutError, ModerationServiceError
+
+
+class UnitViewSet(viewsets.GenericViewSet,
+                  mixins.ListModelMixin,
+                  mixins.RetrieveModelMixin,
+                  mixins.CreateModelMixin,
+                  mixins.UpdateModelMixin):
+    """
+    ViewSet quản lý Unit (đơn vị đo lường) — Admin only.
+
+    Actions:
+        list       — GET /api/admin/units/ — List all units (chỉ is_active=True)
+        retrieve   — GET /api/admin/units/{id}/ — Get single unit
+        create     — POST /api/admin/units/ — Create new unit
+        partial_update — PATCH /api/admin/units/{id}/ — Update unit
+        destroy    — DELETE /api/admin/units/{id}/ — Soft delete (is_active=False)
+    """
+    permission_classes = [IsAdminUser]
+
+    def get_queryset(self):
+        queryset = Unit.objects.all()
+        # Filter by is_active unless ?include_inactive=true
+        if not self.request.query_params.get('include_inactive'):
+            queryset = queryset.filter(is_active=True)
+        return queryset.order_by('name')
+
+    def list(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = UnitSerializer(queryset, many=True)
+        return Response({'success': True, 'data': serializer.data})
+
+    def retrieve(self, request, pk=None):
+        instance = get_object_or_404(Unit, pk=pk)
+        serializer = UnitSerializer(instance)
+        return Response({'success': True, 'data': serializer.data})
+
+    def create(self, request):
+        serializer = UnitSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {'success': False, 'message': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response(
+            {'success': True, 'data': serializer.data},
+            status=status.HTTP_201_CREATED
+        )
+
+    def partial_update(self, request, pk=None):
+        instance = get_object_or_404(Unit, pk=pk)
+        serializer = UnitSerializer(instance, data=request.data, partial=True)
+        if not serializer.is_valid():
+            return Response(
+                {'success': False, 'message': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response({'success': True, 'data': serializer.data})
+
+    def destroy(self, request, pk=None):
+        instance = get_object_or_404(Unit, pk=pk)
+        instance.is_active = False
+        instance.save(update_fields=['is_active'])
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class IngredientViewSet(viewsets.GenericViewSet,
@@ -100,3 +166,52 @@ class IngredientViewSet(viewsets.GenericViewSet,
             name__icontains=q, status='APPROVED'
         ).order_by('name')[:10]
         return Response({'success': True, 'data': IngredientSerializer(results, many=True).data})
+
+    @action(detail=True, methods=['get', 'patch'], url_path='units')
+    def units(self, request, pk=None):
+        """
+        GET /api/ingredients/{id}/units/ — Lấy units của ingredient
+        PATCH /api/ingredients/{id}/units/ — Gán units cho ingredient
+        """
+        ingredient = get_object_or_404(Ingredient, pk=pk)
+
+        if request.method == 'GET':
+            # Filter out inactive units from allowed_units
+            active_allowed_units = ingredient.allowed_units.filter(is_active=True)
+            return Response({
+                'success': True,
+                'data': {
+                    'default_unit': UnitSerializer(ingredient.default_unit).data if ingredient.default_unit else None,
+                    'allowed_units': UnitSerializer(active_allowed_units, many=True).data
+                }
+            })
+
+        # PATCH — gán units
+        serializer = IngredientUnitsSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {'success': False, 'message': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        default_unit_id = serializer.validated_data.get('default_unit_id')
+        allowed_unit_ids = serializer.validated_data.get('allowed_unit_ids', [])
+
+        # Update allowed_units
+        if allowed_unit_ids is not None:
+            ingredient.allowed_units.set(allowed_unit_ids)
+
+        # Update default_unit
+        if default_unit_id is not None:
+            ingredient.default_unit_id = default_unit_id
+        else:
+            ingredient.default_unit = None
+        ingredient.save(update_fields=['default_unit'])
+
+        return Response({
+            'success': True,
+            'data': {
+                'default_unit': UnitSerializer(ingredient.default_unit).data if ingredient.default_unit else None,
+                'allowed_units': UnitSerializer(ingredient.allowed_units.all(), many=True).data
+            }
+        })
