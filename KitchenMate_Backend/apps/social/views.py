@@ -179,9 +179,11 @@ class CollectionViewSet(viewsets.GenericViewSet,
         ).first()
 
         if not favorites_collection:
-            return Response(
-                {'success': False, 'error': {'message': 'Khong tim thay danh sach Yeu thich.'}},
-                status=status.HTTP_404_NOT_FOUND
+            # Auto-create favorites collection if missing (for users created before signal was added)
+            favorites_collection = Collection.objects.create(
+                user=request.user,
+                name='Yêu thích',
+                is_favorites=True
             )
 
         recipe_id = request.data.get('recipe_id')
