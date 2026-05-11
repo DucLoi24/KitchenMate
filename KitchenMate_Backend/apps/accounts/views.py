@@ -103,9 +103,11 @@ class GoogleOAuthView(APIView):
             user_info = id_token.verify_oauth2_token(
                 id_token_str,
                 google_requests.Request(),
-                audience=settings.GOOGLE_CLIENT_ID
+                audience=settings.GOOGLE_CLIENT_ID,
+                clock_skew_in_seconds=5,
             )
-        except ValueError:
+        except ValueError as e:
+            logger.warning("Google id_token verification failed (POST): %s | id_token: %s", str(e), id_token_str[:50] if id_token_str else 'None')
             return Response(
                 {'success': False, 'error': {'message': 'Token không hợp lệ'}},
                 status=status.HTTP_400_BAD_REQUEST
@@ -252,9 +254,11 @@ class GoogleOAuthCallbackView(View):
             user_info = id_token.verify_oauth2_token(
                 id_token_str,
                 google_requests.Request(),
-                audience=settings.GOOGLE_CLIENT_ID
+                audience=settings.GOOGLE_CLIENT_ID,
+                clock_skew_in_seconds=5,
             )
-        except ValueError:
+        except ValueError as e:
+            logger.warning("Google id_token verification failed: %s | id_token: %s", str(e), id_token_str[:50])
             return JsonResponse({
                 'success': False,
                 'error': {'message': 'Token không hợp lệ'}
@@ -327,8 +331,11 @@ class GoogleOAuthCallbackView(View):
             }
         )
         if not response.ok:
+            logger.warning("Google token exchange failed: status=%s body=%s", response.status_code, response.text[:300])
             raise ValueError(f"Token exchange failed: {response.text}")
-        return response.json()
+        tokens = response.json()
+        logger.info("Token exchange success: keys=%s", list(tokens.keys()))
+        return tokens
 
     def _get_or_create_google_user(self, email, name, google_sub, picture):
         try:
