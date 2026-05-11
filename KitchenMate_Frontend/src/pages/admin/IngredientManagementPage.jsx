@@ -18,6 +18,8 @@ import {
   Pencil,
   Trash2,
   Package2,
+  Search,
+  X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -880,6 +882,7 @@ export function IngredientManagementPage() {
   const [totalCount, setTotalCount] = useState(0)
   const [sort, setSort] = useState('-created_at')
   const [statusFilter, setStatusFilter] = useState('APPROVED')
+  const [searchQuery, setSearchQuery] = useState('')
   const navigate = useNavigate()
 
   // Modal state
@@ -905,6 +908,11 @@ export function IngredientManagementPage() {
         page,
         page_size: PAGE_SIZE,
         ordering: sort,
+      }
+
+      // Add search param if query is not empty
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim()
       }
 
       let res
@@ -946,7 +954,7 @@ export function IngredientManagementPage() {
         setLoading(false)
       }
     }
-  }, [activeTab, page, sort, statusFilter])
+  }, [activeTab, page, sort, statusFilter, searchQuery])
 
   useEffect(() => {
     let isMounted = true
@@ -1073,8 +1081,38 @@ export function IngredientManagementPage() {
 
       {/* Controls */}
       <div className="px-4 py-3 flex items-center justify-between border-b border-[var(--color-border)]">
-        <div className="text-sm text-[var(--color-text-secondary)]">
-          {totalCount > 0 && `${totalCount} nguyên liệu`}
+        <div className="flex items-center gap-4">
+          <div className="text-sm text-[var(--color-text-secondary)]">
+            {totalCount > 0 && `${totalCount} nguyên liệu`}
+          </div>
+          {/* Search box */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Tìm kiếm nguyên liệu..."
+              className={cn(
+                'h-9 pl-9 pr-8 rounded-[var(--radius-md)]',
+                'border border-[var(--color-border)]',
+                'bg-[var(--color-surface)]',
+                'text-[var(--color-text)] text-sm',
+                'placeholder:text-[var(--color-text-muted)]',
+                'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+                'w-48 transition-all duration-[var(--transition-fast)]',
+                searchQuery && 'w-64'
+              )}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-[var(--color-background-alt)]"
+              >
+                <X className="w-3.5 h-3.5 text-[var(--color-text-muted)]" />
+              </button>
+            )}
+          </div>
         </div>
         <div className="flex items-center gap-3">
           {activeTab !== 'pending' && (

@@ -142,6 +142,10 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
         status = request.query_params.get('status')
         if status in ('APPROVED', 'REJECTED', 'PENDING'):
             queryset = queryset.filter(status=status)
+        # Search by name
+        search = request.query_params.get('search', '').strip()
+        if search:
+            queryset = queryset.filter(name__icontains=search)
         page = self._paginate(request, queryset, IngredientSerializer)
         return page
 
@@ -203,6 +207,10 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
     @action(detail=False, methods=['get'], url_path='pending')
     def pending(self, request):
         ingredients = Ingredient.objects.filter(status='PENDING').order_by('created_at')
+        # Search by name
+        search = request.query_params.get('search', '').strip()
+        if search:
+            ingredients = ingredients.filter(name__icontains=search)
         page = self._paginate(request, ingredients, IngredientSerializer)
         return page
 
