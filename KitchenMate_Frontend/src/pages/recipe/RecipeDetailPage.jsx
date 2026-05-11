@@ -14,7 +14,7 @@ import { useRecipe } from '@/hooks/useRecipes'
 import { useAddToShoppingList, useShoppingList, usePantry } from '@/hooks/useKitchen'
 import { useAuth } from '@/hooks/useAuth'
 import { socialApi } from '@/api/socialApi'
-import { Badge, Button, CategoryBadge } from '@/components/ui'
+import { Badge, Button, CategoryBadge, StarRatingDisplay } from '@/components/ui'
 import { cn } from '@/utils'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
@@ -186,8 +186,8 @@ function RatingDisplay({ rating, reviewCount }) {
   if (!formattedRating) return null
   return (
     <div className="flex items-center gap-2">
-      <Star className="w-5 h-5 fill-[var(--color-accent)] text-[var(--color-accent)]" />
-      <span className="font-semibold text-lg text-white">{formattedRating}</span>
+      <StarRatingDisplay value={Math.round(rating)} size="lg" />
+      <span className="font-semibold text-lg text-[var(--color-accent)]">{formattedRating}</span>
       <span className="text-white/70">({reviewCount || 0} review)</span>
     </div>
   )
