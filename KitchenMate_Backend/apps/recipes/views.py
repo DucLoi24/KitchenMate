@@ -13,7 +13,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from core.permissions import IsOwner
 from core.services.ai_moderator import moderate_text, ModerationTimeoutError, ModerationServiceError
 from core.services.recipe_moderation_task import trigger_async_moderation
-from .models import Recipe
+from .models import Recipe, RecipeView
 from .serializers import RecipeListSerializer, RecipeDetailSerializer, RecipeCreateSerializer
 from .filters import RecipeFilter
 from apps.social.models import Collection, CollectionRecipe
@@ -62,6 +62,10 @@ class RecipeViewSet(viewsets.GenericViewSet):
             serializer = RecipeDetailSerializer(recipe)
             return Response({'success': True, 'data': serializer.data})
 
+        RecipeView.objects.create(
+            recipe=recipe,
+            user=request.user if request.user.is_authenticated else None
+        )
         Recipe.objects.filter(pk=recipe.pk).update(view_count=F('view_count') + 1)
         serializer = RecipeDetailSerializer(recipe)
         return Response({'success': True, 'data': serializer.data})

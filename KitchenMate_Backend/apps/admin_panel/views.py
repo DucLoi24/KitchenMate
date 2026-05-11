@@ -11,7 +11,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from core.permissions import IsAdminUser
-from apps.recipes.models import Recipe
+from apps.recipes.models import Recipe, RecipeView
 from apps.recipes.serializers import RecipeListSerializer
 from apps.ingredients.models import Ingredient
 from apps.ingredients.serializers import IngredientSerializer, UnitSerializer
@@ -407,11 +407,11 @@ class DashboardChartViewSet(viewsets.GenericViewSet):
         }
 
         total_views_qs = (
-            Recipe.objects
-            .filter(created_at__date__in=dates)
-            .annotate(date=TruncDate('created_at'))
+            RecipeView.objects
+            .filter(viewed_at__date__in=dates)
+            .annotate(date=TruncDate('viewed_at'))
             .values('date')
-            .annotate(count=Sum('view_count'))
+            .annotate(count=Count('id'))
             .order_by('date')
         )
         total_views_dict = {str(v['date']): v['count'] for v in total_views_qs}

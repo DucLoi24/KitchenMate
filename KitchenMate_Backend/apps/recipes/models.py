@@ -142,16 +142,28 @@ class Recipe(models.Model):
         return timezone.now() > self.deleted_at + timedelta(days=self.TRASH_RETENTION_DAYS)
 
     def soft_delete(self):
-        """Đưa recipe vào trash: set is_deleted=True và deleted_at=now."""
         self.is_deleted = True
         self.deleted_at = timezone.now()
         self.save(update_fields=['is_deleted', 'deleted_at'])
 
-    def restore(self):
-        """Khôi phục recipe từ trash: clear is_deleted và deleted_at."""
-        self.is_deleted = False
-        self.deleted_at = None
-        self.save(update_fields=['is_deleted', 'deleted_at'])
+
+class RecipeView(models.Model):
+    """
+    Theo dõi từng lượt xem công thức để phục vụ chart analytics.
+    """
+    recipe = models.ForeignKey('Recipe', on_delete=models.CASCADE, related_name='recipe_views')
+    viewed_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+
+    class Meta:
+        db_table = 'recipe_views'
+        indexes = [
+            models.Index(fields=['recipe', '-viewed_at']),
+            models.Index(fields=['-viewed_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.recipe.title} - {self.viewed_at}"
 
 
 class RecipeIngredient(models.Model):
