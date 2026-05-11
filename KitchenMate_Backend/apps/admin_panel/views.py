@@ -14,7 +14,7 @@ from core.permissions import IsAdminUser
 from apps.recipes.models import Recipe
 from apps.recipes.serializers import RecipeListSerializer
 from apps.ingredients.models import Ingredient
-from apps.ingredients.serializers import IngredientSerializer
+from apps.ingredients.serializers import IngredientSerializer, UnitSerializer
 from apps.accounts.serializers import UserSerializer
 
 User = get_user_model()
@@ -112,20 +112,93 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
 
 
 class AdminIngredientViewSet(viewsets.GenericViewSet,
-                              mixins.ListModelMixin):
+                              mixins.ListModelMixin,
+                              mixins.RetrieveModelMixin,
+                              mixins.CreateModelMixin,
+                              mixins.UpdateModelMixin):
     """
     ViewSet quan tri nguyen lieu.
     list: danh sach tat ca nguyen lieu
+    retrieve: chi tiet nguyen lieu
+    create: tao nguyen lieu moi (Admin tao truc tiep, status=APPROVED)
+    update: cap nhat nguyen lieu
+    partial_update: cap nhat tung truong
     pending: danh sach PENDING
     approve: chuyen sang APPROVED
     reject: chuyen sang REJECTED
+    destroy: soft delete (set status=REJECTED)
     """
     permission_classes = [IsAdminUser]
+    ordering_fields = ('id', 'name', 'category', 'created_at')
+
+    def get_queryset(self):
+        return Ingredient.objects.select_related(
+            'default_unit'
+        ).prefetch_related('allowed_units').order_by('created_at')
 
     def list(self, request):
-        ingredients = Ingredient.objects.select_related('default_unit').prefetch_related('allowed_units').order_by('created_at')
-        page = self._paginate(request, ingredients, IngredientSerializer)
+        queryset = self.filter_queryset(self.get_queryset())
+        # Filter by status if provided
+        status = request.query_params.get('status')
+        if status in ('APPROVED', 'REJECTED', 'PENDING'):
+            queryset = queryset.filter(status=status)
+        page = self._paginate(request, queryset, IngredientSerializer)
         return page
+
+    def retrieve(self, request, pk=None):
+        instance = self.get_object()
+        serializer = IngredientSerializer(instance)
+        return Response({'success': True, 'data': serializer.data})
+
+    def create(self, request):
+        serializer = IngredientSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                {'success': False, 'message': serializer.errors},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        # Admin tao truc tiep -> APPROVED ngay, bo qua AI moderation
+        serializer.save(status='APPROVED')
+        return Response(
+            {'success': True, 'message': 'Nguyen lieu da duoc tao thanh cong.', 'data': serializer.data},
+            status=status.HTTP_201_CREATED
+        )
+
+    def update(self, request, pk=None):
+        instance = self.get_object()
+        serializer = IngredientSerializer(instance, data=request.data)
+        if not serializer.is_valid():
+            errors = serializer.errors
+            # Format: {"field": ["error1", "error2"]} -> "field: error1; field2: error2"
+            msg = '; '.join(f'{k}: {", ".join(v)}' for k, v in errors.items())
+            return Response(
+                {'success': False, 'message': msg or str(errors)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response({'success': True, 'message': 'Nguyen lieu da duoc cap nhat.', 'data': serializer.data})
+
+    def partial_update(self, request, pk=None):
+        instance = self.get_object()
+        serializer = IngredientSerializer(instance, data=request.data, partial=True)
+        if not serializer.is_valid():
+            errors = serializer.errors
+            msg = '; '.join(f'{k}: {", ".join(v)}' for k, v in errors.items())
+            return Response(
+                {'success': False, 'message': msg or str(errors)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response({'success': True, 'message': 'Nguyen lieu da duoc cap nhat.', 'data': serializer.data})
+
+    def destroy(self, request, pk=None):
+        instance = self.get_object()
+        instance.status = 'REJECTED'
+        instance.save(update_fields=['status'])
+        return Response(
+            {'success': True, 'message': 'Nguyen lieu da bi xoa (doi tuong ve trang thai REJECTED).'},
+            status=status.HTTP_204_NO_CONTENT
+        )
 
     @action(detail=False, methods=['get'], url_path='pending')
     def pending(self, request):
@@ -135,14 +208,14 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
 
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
-        ingredient = get_object_or_404(Ingredient, pk=pk)
+        ingredient = self.get_object()
         ingredient.status = 'APPROVED'
         ingredient.save(update_fields=['status'])
         return Response({'success': True, 'message': 'Nguyen lieu da duoc duyet.'})
 
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
-        ingredient = get_object_or_404(Ingredient, pk=pk)
+        ingredient = self.get_object()
         ingredient.status = 'REJECTED'
         ingredient.save(update_fields=['status'])
         return Response({'success': True, 'message': 'Nguyen lieu da bi tu choi.'})

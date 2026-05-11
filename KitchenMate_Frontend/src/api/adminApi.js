@@ -134,6 +134,64 @@ export const adminApi = {
     return data
   },
 
+  /**
+   * Get a single ingredient
+   * GET /api/admin/ingredients/{id}/
+   * Response: { success, data: Ingredient }
+   */
+  getIngredient: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get(`/admin/ingredients/${id}/`)
+    return data
+  },
+
+  /**
+   * Create a new ingredient (Admin creates directly, status=APPROVED)
+   * POST /api/admin/ingredients/
+   * Body: { name, category, default_unit_id, allowed_unit_ids }
+   * Response: { success, message, data: Ingredient }
+   */
+  createIngredient: async (data) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data: response } = await axiosInstance.post('/admin/ingredients/', data)
+    return response
+  },
+
+  /**
+   * Update an ingredient (full update)
+   * PUT /api/admin/ingredients/{id}/
+   * Body: { name, category, default_unit_id, allowed_unit_ids }
+   * Response: { success, message, data: Ingredient }
+   */
+  updateIngredient: async (id, data) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data: response } = await axiosInstance.put(`/admin/ingredients/${id}/`, data)
+    return response
+  },
+
+  /**
+   * Partial update an ingredient
+   * PATCH /api/admin/ingredients/{id}/
+   * Body: { name?, category?, default_unit_id?, allowed_unit_ids? }
+   * Response: { success, message, data: Ingredient }
+   */
+  patchIngredient: async (id, data) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data: response } = await axiosInstance.patch(`/admin/ingredients/${id}/`, data)
+    return response
+  },
+
+  /**
+   * Delete (soft) an ingredient - sets status=REJECTED
+   * DELETE /api/admin/ingredients/{id}/
+   * Response: 204 No Content
+   */
+  deleteIngredient: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.delete(`/admin/ingredients/${id}/`)
+    return data
+  },
+
   // ===== User Management =====
 
   /**
