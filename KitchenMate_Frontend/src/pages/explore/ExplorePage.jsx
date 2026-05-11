@@ -117,7 +117,7 @@ export function ExplorePage() {
         difficulty: recipe.difficulty,
         avg_rating: recipe.avg_rating,
         save_count: recipe.save_count,
-        is_favorited: false,
+        is_favorited: recipe.is_favorited,
         categories: recipe.categories || [],
       }))
     )

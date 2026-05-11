@@ -747,10 +747,15 @@ export function RecipeDetailPage() {
           <div className="flex flex-wrap gap-3 mb-8 border-t border-b border-[var(--color-border)] py-4">
             <button
               onClick={handleFavorite}
-              className="flex items-center gap-2 px-4 py-2 rounded-full border border-[var(--color-border)] hover:bg-[var(--color-background-alt)] transition-colors"
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-full border transition-colors',
+                recipe.is_favorited
+                  ? 'border-red-300 bg-red-50 hover:bg-red-100 text-red-500'
+                  : 'border-[var(--color-border)] hover:bg-[var(--color-background-alt)]'
+              )}
             >
-              <Heart className="w-5 h-5" />
-              <span>Lưu</span>
+              <Heart className={cn('w-5 h-5', recipe.is_favorited && 'fill-current')} />
+              <span>{recipe.is_favorited ? 'Đã lưu' : 'Lưu'}</span>
             </button>
             <button
               onClick={() => setShowCollectionModal(true)}
