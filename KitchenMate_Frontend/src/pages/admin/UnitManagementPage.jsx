@@ -544,7 +544,7 @@ function IngredientUnitsTab() {
     setLoading(true)
     setError(null)
     try {
-      const res = await adminApi.getIngredientAll({ page_size: 500 })
+      const res = await adminApi.getIngredientAll({ page_size: 500, status: 'APPROVED' })
       const results = res.data?.results || res.data?.data || []
       setIngredients(results)
     } catch (err) {
@@ -965,7 +965,7 @@ function IngredientUnitsTabWithUnits({ units, setUnits }) {
     setLoading(true)
     setError(null)
     try {
-      const res = await adminApi.getIngredientAll({ page_size: 500 })
+      const res = await adminApi.getIngredientAll({ page_size: 500, status: 'APPROVED' })
       const results = res.data?.results || res.data?.data || []
       setIngredients(results)
     } catch (err) {
