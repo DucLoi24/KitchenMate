@@ -25,10 +25,11 @@ class ReviewSerializer(serializers.ModelSerializer):
         - created_at: Thời điểm tạo, tự động gán bởi model.
     """
     user_name = serializers.CharField(source='user.full_name', read_only=True)
+    user_avatar = serializers.CharField(source='user.avatar_url', read_only=True)
 
     class Meta:
         model = Review
-        fields = ('id', 'user', 'user_name', 'recipe', 'rating', 'comment', 'cooksnap_url', 'created_at')
+        fields = ('id', 'user', 'user_name', 'user_avatar', 'recipe', 'rating', 'comment', 'cooksnap_url', 'created_at')
         read_only_fields = ('id', 'user', 'recipe', 'created_at')
 
 

@@ -70,9 +70,17 @@ function ReviewItem({ review, isOwner, onEdit, onDelete, onReport }) {
   return (
     <div className="flex gap-4 p-4 bg-[var(--color-background-alt)] rounded-[var(--radius-lg)]">
       <Link to={`/profile/${review.user}`} className="flex-shrink-0">
-        <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-lg font-medium">
-          {review.user_name?.[0]?.toUpperCase() || '?'}
-        </div>
+        {review.user_avatar ? (
+          <img
+            src={review.user_avatar}
+            alt={review.user_name}
+            className="w-10 h-10 rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-lg font-medium">
+            {review.user_name?.[0]?.toUpperCase() || '?'}
+          </div>
+        )}
       </Link>
       <div className="flex-1 min-w-0">
         <div className="flex items-start justify-between gap-2 mb-1">
