@@ -11,31 +11,6 @@ export function AuthProvider({ children }) {
   const { user, accessToken, setAuth, logout: clearAuth, updateUser } = useAuthStore()
   const isAuthenticated = !!accessToken
 
-  useEffect(() => {
-    // Zustand persist tự khôi phục accessToken từ auth-storage.
-    // Chỉ cần verify token còn hợp lệ bằng cách gọi getProfile.
-    const initAuth = async () => {
-      const { accessToken: storedToken } = useAuthStore.getState()
-      if (!storedToken) return
-
-      useAuthStore.getState().setLoading(true)
-      try {
-        const userData = await authApi.getProfile()
-        updateUser(userData.data)
-      } catch (err) {
-        // Token hết hạn hoặc không hợp lệ → axiosInstance sẽ tự refresh.
-        // Nếu refresh cũng thất bại, interceptor sẽ redirect về /login.
-        // Chỉ clear nếu lỗi không phải 401 (401 đã được interceptor xử lý).
-        if (err?.response?.status !== 401) {
-          clearAuth()
-        }
-      } finally {
-        useAuthStore.getState().setLoading(false)
-      }
-    }
-    initAuth()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
-
   const login = useCallback(async (email, password) => {
     const data = await authApi.login(email, password)
     setAuth(data.user, data.access, data.refresh)
@@ -60,7 +35,6 @@ export function AuthProvider({ children }) {
   const refreshUser = useCallback(async () => {
     try {
       const userData = await authApi.getProfile()
-      // Backend returns {success, data: {user, ...}} - extract user from data.data
       updateUser(userData.data)
       return userData.data
     } catch (error) {
