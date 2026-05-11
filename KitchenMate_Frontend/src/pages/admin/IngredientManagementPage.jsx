@@ -20,6 +20,7 @@ import {
   Package2,
   Search,
   X,
+  RotateCw,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
@@ -480,7 +481,7 @@ function IngredientModal({ isOpen, ingredient, units, onClose, onSave }) {
 
 // ============ Ingredient List Item ============
 
-function IngredientListItem({ ingredient, onApprove, onReject, onEdit, onDelete }) {
+function IngredientListItem({ ingredient, onApprove, onReject, onEdit, onDelete, onRestore }) {
   const [expanded, setExpanded] = useState(false)
   const [showApproveDialog, setShowApproveDialog] = useState(false)
   const [showRejectDialog, setShowRejectDialog] = useState(false)
@@ -533,6 +534,28 @@ function IngredientListItem({ ingredient, onApprove, onReject, onEdit, onDelete 
         toast.error(err?.response?.data?.message || 'Không thể từ chối nguyên liệu.')
       }
       throw err
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleRestore = async () => {
+    setActionLoading(true)
+    try {
+      await adminApi.restoreIngredient(ingredient.id)
+      toast.success('Đã khôi phục nguyên liệu')
+      onRestore(ingredient.id)
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 401) {
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+      } else if (status === 403) {
+        toast.error('Bạn không có quyền thực hiện thao tác này.')
+      } else if (status === 500) {
+        toast.error('Lỗi server. Vui lòng thử lại.')
+      } else {
+        toast.error(err?.response?.data?.message || 'Không thể khôi phục nguyên liệu.')
+      }
     } finally {
       setActionLoading(false)
     }
@@ -723,9 +746,23 @@ function IngredientListItem({ ingredient, onApprove, onReject, onEdit, onDelete 
                   </div>
                 )}
 
-                {/* Edit/Delete actions for non-PENDING (Approved/Rejected) */}
+                {/* Edit/Delete/Restore actions for non-PENDING (Approved/Rejected) */}
                 {ingredient.status !== 'PENDING' && (
                   <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
+                    {ingredient.status === 'REJECTED' && (
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRestore(ingredient.id)
+                        }}
+                        disabled={actionLoading}
+                      >
+                        <RotateCw className="w-4 h-4" />
+                        Khôi phục
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
@@ -1039,6 +1076,18 @@ export function IngredientManagementPage() {
     }
   }
 
+  const handleRestore = async (id) => {
+    try {
+      await adminApi.restoreIngredient(id)
+      toast.success('Đã khôi phục nguyên liệu')
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Không thể khôi phục nguyên liệu.')
+      return
+    }
+    setIngredients(prev => prev.filter(i => i.id !== id))
+    loadIngredients()
+  }
+
   const handleModalSave = () => {
     setShowModal(false)
     setEditingIngredient(null)
@@ -1161,6 +1210,7 @@ export function IngredientManagementPage() {
                 onReject={handleReject}
                 onEdit={handleOpenEdit}
                 onDelete={(ing) => setDeleteTarget(ing)}
+                onRestore={handleRestore}
               />
             ))}
           </div>

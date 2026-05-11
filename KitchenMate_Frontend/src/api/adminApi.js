@@ -124,6 +124,17 @@ export const adminApi = {
   },
 
   /**
+   * Restore a rejected ingredient (set status back to APPROVED)
+   * POST /api/admin/ingredients/{id}/restore/
+   * Response: { success, message }
+   */
+  restoreIngredient: async (id) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/admin/ingredients/${id}/restore/`)
+    return data
+  },
+
+  /**
    * Get all ingredients (all statuses)
    * GET /api/admin/ingredients/
    * Response: { success, data: { count, next, previous, results[] } }

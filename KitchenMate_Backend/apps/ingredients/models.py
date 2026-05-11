@@ -65,6 +65,8 @@ class Ingredient(models.Model):
         related_name='contributed_ingredients'
     )
     created_at = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
     default_unit = models.ForeignKey(
         'Unit',
         on_delete=models.SET_NULL,

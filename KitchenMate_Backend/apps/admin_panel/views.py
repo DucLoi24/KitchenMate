@@ -228,6 +228,18 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
         ingredient.save(update_fields=['status'])
         return Response({'success': True, 'message': 'Nguyen lieu da bi tu choi.'})
 
+    @action(detail=True, methods=['post'], url_path='restore')
+    def restore(self, request, pk=None):
+        ingredient = self.get_object()
+        if ingredient.status != 'REJECTED':
+            return Response(
+                {'success': False, 'message': 'Chi co the khoi phuc nguyen lieu bi tu choi.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        ingredient.status = 'APPROVED'
+        ingredient.save(update_fields=['status'])
+        return Response({'success': True, 'message': 'Nguyen lieu da duoc khoi phuc.'})
+
     def _paginate(self, request, queryset, serializer_class):
         from rest_framework.pagination import PageNumberPagination
         paginator = PageNumberPagination()
