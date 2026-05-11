@@ -25,9 +25,9 @@ import { ReportModal } from '@/components/report/ReportModal'
 gsap.registerPlugin(ScrollTrigger)
 
 const difficultyConfig = {
-  EASY: { label: 'Dễ', variant: 'success', icon: '🍀' },
-  MEDIUM: { label: 'Trung bình', variant: 'warning', icon: '🍳' },
-  HARD: { label: 'Khó', variant: 'danger', icon: '🔥' },
+  EASY: { label: 'Dễ', variant: 'success' },
+  MEDIUM: { label: 'Trung bình', variant: 'warning' },
+  HARD: { label: 'Khó', variant: 'danger' },
 }
 
 function formatRating(rating) {
@@ -167,12 +167,11 @@ function MetaBadges({ prepTime, difficulty }) {
   const difficultyInfo = difficultyConfig[difficulty] || difficultyConfig.MEDIUM
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Badge variant={difficultyInfo.variant} className="flex items-center gap-1.5">
-        <span>{difficultyInfo.icon}</span>
-        <span>{difficultyInfo.label}</span>
+      <Badge variant={difficultyInfo.variant}>
+        {difficultyInfo.label}
       </Badge>
       {prepTime && (
-        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm">
+        <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--color-primary)]/80 backdrop-blur-sm text-white text-sm">
           <Clock className="w-4 h-4" />
           <span>{prepTime} phút</span>
         </span>
