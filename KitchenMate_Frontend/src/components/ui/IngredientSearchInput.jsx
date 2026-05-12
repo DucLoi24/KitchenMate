@@ -21,6 +21,7 @@ export function IngredientSearchInput({
   value,
   onChange,
   onSelect,
+  onRequestContribute,
   placeholder = 'Tìm kiếm nguyên liệu...',
   className,
   maxResults = 10,
@@ -199,9 +200,18 @@ export function IngredientSearchInput({
           animate={{ opacity: 1, y: 0 }}
           className="absolute left-0 z-[60] w-full mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] p-4 text-center"
         >
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <p className="text-sm text-[var(--color-text-muted)] mb-3">
             Không tìm thấy nguyên liệu phù hợp
           </p>
+          {onRequestContribute && (
+            <button
+              type="button"
+              onClick={() => onRequestContribute(query)}
+              className="px-4 py-2 text-sm font-medium bg-[var(--color-primary)] text-white rounded-[var(--radius-md)] hover:bg-[var(--color-primary-dark)] transition-colors"
+            >
+              Đóng góp nguyên liệu mới
+            </button>
+          )}
         </motion.div>
       )}
     </div>

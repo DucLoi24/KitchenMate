@@ -7,6 +7,7 @@ import { notificationApi } from '@/api/reportsApi'
 const NOTIFICATION_ICONS = {
   REPORT_PROCESSED: <Check className="w-4 h-4 text-green-500" />,
   WARNING: <AlertTriangle className="w-4 h-4 text-yellow-500" />,
+  INGREDIENT_REJECTED: <X className="w-4 h-4 text-red-500" />,
 }
 
 function NotificationItem({ notification, onMarkAsRead }) {

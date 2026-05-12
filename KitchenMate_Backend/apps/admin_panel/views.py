@@ -224,9 +224,27 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         ingredient = self.get_object()
+        reason = request.data.get('reason', '')
         ingredient.status = 'REJECTED'
-        ingredient.save(update_fields=['status'])
-        return Response({'success': True, 'message': 'Nguyen lieu da bi tu choi.'})
+        ingredient.rejection_reason = reason if reason else None
+        ingredient.save(update_fields=['status', 'rejection_reason'])
+
+        # Create notification for the contributor
+        if ingredient.created_by:
+            from apps.reports.models import Notification, NotificationType
+            Notification.objects.create(
+                user=ingredient.created_by,
+                type=NotificationType.INGREDIENT_REJECTED,
+                title='Nguyên liệu không được duyệt',
+                message=f'Nguyên liệu "{ingredient.name}" đã bị từ chối.{f" Lý do: {reason}" if reason else ""}',
+                data={'ingredient_id': ingredient.id, 'rejection_reason': reason or None}
+            )
+
+        return Response({
+            'success': True,
+            'message': 'Nguyen lieu da bi tu choi.',
+            'rejection_reason': reason or None
+        })
 
     @action(detail=True, methods=['post'], url_path='restore')
     def restore(self, request, pk=None):

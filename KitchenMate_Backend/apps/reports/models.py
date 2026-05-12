@@ -27,6 +27,7 @@ class NotificationType(models.TextChoices):
     """Loại thông báo trong app."""
     REPORT_PROCESSED = 'REPORT_PROCESSED', 'Báo cáo đã xử lý'
     WARNING = 'WARNING', 'Cảnh cáo'
+    INGREDIENT_REJECTED = 'INGREDIENT_REJECTED', 'Nguyên liệu bị từ chối'
 
 
 class TargetType(models.TextChoices):

@@ -4,6 +4,7 @@ import { Plus, Trash2, Search } from 'lucide-react'
 import { cn } from '@/utils'
 import { CATEGORY_COLORS, UNITS } from '@/hooks/useRecipeDraft'
 import { IngredientSearchInput } from '@/components/ui'
+import { IngredientContributeModal } from '@/components/ui/IngredientContributeModal'
 
 // Fetch units for an ingredient from backend
 const fetchIngredientUnits = async (ingredientId) => {
@@ -19,6 +20,19 @@ const fetchIngredientUnits = async (ingredientId) => {
 export function IngredientList({ onChange, data, errors = {} }) {
   const ingredients = data?.ingredients || []
   const [searchOpen, setSearchOpen] = useState(false)
+  const [contributeModalOpen, setContributeModalOpen] = useState(false)
+  const [contributeQuery, setContributeQuery] = useState('')
+
+  const handleRequestContribute = (query) => {
+    setContributeQuery(query)
+    setContributeModalOpen(true)
+  }
+
+  const handleContributeSuccess = () => {
+    setContributeModalOpen(false)
+    setContributeQuery('')
+    setSearchOpen(false)
+  }
 
   const handleAddIngredient = async (ingredient) => {
     // Fetch allowed units from backend
@@ -101,6 +115,7 @@ export function IngredientList({ onChange, data, errors = {} }) {
               <div className="relative">
                 <IngredientSearchInput
                   onSelect={handleAddIngredient}
+                  onRequestContribute={handleRequestContribute}
                   placeholder="Tìm kiếm nguyên liệu (VD: thịt bò, nấm, hành...)"
                 />
               </div>
@@ -192,6 +207,13 @@ export function IngredientList({ onChange, data, errors = {} }) {
       {errors.ingredients && (
         <p className="text-sm text-red-500">{errors.ingredients}</p>
       )}
+
+      <IngredientContributeModal
+        isOpen={contributeModalOpen}
+        onClose={() => setContributeModalOpen(false)}
+        initialName={contributeQuery}
+        onSuccess={handleContributeSuccess}
+      />
     </div>
   )
 }

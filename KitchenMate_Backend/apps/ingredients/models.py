@@ -74,6 +74,7 @@ class Ingredient(models.Model):
         blank=True,
         related_name='default_for_ingredients'
     )
+    rejection_reason = models.TextField(blank=True, null=True)
     allowed_units = models.ManyToManyField(
         'Unit',
         related_name='used_in_ingredients',
