@@ -167,7 +167,11 @@ class GoogleOAuthView(APIView):
         return response.json()
 
     def _get_or_create_google_user(self, email, name, google_sub, picture):
-        """Get existing user by google_user_id or link/create based on email."""
+        """Get existing user by google_user_id or create new Google user.
+
+        SECURITY: Never link Google login to existing account (including admin).
+        If email exists, create new user with modified email instead.
+        """
         # Try to find by google_user_id first
         try:
             user = User.objects.get(google_user_id=google_sub)
@@ -175,17 +179,28 @@ class GoogleOAuthView(APIView):
         except User.DoesNotExist:
             pass
 
-        # Check if email exists - link Google to existing account
-        try:
-            user = User.objects.get(email=email)
-            user.google_user_id = google_sub
-            user.is_google_user = True
-            if not user.avatar_url and picture:
-                user.avatar_url = picture
-            user.save()
-            return user, False
-        except User.DoesNotExist:
-            pass
+        # Never link Google to existing account - security risk
+        # If email exists (including admin accounts), create with modified email
+        if User.objects.filter(email=email).exists():
+            # Extract domain, create unique email for Google user
+            parts = email.split('@')
+            modified_email = f"{parts[0]}+google_{google_sub[:16]}@{parts[1]}"
+            # In case modified email also exists, use UUID suffix
+            counter = 1
+            final_email = modified_email
+            while User.objects.filter(email=final_email).exists():
+                final_email = f"{parts[0]}+google_{google_sub[:16]}_{counter}@{parts[1]}"
+                counter += 1
+
+            user = User.objects.create(
+                username=final_email,
+                email=final_email,
+                full_name=name,
+                avatar_url=picture or '',
+                google_user_id=google_sub,
+                is_google_user=True,
+            )
+            return user, True
 
         # Create new user
         user = User.objects.create(
