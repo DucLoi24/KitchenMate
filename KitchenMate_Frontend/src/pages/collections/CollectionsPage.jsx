@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Bookmark, Heart, Trash2, RefreshCw, MoreHorizontal } from 'lucide-react'
@@ -333,7 +333,7 @@ export function CollectionsPage() {
   const [error, setError] = useState(false)
   const [showCreateDialog, setShowCreateDialog] = useState(false)
 
-  const loadCollections = async () => {
+  const loadCollections = useCallback(async () => {
     setLoading(true)
     setError(false)
     try {
@@ -353,11 +353,15 @@ export function CollectionsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    loadCollections()
-  }, [])
+    const timer = setTimeout(() => {
+      loadCollections()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [loadCollections])
 
   const handleCollectionCreated = (newCollection) => {
     setCollections(prev => [newCollection, ...prev])

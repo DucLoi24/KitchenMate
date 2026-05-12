@@ -2,20 +2,32 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '@/stores/authStore'
 
+function getOAuthParams() {
+  const params = new URLSearchParams(window.location.search)
+  return {
+    access: params.get('access'),
+    refresh: params.get('refresh'),
+    userStr: params.get('user'),
+  }
+}
+
 export function GoogleOAuthButton({ onSuccess, onError }) {
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(() => {
+    const { access, refresh, userStr } = getOAuthParams()
+    return Boolean(access && refresh && userStr)
+  })
   const setAuth = useAuthStore((state) => state.setAuth)
 
   // Listen for OAuth callback from current page URL (after redirect)
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search)
-    const access = params.get('access')
-    const refresh = params.get('refresh')
-    const userStr = params.get('user')
+    const { access, refresh, userStr } = getOAuthParams()
 
     // If we have OAuth params in URL, process them
-    if (access && refresh && userStr) {
-      setIsLoading(true)
+    if (!access || !refresh || !userStr) return
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (!isActive) return
       try {
         const user = JSON.parse(decodeURIComponent(userStr))
         setAuth(user, access, refresh)
@@ -26,8 +38,14 @@ export function GoogleOAuthButton({ onSuccess, onError }) {
       } catch (error) {
         onError?.(error)
       } finally {
-        setIsLoading(false)
+        if (isActive) {
+          setIsLoading(false)
+        }
       }
+    })
+
+    return () => {
+      isActive = false
     }
   }, [setAuth, onSuccess, onError])
 

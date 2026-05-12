@@ -4,31 +4,29 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/utils'
 
 export function SearchBar({ value, onChange, isLoading = false, placeholder = 'Tìm kiếm công thức...' }) {
-  const [inputValue, setInputValue] = useState(value)
-  const [isDebouncing, setIsDebouncing] = useState(false)
-
-  useEffect(() => {
-    setInputValue(value)
-  }, [value])
+  const [draftValue, setDraftValue] = useState({ source: value, value })
+  const inputValue = draftValue.source === value ? draftValue.value : value
 
   useEffect(() => {
     if (inputValue === value) return
 
-    setIsDebouncing(true)
     const timer = setTimeout(() => {
       onChange(inputValue)
-      setIsDebouncing(false)
     }, 300)
 
     return () => clearTimeout(timer)
   }, [inputValue, value, onChange])
 
+  const updateInputValue = (nextValue) => {
+    setDraftValue({ source: value, value: nextValue })
+  }
+
   const handleClear = () => {
-    setInputValue('')
+    updateInputValue('')
     onChange('')
   }
 
-  const showLoading = isLoading || isDebouncing
+  const showLoading = isLoading || inputValue !== value
   const showClear = inputValue.length > 0
 
   return (
@@ -57,7 +55,7 @@ export function SearchBar({ value, onChange, isLoading = false, placeholder = 'T
         <input
           type="text"
           value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          onChange={(e) => updateInputValue(e.target.value)}
           placeholder={placeholder}
           className="flex-1 bg-transparent outline-none text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] text-base"
         />

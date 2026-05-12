@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 import { gsap } from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import {
-  Clock, Star, ChefHat, Heart, ArrowLeft, Play, Library,
+  Clock, ChefHat, Heart, ArrowLeft, Play, Library,
   ChevronLeft, ChevronRight, X, Utensils, ShoppingBasket, Flag
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
@@ -463,8 +463,17 @@ function CookModeOverlay({ recipe, isOpen, onClose }) {
 
   useEffect(() => {
     if (isOpen) {
-      setCurrentStep(0)
+      let isActive = true
+      queueMicrotask(() => {
+        if (isActive) {
+          setCurrentStep(0)
+        }
+      })
       document.body.style.overflow = 'hidden'
+      return () => {
+        isActive = false
+        document.body.style.overflow = ''
+      }
     } else {
       document.body.style.overflow = ''
     }

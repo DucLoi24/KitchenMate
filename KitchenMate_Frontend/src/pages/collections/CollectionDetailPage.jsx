@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, Trash2, RefreshCw, Bookmark, Heart } from 'lucide-react'
@@ -110,7 +110,7 @@ export function CollectionDetailPage() {
 
   const isFavorites = collection?.is_favorites
 
-  const loadCollection = async (collectionId) => {
+  const loadCollection = useCallback(async (collectionId) => {
     setLoading(true)
     setError(false)
     try {
@@ -126,13 +126,17 @@ export function CollectionDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [navigate])
 
   useEffect(() => {
-    if (id) {
+    if (!id) return
+
+    const timer = setTimeout(() => {
       loadCollection(id)
-    }
-  }, [id])
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [id, loadCollection])
 
   const handleDelete = async () => {
     try {

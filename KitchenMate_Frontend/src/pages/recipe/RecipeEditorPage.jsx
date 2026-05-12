@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -97,14 +97,14 @@ export function RecipeEditorPage() {
         visibility: recipe.visibility || 'PRIVATE',
       }
       initializeForm(formattedData)
-    } else if (hasDraft && formData) {
+    } else if (hasDraft) {
       // Use draft from localStorage - already loaded in hook's formData
       // No need to call initializeForm since hook auto-loads draft
     } else if (!isEditMode) {
       // New recipe - initialize with empty form
       initializeForm(initialFormData)
     }
-  }, [isEditMode, existingRecipe, hasDraft])
+  }, [isEditMode, existingRecipe, hasDraft, initializeForm])
 
   // NOTE: Auto-save is handled internally by useRecipeDraft hook
   // No need for a redundant auto-save effect here

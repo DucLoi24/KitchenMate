@@ -26,7 +26,6 @@ export function StepBasicInfo({ data, onChange, errors = {} }) {
   const [dragActive, setDragActive] = useState(false)
   const inputRef = useRef(null)
   const [categories, setCategories] = useState([])
-  const [selectedCategories, setSelectedCategories] = useState([])
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -46,14 +45,6 @@ export function StepBasicInfo({ data, onChange, errors = {} }) {
         setCategories(FALLBACK_CATEGORIES)
       })
   }, [])
-
-  // Restore selected categories from formData when categories are loaded
-  useEffect(() => {
-    if (categories.length > 0 && data.categories && data.categories.length > 0) {
-      const restored = categories.filter((cat) => data.categories.includes(cat.id))
-      setSelectedCategories(restored)
-    }
-  }, [categories, data.categories])
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -6,7 +6,6 @@ import {
   Menu,
   X,
   User,
-  Settings,
   LogOut,
   ChefHat,
   Bookmark,

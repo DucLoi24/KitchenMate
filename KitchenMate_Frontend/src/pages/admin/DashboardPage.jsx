@@ -8,7 +8,7 @@
  * - Error state with retry button
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { Users, BookOpen, Clock, Carrot, AlertTriangle, RefreshCw, Construction, FolderOpen, Flag } from 'lucide-react'
 
@@ -158,7 +158,7 @@ export function DashboardPage() {
   const [chartsLoading, setChartsLoading] = useState(false)
   const [chartsError, setChartsError] = useState(null)
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true)
     setError(null)
 
@@ -205,9 +205,9 @@ export function DashboardPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchCharts = async () => {
+  const fetchCharts = useCallback(async () => {
     setChartsLoading(true)
     setChartsError(null)
     try {
@@ -226,12 +226,16 @@ export function DashboardPage() {
     } finally {
       setChartsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
-    fetchStats()
-    fetchCharts()
-  }, [])
+    const timer = setTimeout(() => {
+      fetchStats()
+      fetchCharts()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [fetchStats, fetchCharts])
 
   // Render fallback if backend feature is missing
   if (!backendAvailable && !loading) {

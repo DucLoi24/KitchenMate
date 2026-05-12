@@ -6,7 +6,7 @@
  * Cho phép duyệt/bỏ qua/xử lý báo cáo.
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Flag,
@@ -15,7 +15,6 @@ import {
   XCircle,
   AlertTriangle,
   RefreshCw,
-  Search,
   Eye,
   Ban,
   MessageSquare,
@@ -26,7 +25,6 @@ import toast from 'react-hot-toast'
 
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 
 const PAGE_SIZE = 20
 
@@ -166,7 +164,6 @@ function StatusBadge({ status }) {
 
 function ReportCard({ report, onView, onProcess }) {
   const targetConfig = TARGET_TYPE_CONFIG[report.target_type] || TARGET_TYPE_CONFIG.recipe
-  const TargetIcon = targetConfig.icon
 
   return (
     <motion.div
@@ -263,14 +260,23 @@ function ReportCard({ report, onView, onProcess }) {
 
 // ============ Process Dialog ============
 
-function ProcessDialog({ isOpen, report, onConfirm, onCancel, loading }) {
+function ProcessDialog({ isOpen, onConfirm, onCancel, loading }) {
   const [action, setAction] = useState('')
   const [note, setNote] = useState('')
 
   useEffect(() => {
-    if (!isOpen) {
-      setAction('')
-      setNote('')
+    if (isOpen) return
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (isActive) {
+        setAction('')
+        setNote('')
+      }
+    })
+
+    return () => {
+      isActive = false
     }
   }, [isOpen])
 
@@ -503,7 +509,7 @@ export function ReportManagementPage() {
   const [showProcess, setShowProcess] = useState(false)
   const [processLoading, setProcessLoading] = useState(false)
 
-  const fetchReports = async (page = 1) => {
+  const fetchReports = useCallback(async (page = 1) => {
     setLoading(true)
     setError(null)
 
@@ -521,11 +527,15 @@ export function ReportManagementPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [statusFilter])
 
   useEffect(() => {
-    fetchReports()
-  }, [statusFilter])
+    const timer = setTimeout(() => {
+      fetchReports()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [fetchReports])
 
   const handleView = (report) => {
     setSelectedReport(report)
@@ -651,7 +661,6 @@ export function ReportManagementPage() {
 
       <ProcessDialog
         isOpen={showProcess}
-        report={selectedReport}
         onConfirm={handleProcessConfirm}
         onCancel={() => {
           setShowProcess(false)

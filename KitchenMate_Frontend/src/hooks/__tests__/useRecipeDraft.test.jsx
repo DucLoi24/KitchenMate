@@ -11,7 +11,7 @@ const localStorageMock = {
   clear: vi.fn(() => { localStorageMock.store = {} }),
 }
 
-Object.defineProperty(global, 'localStorage', { value: localStorageMock })
+Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock })
 
 describe('useRecipeDraft - RecipeEditorPage integration bug', () => {
   beforeEach(() => {

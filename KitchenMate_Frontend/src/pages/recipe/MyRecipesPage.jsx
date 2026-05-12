@@ -7,7 +7,6 @@ import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { useMyRecipes, useUpdateRecipe, useDeleteRecipe, useTrashRecipes, useRestoreRecipe } from '@/hooks/useRecipes'
 import recipeApi from '@/api/recipeApi'
 
@@ -224,8 +223,8 @@ export function MyRecipesPage() {
   const restoreRecipe = useRestoreRecipe()
   const navigate = useNavigate()
 
-  const recipes = data?.data?.results || data?.results || data || []
-  const trashRecipes = trashData?.data?.results || trashData?.results || trashData || []
+  const recipes = useMemo(() => data?.data?.results || data?.results || data || [], [data])
+  const trashRecipes = useMemo(() => trashData?.data?.results || trashData?.results || trashData || [], [trashData])
 
   const [visibilityFilter, setVisibilityFilter] = useState('ALL')
   const [confirmDialog, setConfirmDialog] = useState({ isOpen: false, recipe: null, type: null })
@@ -399,7 +398,7 @@ export function MyRecipesPage() {
         </motion.div>
       ) : (
         <div className="space-y-3 px-4 pb-4">
-          {filteredRecipes.map((recipe, index) => (
+          {filteredRecipes.map((recipe) => (
             <RecipeItem
               key={recipe.id}
               recipe={recipe}

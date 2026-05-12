@@ -6,14 +6,9 @@ import {
   Pencil,
   Trash2,
   Check,
-  X,
-  ChevronDown,
-  ChevronUp,
   RefreshCw,
   AlertCircle,
   Search,
-  CheckCircle2,
-  XCircle,
   Package2,
   ArrowLeft,
 } from 'lucide-react'
@@ -117,16 +112,25 @@ function UnitModal({ isOpen, unit, onClose, onSave }) {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    if (unit) {
-      setName(unit.name || '')
-      setSlug(unit.slug || '')
-      setIsActive(unit.is_active !== false)
-    } else {
-      setName('')
-      setSlug('')
-      setIsActive(true)
+    let isActive = true
+    queueMicrotask(() => {
+      if (!isActive) return
+
+      if (unit) {
+        setName(unit.name || '')
+        setSlug(unit.slug || '')
+        setIsActive(unit.is_active !== false)
+      } else {
+        setName('')
+        setSlug('')
+        setIsActive(true)
+      }
+      setErrors({})
+    })
+
+    return () => {
+      isActive = false
     }
-    setErrors({})
   }, [unit, isOpen])
 
   const handleNameChange = (value) => {
@@ -409,7 +413,11 @@ function UnitsTab() {
   }, [showInactive])
 
   useEffect(() => {
-    loadUnits()
+    const timer = setTimeout(() => {
+      loadUnits()
+    }, 0)
+
+    return () => clearTimeout(timer)
   }, [loadUnits])
 
   const handleCreate = () => {
@@ -434,7 +442,7 @@ function UnitsTab() {
       toast.success('Đã xóa đơn vị')
       setShowDeleteDialog(false)
       loadUnits()
-    } catch (err) {
+    } catch {
       toast.error('Không thể xóa đơn vị')
     } finally {
       setDeleteLoading(false)
@@ -524,10 +532,10 @@ function UnitsTab() {
 
 // ============ Ingredient Units Tab ============
 
-function IngredientUnitsTab() {
+export function IngredientUnitsTab({ units = [] }) {
   const [ingredients, setIngredients] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [unitSearchQuery, setUnitSearchQuery] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState(null)
@@ -535,6 +543,7 @@ function IngredientUnitsTab() {
   const [defaultUnitId, setDefaultUnitId] = useState(null)
   const [saving, setSaving] = useState(false)
   const [loadingUnits, setLoadingUnits] = useState(false)
+  const [unitFilter, setUnitFilter] = useState('all')
 
   const handleWheel = useCallback((e) => {
     e.stopPropagation()
@@ -555,7 +564,11 @@ function IngredientUnitsTab() {
   }, [])
 
   useEffect(() => {
-    loadIngredients()
+    const timer = setTimeout(() => {
+      loadIngredients()
+    }, 0)
+
+    return () => clearTimeout(timer)
   }, [loadIngredients])
 
   const handleSelectIngredient = async (ingredient) => {
@@ -566,7 +579,7 @@ function IngredientUnitsTab() {
       const data = res.data || {}
       setSelectedUnits(data.allowed_units?.map(u => u.id) || [])
       setDefaultUnitId(data.default_unit?.id || null)
-    } catch (err) {
+    } catch {
       toast.error('Không thể tải đơn vị của nguyên liệu')
       setSelectedUnits([])
       setDefaultUnitId(null)
@@ -935,7 +948,7 @@ export function UnitManagementPage() {
           {activeTab === 'units' ? (
             <UnitsTab />
           ) : (
-            <IngredientUnitsTabWithUnits units={units} setUnits={setUnits} />
+            <IngredientUnitsTabWithUnits units={units} />
           )}
         </motion.div>
       </AnimatePresence>
@@ -944,10 +957,10 @@ export function UnitManagementPage() {
 }
 
 // Wrapper component to pass units prop
-function IngredientUnitsTabWithUnits({ units, setUnits }) {
+function IngredientUnitsTabWithUnits({ units }) {
   const [ingredients, setIngredients] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+  const [, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [unitSearchQuery, setUnitSearchQuery] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState(null)
@@ -976,7 +989,11 @@ function IngredientUnitsTabWithUnits({ units, setUnits }) {
   }, [])
 
   useEffect(() => {
-    loadIngredients()
+    const timer = setTimeout(() => {
+      loadIngredients()
+    }, 0)
+
+    return () => clearTimeout(timer)
   }, [loadIngredients])
 
   const handleSelectIngredient = async (ingredient) => {
@@ -987,7 +1004,7 @@ function IngredientUnitsTabWithUnits({ units, setUnits }) {
       const data = res.data || {}
       setSelectedUnits(data.allowed_units?.map(u => u.id) || [])
       setDefaultUnitId(data.default_unit?.id || null)
-    } catch (err) {
+    } catch {
       toast.error('Không thể tải đơn vị của nguyên liệu')
       setSelectedUnits([])
       setDefaultUnitId(null)

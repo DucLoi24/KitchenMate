@@ -1,11 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  Clock,
   List,
   CheckCircle,
-  ChevronDown,
-  ChevronUp,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
@@ -114,7 +111,12 @@ function CategoryFormDialog({ isOpen, category, onConfirm, onCancel, loading }) 
 
   // Reset form when dialog opens/closes or category changes
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (!isActive) return
+
       if (category) {
         setName(category.name || '')
         setDescription(category.description || '')
@@ -125,6 +127,10 @@ function CategoryFormDialog({ isOpen, category, onConfirm, onCancel, loading }) 
         setOrder(0)
       }
       setErrors({})
+    })
+
+    return () => {
+      isActive = false
     }
   }, [isOpen, category])
 
@@ -649,9 +655,12 @@ export function CategoryManagementPage() {
 
   useEffect(() => {
     let isMounted = true
-    loadCategories(isMounted)
+    const timer = setTimeout(() => {
+      loadCategories(isMounted)
+    }, 0)
     return () => {
       isMounted = false
+      clearTimeout(timer)
     }
   }, [loadCategories])
 

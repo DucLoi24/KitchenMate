@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Bell, Check, CheckCheck, X, AlertTriangle, Info } from 'lucide-react'
 import { cn } from '@/utils'
@@ -75,7 +75,7 @@ export function NotificationPopup({ isOpen, onClose }) {
   const [unreadCount, setUnreadCount] = useState(0)
   const popupRef = useRef(null)
 
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     setLoading(true)
     try {
       const res = await notificationApi.getNotifications()
@@ -86,29 +86,38 @@ export function NotificationPopup({ isOpen, onClose }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const fetchUnreadCount = async () => {
+  const fetchUnreadCount = useCallback(async () => {
     try {
       const res = await notificationApi.getUnreadCount()
       setUnreadCount(res.data?.unread_count || 0)
     } catch {
       console.error('Failed to fetch unread count')
     }
-  }
+  }, [])
 
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) return
+
+    const timer = setTimeout(() => {
       fetchNotifications()
-    }
-  }, [isOpen])
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [isOpen, fetchNotifications])
 
   useEffect(() => {
-    fetchUnreadCount()
+    const initialTimer = setTimeout(() => {
+      fetchUnreadCount()
+    }, 0)
     // Poll every 30 seconds
     const interval = setInterval(fetchUnreadCount, 30000)
-    return () => clearInterval(interval)
-  }, [])
+    return () => {
+      clearTimeout(initialTimer)
+      clearInterval(interval)
+    }
+  }, [fetchUnreadCount])
 
   const handleMarkAsRead = async (notificationId) => {
     try {

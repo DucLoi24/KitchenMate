@@ -53,17 +53,19 @@ export function ReviewsSection({ recipeId }) {
   }, [recipeId, isAuthenticated, user])
 
   useEffect(() => {
-    fetchReviews(1)
-    if (isAuthenticated) {
-      fetchMyReview()
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    const timer = setTimeout(() => {
+      fetchReviews(1)
+      if (isAuthenticated) {
+        fetchMyReview()
+      }
+    }, 0)
 
-  useEffect(() => {
-    if (myReview && !reviews.find((r) => r.id === myReview.id)) {
-      setReviews((prev) => [myReview, ...prev])
-    }
-  }, [myReview, reviews])
+    return () => clearTimeout(timer)
+  }, [fetchReviews, fetchMyReview, isAuthenticated])
+
+  const displayedReviews = myReview && !reviews.find((r) => r.id === myReview.id)
+    ? [myReview, ...reviews]
+    : reviews
 
   const handlePageChange = (page) => {
     fetchReviews(page)
@@ -162,7 +164,7 @@ export function ReviewsSection({ recipeId }) {
 
         <div className="border-t border-[var(--color-border)] pt-6 mt-6">
           <ReviewList
-            reviews={reviews}
+            reviews={displayedReviews}
             pagination={pagination}
             currentUserId={user?.id}
             onPageChange={handlePageChange}
@@ -188,7 +190,7 @@ export function ReviewsSection({ recipeId }) {
       )}
 
       <ReviewList
-        reviews={reviews}
+        reviews={displayedReviews}
         pagination={pagination}
         currentUserId={user?.id}
         onPageChange={handlePageChange}

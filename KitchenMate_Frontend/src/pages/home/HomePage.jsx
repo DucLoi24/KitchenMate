@@ -325,13 +325,12 @@ export function HomePage() {
     : suggestionsData?.results || []
 
   // Greeting based on time
-  const [greeting, setGreeting] = useState('')
-  useEffect(() => {
-    const hour = new Date().getHours()
-    if (hour < 12) setGreeting('Chào buổi sáng')
-    else if (hour < 18) setGreeting('Chào buổi chiều')
-    else setGreeting('Chào buổi tối')
-  }, [])
+  const hour = new Date().getHours()
+  const greeting = hour < 12
+    ? 'Chào buổi sáng'
+    : hour < 18
+      ? 'Chào buổi chiều'
+      : 'Chào buổi tối'
 
   // Hero carousel images
   const heroImages = [

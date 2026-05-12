@@ -17,7 +17,6 @@ import {
   Plus,
   Pencil,
   Trash2,
-  Package2,
   Search,
   X,
   RotateCw,
@@ -185,7 +184,18 @@ function RejectDialog({ isOpen, item, onConfirm, onCancel, loading }) {
 
   // Reset reason when dialog closes
   useEffect(() => {
-    if (!isOpen) setReason('')
+    if (isOpen) return
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (isActive) {
+        setReason('')
+      }
+    })
+
+    return () => {
+      isActive = false
+    }
   }, [isOpen])
 
   return (
@@ -262,18 +272,27 @@ function IngredientModal({ isOpen, ingredient, units, onClose, onSave }) {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    if (ingredient) {
-      setName(ingredient.name || '')
-      setCategory(ingredient.category || 'OTHER')
-      setDefaultUnitId(ingredient.default_unit?.id || null)
-      setAllowedUnitIds(ingredient.allowed_units?.map(u => u.id) || [])
-    } else {
-      setName('')
-      setCategory('OTHER')
-      setDefaultUnitId(null)
-      setAllowedUnitIds([])
+    let isActive = true
+    queueMicrotask(() => {
+      if (!isActive) return
+
+      if (ingredient) {
+        setName(ingredient.name || '')
+        setCategory(ingredient.category || 'OTHER')
+        setDefaultUnitId(ingredient.default_unit?.id || null)
+        setAllowedUnitIds(ingredient.allowed_units?.map(u => u.id) || [])
+      } else {
+        setName('')
+        setCategory('OTHER')
+        setDefaultUnitId(null)
+        setAllowedUnitIds([])
+      }
+      setErrors({})
+    })
+
+    return () => {
+      isActive = false
     }
-    setErrors({})
   }, [ingredient, isOpen])
 
   const categoryOptions = [
@@ -534,28 +553,6 @@ function IngredientListItem({ ingredient, onApprove, onReject, onEdit, onDelete,
         toast.error(err?.response?.data?.message || 'Không thể từ chối nguyên liệu.')
       }
       throw err
-    } finally {
-      setActionLoading(false)
-    }
-  }
-
-  const handleRestore = async () => {
-    setActionLoading(true)
-    try {
-      await adminApi.restoreIngredient(ingredient.id)
-      toast.success('Đã khôi phục nguyên liệu')
-      onRestore(ingredient.id)
-    } catch (err) {
-      const status = err?.response?.status
-      if (status === 401) {
-        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
-      } else if (status === 403) {
-        toast.error('Bạn không có quyền thực hiện thao tác này.')
-      } else if (status === 500) {
-        toast.error('Lỗi server. Vui lòng thử lại.')
-      } else {
-        toast.error(err?.response?.data?.message || 'Không thể khôi phục nguyên liệu.')
-      }
     } finally {
       setActionLoading(false)
     }
@@ -995,9 +992,12 @@ export function IngredientManagementPage() {
 
   useEffect(() => {
     let isMounted = true
-    loadIngredients(isMounted)
+    const timer = setTimeout(() => {
+      loadIngredients(isMounted)
+    }, 0)
     return () => {
       isMounted = false
+      clearTimeout(timer)
     }
   }, [loadIngredients])
 

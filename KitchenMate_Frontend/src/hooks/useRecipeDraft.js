@@ -74,34 +74,44 @@ function clearDraft(key) {
   }
 }
 
+function normalizeFormData(data = {}) {
+  return {
+    categories: [],  // UUID array for backend PrimaryKeyRelatedField
+    ...(data || {}),
+  }
+}
+
+function createDraftState(draftKey) {
+  const saved = loadDraft(draftKey)
+  return {
+    formData: normalizeFormData(saved || {}),
+    lastSaved: saved?._savedAt ? new Date(saved._savedAt) : null,
+    hasDraft: Boolean(saved),
+  }
+}
+
 export function useRecipeDraft(userId, recipeId = null) {
   const draftKey = getDraftKey(userId, recipeId)
-  // Start with empty object instead of null to prevent crashes when
-  // components access data.categories before initializeForm is called
-  const [formData, setFormData] = useState({})
-  const [lastSaved, setLastSaved] = useState(null)
-  const [hasDraft, setHasDraft] = useState(false)
+  const draftKeyRef = useRef(draftKey)
+  const [draftState, setDraftState] = useState(() => createDraftState(draftKey))
+  const { formData, lastSaved, hasDraft } = draftState
 
-  // Load draft on mount
+  // Reload draft when the editor switches between recipes without remounting.
   useEffect(() => {
-    const saved = loadDraft(draftKey)
-    if (saved) {
-      setFormData(saved)
-      setLastSaved(saved._savedAt ? new Date(saved._savedAt) : null)
-      setHasDraft(true)
+    if (draftKeyRef.current === draftKey) return
+    draftKeyRef.current = draftKey
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (isActive) {
+        setDraftState(createDraftState(draftKey))
+      }
+    })
+
+    return () => {
+      isActive = false
     }
   }, [draftKey])
-
-  // Initialize formData with categories field if not already loaded
-  useEffect(() => {
-    // Only add categories if formData exists and doesn't have categories
-    if (formData && typeof formData === 'object' && !('categories' in formData)) {
-      setFormData((prev) => ({
-        ...prev,
-        categories: [],  // UUID array for backend PrimaryKeyRelatedField
-      }))
-    }
-  }, [formData])
 
   // Auto-save effect with debounce
   useEffect(() => {
@@ -119,32 +129,40 @@ export function useRecipeDraft(userId, recipeId = null) {
         _savedAt: new Date().toISOString(),
       }
       saveDraft(draftKey, dataToSave)
-      setLastSaved(new Date())
+      setDraftState((prev) => ({ ...prev, lastSaved: new Date() }))
     }, AUTO_SAVE_DELAY)
 
     return () => clearTimeout(timer)
   }, [formData, draftKey])
 
   const updateFormData = useCallback((updates) => {
-    setFormData((prev) => {
-      if (typeof updates === 'function') {
-        return updates(prev)
+    setDraftState((prev) => {
+      const nextFormData = typeof updates === 'function'
+        ? updates(prev.formData)
+        : { ...prev.formData, ...updates }
+
+      return {
+        ...prev,
+        formData: normalizeFormData(nextFormData),
       }
-      return { ...prev, ...updates }
     })
   }, [])
 
   const clearAllDraft = useCallback(() => {
     clearDraft(draftKey)
-    setFormData({})
-    setLastSaved(null)
-    setHasDraft(false)
+    setDraftState({
+      formData: normalizeFormData(),
+      lastSaved: null,
+      hasDraft: false,
+    })
   }, [draftKey])
 
   const initializeForm = useCallback((initialData) => {
-    setFormData(initialData)
-    setLastSaved(null)
-    setHasDraft(false)
+    setDraftState({
+      formData: normalizeFormData(initialData),
+      lastSaved: null,
+      hasDraft: false,
+    })
   }, [])
 
   return {
@@ -160,12 +178,10 @@ export function useRecipeDraft(userId, recipeId = null) {
 export function useIngredients(searchQuery = '') {
   const [results, setResults] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const shouldSearch = Boolean(searchQuery && searchQuery.length >= 2)
 
   useEffect(() => {
-    if (!searchQuery || searchQuery.length < 2) {
-      setResults([])
-      return
-    }
+    if (!shouldSearch) return
 
     const controller = new AbortController()
 
@@ -196,9 +212,12 @@ export function useIngredients(searchQuery = '') {
       controller.abort()
       clearTimeout(debounceTimer)
     }
-  }, [searchQuery])
+  }, [searchQuery, shouldSearch])
 
-  return { results, isLoading }
+  return {
+    results: shouldSearch ? results : [],
+    isLoading: shouldSearch ? isLoading : false,
+  }
 }
 
 export default { useRecipeDraft, useIngredients, useDebounceCallback, VISIBILITY, DIFFICULTY, DIFFICULTY_CONFIG, CATEGORY_COLORS, UNITS }

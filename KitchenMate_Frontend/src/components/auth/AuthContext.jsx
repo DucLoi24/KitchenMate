@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useCallback } from 'react'
+import { createContext, useMemo, useCallback } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/stores/authStore'
 import { authApi } from '@/api/authApi'

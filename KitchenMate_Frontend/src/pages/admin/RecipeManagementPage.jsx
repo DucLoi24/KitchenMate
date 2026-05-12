@@ -176,7 +176,18 @@ function RejectDialog({ isOpen, item, onConfirm, onCancel, loading }) {
 
   // Reset reason when dialog closes
   useEffect(() => {
-    if (!isOpen) setReason('')
+    if (isOpen) return
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (isActive) {
+        setReason('')
+      }
+    })
+
+    return () => {
+      isActive = false
+    }
   }, [isOpen])
 
   return (
@@ -256,7 +267,18 @@ function UnpublishDialog({ isOpen, item, onConfirm, onCancel, loading }) {
   }
 
   useEffect(() => {
-    if (!isOpen) setReason('')
+    if (isOpen) return
+
+    let isActive = true
+    queueMicrotask(() => {
+      if (isActive) {
+        setReason('')
+      }
+    })
+
+    return () => {
+      isActive = false
+    }
   }, [isOpen])
 
   return (
@@ -867,11 +889,14 @@ export function RecipeManagementPage() {
 
   useEffect(() => {
     let isMounted = true
-    loadRecipes(isMounted)
+    const timer = setTimeout(() => {
+      loadRecipes(isMounted)
+    }, 0)
     return () => {
       isMounted = false
+      clearTimeout(timer)
     }
-  }, [loadRecipes, debouncedSearch, activeTab])
+  }, [loadRecipes])
 
   // 2-second polling for real-time updates - only on pending tab
   useEffect(() => {

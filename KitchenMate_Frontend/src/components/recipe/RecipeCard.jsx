@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Clock, Star, Heart, Library } from 'lucide-react'
 import { Badge } from '@/components/ui'
@@ -13,6 +13,28 @@ const difficultyConfig = {
   EASY: { label: 'Dễ', variant: 'success', icon: '🍀' },
   MEDIUM: { label: 'Trung bình', variant: 'warning', icon: '🍳' },
   HARD: { label: 'Khó', variant: 'danger', icon: '🔥' },
+}
+
+function usePropBackedState(sourceValue, resetKey) {
+  const [override, setOverride] = useState(null)
+  const value = override?.resetKey === resetKey && override?.sourceValue === sourceValue
+    ? override.value
+    : sourceValue
+
+  const setValue = useCallback((nextValue) => {
+    setOverride((previous) => {
+      const currentValue = previous?.resetKey === resetKey && previous?.sourceValue === sourceValue
+        ? previous.value
+        : sourceValue
+      return {
+        resetKey,
+        sourceValue,
+        value: typeof nextValue === 'function' ? nextValue(currentValue) : nextValue,
+      }
+    })
+  }, [resetKey, sourceValue])
+
+  return [value, setValue]
 }
 
 export function RecipeCard({
@@ -38,20 +60,11 @@ export function RecipeCard({
     categories = [],
   } = recipe
 
-  const [favorited, setFavorited] = useState(!!is_favorited)
-  const [inCollection, setInCollection] = useState(!!is_in_collection)
+  const [favorited, setFavorited] = usePropBackedState(!!is_favorited, id)
+  const [inCollection] = usePropBackedState(!!is_in_collection, id)
   const [showGuestCTA, setShowGuestCTA] = useState(false)
   const [showCollectionModal, setShowCollectionModal] = useState(false)
   const debounceRef = useRef(null)
-
-  // Sync state when prop changes (e.g., after page refresh)
-  useEffect(() => {
-    setFavorited(!!is_favorited)
-  }, [is_favorited])
-
-  useEffect(() => {
-    setInCollection(!!is_in_collection)
-  }, [is_in_collection])
 
   const difficultyInfo = difficultyConfig[difficulty] || difficultyConfig.MEDIUM
 
@@ -75,7 +88,7 @@ export function RecipeCard({
       // Revert on failure
       setFavorited(prev)
     }
-  }, [isAuthenticated, favorited, id])
+  }, [isAuthenticated, favorited, id, setFavorited])
 
   const handleCollectionToggle = useCallback(() => {
     if (!isAuthenticated) {
