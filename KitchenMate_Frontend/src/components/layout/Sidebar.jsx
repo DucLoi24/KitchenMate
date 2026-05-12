@@ -39,8 +39,10 @@ export function Sidebar({ isOpen = true }) {
   const location = useLocation()
   const { isAuthenticated, user } = useAuth()
   const isAdmin = user?.is_staff || user?.is_superuser
+  const [isHovered, setIsHovered] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const isExpanded = isOpen || isHovered
 
   const allNavItems = isAdmin
     ? [...navItems, { to: '/admin', icon: Settings, label: 'Quản trị' }]
@@ -67,8 +69,10 @@ export function Sidebar({ isOpen = true }) {
     <>
       <motion.aside
         initial={false}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         animate={{
-          width: isOpen ? 240 : 72,
+          width: isExpanded ? 240 : 72,
         }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         className="hidden lg:flex flex-col h-[calc(100vh-4rem)] sticky top-16 bg-[var(--color-surface)] border-r border-[var(--color-border)] overflow-hidden"
@@ -83,6 +87,8 @@ export function Sidebar({ isOpen = true }) {
                 <li key={to}>
                   <Link
                     to={to}
+                    aria-label={label}
+                    title={isExpanded ? undefined : label}
                     className={cn(
                       'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] transition-all duration-[var(--transition-fast)] group relative',
                       isActive
@@ -97,8 +103,8 @@ export function Sidebar({ isOpen = true }) {
                         transition={{ type: 'spring', stiffness: 400, damping: 30 }}
                       />
                     )}
-                    <Icon className={cn('w-5 h-5 flex-shrink-0', isOpen ? '' : 'mx-auto')} />
-                    {isOpen && (
+                    <Icon className={cn('w-5 h-5 flex-shrink-0', isExpanded ? '' : 'mx-auto')} />
+                    {isExpanded && (
                       <span className="font-medium truncate">{label}</span>
                     )}
                   </Link>
@@ -118,6 +124,8 @@ export function Sidebar({ isOpen = true }) {
                   <li key={to}>
                     <Link
                       to={to}
+                      aria-label={label}
+                      title={isExpanded ? undefined : label}
                       className={cn(
                         'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] transition-all duration-[var(--transition-fast)]',
                         isActive
@@ -125,8 +133,8 @@ export function Sidebar({ isOpen = true }) {
                           : 'text-[var(--color-text-secondary)] hover:bg-[var(--color-background-alt)] hover:text-[var(--color-text)]'
                       )}
                     >
-                      <Icon className={cn('w-5 h-5 flex-shrink-0', isOpen ? '' : 'mx-auto')} />
-                      {isOpen && <span className="font-medium truncate">{label}</span>}
+                      <Icon className={cn('w-5 h-5 flex-shrink-0', isExpanded ? '' : 'mx-auto')} />
+                      {isExpanded && <span className="font-medium truncate">{label}</span>}
                     </Link>
                   </li>
                 )
@@ -139,20 +147,22 @@ export function Sidebar({ isOpen = true }) {
           <div className="border-t border-[var(--color-border)] py-4 px-3">
             <button
               onClick={() => setShowNotifications(true)}
+              aria-label="Thông báo"
+              title={isExpanded ? undefined : 'Thông báo'}
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-md)] transition-all duration-[var(--transition-fast)] w-full',
                 'text-[var(--color-text-secondary)] hover:bg-[var(--color-background-alt)] hover:text-[var(--color-text)]'
               )}
             >
               <div className="relative">
-                <Bell className={cn('w-5 h-5 flex-shrink-0', isOpen ? '' : 'mx-auto')} />
+                <Bell className={cn('w-5 h-5 flex-shrink-0', isExpanded ? '' : 'mx-auto')} />
                 {unreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-4 h-4 text-[10px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
               </div>
-              {isOpen && (
+              {isExpanded && (
                 <span className="font-medium truncate">Thông báo</span>
               )}
             </button>
