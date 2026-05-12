@@ -22,6 +22,7 @@ import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { adminApi } from '@/api/adminApi'
+import { AdminNav } from '@/components/admin/AdminNav'
 
 const PAGE_SIZE = 20
 
@@ -817,7 +818,7 @@ export function RecipeManagementPage() {
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
   const [sort, setSort] = useState('-created_at')
-  const [visibilityFilter, setVisibilityFilter] = useState('')
+  const [visibilityFilter, setVisibilityFilter] = useState('PUBLIC')
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const pollingRef = useRef(null)
@@ -1027,7 +1028,8 @@ export function RecipeManagementPage() {
     setPage(1)
     setRecipes([])
     setSearchQuery('')
-    setVisibilityFilter('')
+    // Tab "Tất cả" mặc định lọc công khai
+    setVisibilityFilter(tabId === 'all' ? 'PUBLIC' : '')
     if (pollingRef.current) {
       clearInterval(pollingRef.current)
       pollingRef.current = null
@@ -1046,6 +1048,7 @@ export function RecipeManagementPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
+      <AdminNav />
       {/* Header */}
       <div className="px-4 py-4">
         <h1 className="font-display text-2xl font-bold text-[var(--color-text)]">

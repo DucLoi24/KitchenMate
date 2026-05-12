@@ -23,6 +23,7 @@ import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { adminApi } from '@/api/adminApi'
 import { useAuthStore } from '@/stores'
+import { AdminNav } from '@/components/admin/AdminNav'
 
 const PAGE_SIZE = 20
 
@@ -862,6 +863,7 @@ export function UserManagementPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
+      <AdminNav />
       {/* Header */}
       <div className="px-4 py-4">
         <h1 className="font-display text-2xl font-bold text-[var(--color-text)]">

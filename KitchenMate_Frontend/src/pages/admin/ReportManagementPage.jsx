@@ -25,6 +25,7 @@ import toast from 'react-hot-toast'
 
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
+import { AdminNav } from '@/components/admin/AdminNav'
 
 const PAGE_SIZE = 20
 
@@ -573,9 +574,10 @@ export function ReportManagementPage() {
   }
 
   return (
-    <div className="p-6">
+    <div className="min-h-screen bg-[var(--color-background)]">
+      <AdminNav />
       {/* Header */}
-      <div className="mb-6">
+      <div className="px-4 py-4">
         <h1 className="font-display text-2xl font-bold text-[var(--color-text)]">
           Quản lý báo cáo
         </h1>

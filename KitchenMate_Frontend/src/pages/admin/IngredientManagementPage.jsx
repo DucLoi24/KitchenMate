@@ -28,6 +28,7 @@ import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { adminApi } from '@/api/adminApi'
+import { AdminNav } from '@/components/admin/AdminNav'
 
 const PAGE_SIZE = 20
 
@@ -1096,6 +1097,7 @@ export function IngredientManagementPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
+      <AdminNav />
       {/* Header */}
       <div className="px-4 py-4">
         <h1 className="font-display text-2xl font-bold text-[var(--color-text)]">

@@ -46,6 +46,13 @@ export const categoryApi = {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     await axiosInstance.delete(`/recipes/categories/${slug}/`)
   },
+
+  // Restore category (admin only - IsAdminUser, soft delete)
+  restoreCategory: async (slug) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/recipes/categories/${slug}/restore/`)
+    return data
+  },
 }
 
 export default categoryApi

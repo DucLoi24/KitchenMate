@@ -19,6 +19,7 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Badge } from '@/components/ui/Badge'
 import { adminApi } from '@/api/adminApi'
+import { AdminNav } from '@/components/admin/AdminNav'
 
 // ============ Icons ============
 const ScaleIcon = Scale
@@ -894,6 +895,7 @@ export function UnitManagementPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
+      <AdminNav />
       {/* Header */}
       <div className="px-4 py-4">
         <a

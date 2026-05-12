@@ -18,6 +18,7 @@ import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { categoryApi } from '@/api/categoryApi'
+import { AdminNav } from '@/components/admin/AdminNav'
 
 const PAGE_SIZE = 20
 
@@ -348,7 +349,7 @@ function DeleteConfirmDialog({ isOpen, item, onConfirm, onCancel, loading }) {
 
 // ============ Category List Item ============
 
-function CategoryListItem({ category, onEdit, onDelete }) {
+function CategoryListItem({ category, onEdit, onDelete, loadCategories }) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
@@ -447,23 +448,48 @@ function CategoryListItem({ category, onEdit, onDelete }) {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowEditDialog(true)}
-            >
-              <Pencil className="w-4 h-4" />
-              Sửa
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setShowDeleteDialog(true)}
-              className="text-red-500 hover:text-red-600 hover:bg-red-50"
-            >
-              <Trash2 className="w-4 h-4" />
-              Xóa
-            </Button>
+            {category.is_active ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowEditDialog(true)}
+                >
+                  <Pencil className="w-4 h-4" />
+                  Sửa
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Xóa
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={async () => {
+                  setActionLoading(true)
+                  try {
+                    await categoryApi.restoreCategory(category.slug)
+                    toast.success('Đã khôi phục danh mục')
+                    loadCategories?.()
+                  } catch (err) {
+                    toast.error(err?.response?.data?.message || 'Không thể khôi phục danh mục')
+                  } finally {
+                    setActionLoading(false)
+                  }
+                }}
+                disabled={actionLoading}
+              >
+                <RefreshCw className="w-4 h-4" />
+                Khôi phục
+              </Button>
+            )}
           </div>
         </div>
       </motion.div>
@@ -720,6 +746,7 @@ export function CategoryManagementPage() {
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">
+      <AdminNav />
       {/* Header */}
       <div className="px-4 py-4 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold text-[var(--color-text)]">
@@ -785,6 +812,7 @@ export function CategoryManagementPage() {
                 category={category}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                loadCategories={loadCategories}
               />
             ))}
           </div>
