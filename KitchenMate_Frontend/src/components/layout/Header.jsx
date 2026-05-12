@@ -10,6 +10,7 @@ import {
   ChefHat,
   Bookmark,
   UtensilsCrossed,
+  ArrowRight,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui'
@@ -230,8 +231,8 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
             transition={{ duration: 0.2 }}
             className="md:hidden border-t border-[var(--color-border)] overflow-hidden"
           >
-            <form onSubmit={handleSearch} className="p-4">
-              <div className="relative">
+            <form onSubmit={handleSearch} className="p-4 flex gap-2">
+              <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--color-text-muted)]" />
                 <input
                   ref={searchInputRef}
@@ -242,6 +243,13 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
                   className="w-full h-11 pl-10 pr-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                 />
               </div>
+              <button
+                type="submit"
+                className="h-11 px-4 rounded-[var(--radius-md)] bg-[var(--color-primary)] text-white hover:bg-[var(--color-primary)]/90 transition-colors flex items-center justify-center"
+                aria-label="Tìm kiếm"
+              >
+                <ArrowRight className="w-5 h-5" />
+              </button>
             </form>
           </motion.div>
         )}

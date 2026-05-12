@@ -70,7 +70,12 @@ export function ExplorePage() {
   const [sort, setSort] = useState(searchParams.get('sort') || 'newest')
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false)
 
-  // Build API params
+  // Sync search state from URL params when URL changes (e.g., from Header search)
+  // This effect bridges external URL changes to component state
+  const urlSearch = searchParams.get('q') || ''
+  useEffect(() => {
+    setSearch(urlSearch) // eslint-disable-line react-hooks/set-state-in-effect
+  }, [urlSearch])
   const apiParams = useMemo(() => {
     const params = {}
 

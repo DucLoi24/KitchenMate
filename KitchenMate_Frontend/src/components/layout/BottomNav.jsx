@@ -18,7 +18,6 @@ import { cn } from '@/utils'
 import { useAuth } from '@/components/auth/useAuth'
 import { useState, useEffect } from 'react'
 import { notificationApi } from '@/api/reportsApi'
-import { NotificationPopup } from '@/components/notification/NotificationPopup'
 
 const navItems = [
   { to: '/', icon: Home, label: 'Trang chủ' },
@@ -40,7 +39,6 @@ export function MobileSidebar({ isOpen, onClose }) {
   const location = useLocation()
   const { user, isAuthenticated } = useAuth()
   const isAdmin = user?.is_staff || user?.is_superuser
-  const [showNotifications, setShowNotifications] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
 
   const allNavItems = isAdmin
@@ -169,7 +167,6 @@ export function MobileSidebar({ isOpen, onClose }) {
             {isAuthenticated && (
               <div className="border-t border-[var(--color-border)] px-3 py-4">
                 <button
-                  onClick={() => setShowNotifications(true)}
                   className={cn(
                     'flex w-full items-center gap-3 rounded-[var(--radius-md)] px-3 py-2.5 text-[var(--color-text-secondary)] transition-colors duration-[var(--transition-fast)] hover:bg-[var(--color-background-alt)] hover:text-[var(--color-text)]'
                   )}
