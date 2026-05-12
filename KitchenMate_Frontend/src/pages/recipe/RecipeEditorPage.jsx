@@ -261,7 +261,7 @@ export function RecipeEditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)]">
+    <div className="flex min-h-[calc(100vh-4rem)] flex-col bg-[var(--color-background)]">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-[var(--color-surface)] border-b border-[var(--color-border)]">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -353,7 +353,7 @@ export function RecipeEditorPage() {
       </header>
 
       {/* Content */}
-      <main className="max-w-4xl mx-auto px-4 py-6">
+      <main className="flex-1 max-w-4xl mx-auto w-full px-4 py-6">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentStep}
@@ -368,7 +368,7 @@ export function RecipeEditorPage() {
       </main>
 
       {/* Footer Navigation */}
-      <footer className="sticky bottom-0 z-40 bg-[var(--color-surface)] border-t border-[var(--color-border)]">
+      <footer className="sticky bottom-0 z-40 mt-auto bg-[var(--color-surface)] border-t border-[var(--color-border)]">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <button
             type="button"
