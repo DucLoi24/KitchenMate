@@ -369,6 +369,24 @@ import { Mail, Lock, ArrowRight } from 'lucide-react'
 - Backdrop overlay (rgba(0,0,0,0.5))
 - Drag handle at top (optional)
 
+### Mobile Hamburger Sidebar Pattern
+- Replaces fixed bottom navigation bar on mobile
+- Opens via hamburger icon in header (top-left)
+- Slide-in animation from left with spring physics (--transition-spring)
+- Backdrop overlay when sidebar is open
+- Auto-close on navigation
+- Contains same navigation items as previous bottom bar
+- Notification bell integrated in sidebar
+
+```jsx
+// Sidebar animation example
+<motion.div
+  initial={{ x: -300 }}
+  animate={{ x: 0 }}
+  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+>
+```
+
 ### Empty State
 ```jsx
 <div className="flex flex-col items-center justify-center py-12 text-center">
@@ -453,18 +471,18 @@ import { Mail, Lock, ArrowRight } from 'lucide-react'
 ```
 src/
 ├── components/
-│   ├── ui/              # Button, Input, Card, Badge, etc.
+│   ├── ui/              # Button, Input, Card, Badge, IngredientContributeModal, NotificationPopup
 │   ├── auth/            # AuthGuard, AuthContext, GoogleOAuthButton
-│   ├── layout/          # Header, Footer, Sidebar, BottomNav
+│   ├── layout/          # Header, Footer, Sidebar, BottomNav (with hamburger sidebar for mobile)
 │   ├── recipe/          # RecipeCard, RecipeDetail components
 │   ├── pantry/          # PantryItem, PantryAddBottomSheet
 │   ├── shopping/         # ShoppingListItem, ShoppingListAddBottomSheet
 │   └── social/           # CommentItem, RatingComponent
 ├── pages/
-│   ├── auth/            # LoginPage, RegisterPage, ForgotPasswordPage
+│   ├── auth/            # LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage
 │   ├── home/            # HomePage
 │   ├── explore/          # ExplorePage
-│   ├── recipe/           # RecipeDetailPage, RecipeEditorPage
+│   ├── recipe/           # RecipeDetailPage, RecipeEditorPage, IngredientList
 │   ├── pantry/          # PantryPage
 │   ├── shopping/        # ShoppingListPage
 │   ├── suggestion/       # SuggestionPage
