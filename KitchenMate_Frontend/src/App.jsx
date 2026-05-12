@@ -13,7 +13,7 @@ import { ShoppingPage } from '@/pages/shopping'
 import { SuggestionPage } from '@/pages/suggestion'
 import { Header } from '@/components/layout'
 import { Sidebar } from '@/components/layout'
-import { BottomNav } from '@/components/layout'
+import { MobileSidebar } from '@/components/layout'
 import { useState } from 'react'
 
 // Lazy load collections pages
@@ -122,7 +122,7 @@ function App() {
               </Routes>
             </main>
           </div>
-          <BottomNav />
+          <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
         </div>
       </AuthProvider>
     </BrowserRouter>
