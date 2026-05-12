@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Star, Heart, Bookmark, Library } from 'lucide-react'
+import { Clock, Star, Heart, Library } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { CategoryBadge } from '@/components/ui/CategoryBadge'
 import { cn } from '@/utils'
@@ -152,44 +152,54 @@ export function RecipeCard({
           </div>
         )}
 
-        {/* Action Buttons (Heart + Collection) */}
+        {/* Action Buttons (Heart + Collection) - Vertical Stack */}
         {showFavoriteButton && (
-          <div className="absolute top-3 right-3 flex gap-2">
-            {/* Favorite (Heart) Button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleFavoriteToggle()
-              }}
-              className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
-            >
-              <Heart
-                className={cn(
-                  'w-4 h-4 transition-colors',
-                  favorited ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'
-                )}
-              />
-            </motion.button>
+          <div className="absolute top-3 right-3 flex flex-col gap-1">
+            {/* Favorite (Heart) + Count */}
+            <div className="flex flex-col items-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleFavoriteToggle()
+                }}
+                className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
+              >
+                <Heart
+                  className={cn(
+                    'w-4 h-4 transition-colors',
+                    favorited ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'
+                  )}
+                />
+              </motion.button>
+              {like_count > 0 && (
+                <span className="text-xs text-white mt-0.5">{like_count}</span>
+              )}
+            </div>
 
-            {/* Collection Button */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleCollectionToggle()
-              }}
-              className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
-            >
-              <Library
-                className={cn(
-                  'w-4 h-4 transition-colors',
-                  inCollection ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400 hover:text-yellow-500'
-                )}
-              />
-            </motion.button>
+            {/* Collection + Count */}
+            <div className="flex flex-col items-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleCollectionToggle()
+                }}
+                className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
+              >
+                <Library
+                  className={cn(
+                    'w-4 h-4 transition-colors',
+                    inCollection ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400 hover:text-yellow-500'
+                  )}
+                />
+              </motion.button>
+              {save_count > 0 && (
+                <span className="text-xs text-white mt-0.5">{save_count}</span>
+              )}
+            </div>
           </div>
         )}
       </div>
@@ -222,21 +232,6 @@ export function RecipeCard({
             </span>
           )}
 
-          {/* Like count */}
-          {like_count > 0 && (
-            <span className="flex items-center gap-1">
-              <Heart className="w-3.5 h-3.5 fill-red-400 text-red-400" />
-              {like_count}
-            </span>
-          )}
-
-          {/* Save count */}
-          {save_count > 0 && (
-            <span className="flex items-center gap-1">
-              <Bookmark className="w-3.5 h-3.5" />
-              {save_count}
-            </span>
-          )}
         </div>
 
         {/* Author */}
