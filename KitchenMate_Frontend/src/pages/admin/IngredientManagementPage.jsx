@@ -568,7 +568,7 @@ function IngredientListItem({ ingredient, onApprove, onReject, onEdit, onDelete,
 
   const categoryLabels = {
     PROTEIN: 'Protein',
-    CARB: 'Carbohydrate',
+    CARB: 'Tinh bột',
     VEG: 'Rau củ',
     SPICE: 'Gia vị',
     STAPLE: 'Gia vị cơ bản',

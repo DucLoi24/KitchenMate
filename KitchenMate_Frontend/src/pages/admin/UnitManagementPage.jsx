@@ -641,7 +641,7 @@ export function IngredientUnitsTab({ units = [] }) {
 
   const categoryLabels = {
     PROTEIN: { label: 'Protein', color: 'bg-red-100 text-red-700' },
-    CARB: { label: 'Carbohydrate', color: 'bg-amber-100 text-amber-700' },
+    CARB: { label: 'Tinh bột', color: 'bg-amber-100 text-amber-700' },
     VEG: { label: 'Rau củ', color: 'bg-green-100 text-green-700' },
     SPICE: { label: 'Gia vị', color: 'bg-purple-100 text-purple-700' },
     STAPLE: { label: 'Gia vị cơ bản', color: 'bg-orange-100 text-orange-700' },
@@ -1065,7 +1065,7 @@ function IngredientUnitsTabWithUnits({ units }) {
 
   const categoryLabels = {
     PROTEIN: { label: 'Protein', color: 'bg-red-100 text-red-700' },
-    CARB: { label: 'Carbohydrate', color: 'bg-amber-100 text-amber-700' },
+    CARB: { label: 'Tinh bột', color: 'bg-amber-100 text-amber-700' },
     VEG: { label: 'Rau củ', color: 'bg-green-100 text-green-700' },
     SPICE: { label: 'Gia vị', color: 'bg-purple-100 text-purple-700' },
     STAPLE: { label: 'Gia vị cơ bản', color: 'bg-orange-100 text-orange-700' },
