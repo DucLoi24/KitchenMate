@@ -78,13 +78,13 @@ export const authApi = {
     return data
   },
 
-  resetPassword: async (uid, token, newPassword) => {
+  resetPassword: async ({ uid, token, password, password_confirm }) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post('/auth/reset-password/', {
-      uid: uid,
+      uid,
       token,
-      new_password: newPassword,
-      new_password_confirm: newPassword,
+      new_password: password,
+      new_password_confirm: password_confirm,
     })
     return data
   },
