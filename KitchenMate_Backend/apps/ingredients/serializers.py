@@ -78,3 +78,43 @@ class IngredientSerializer(serializers.ModelSerializer):
         if qs.exists():
             raise serializers.ValidationError('Nguyên liệu này đã tồn tại trong hệ thống.')
         return value
+
+
+class AdminIngredientSerializer(IngredientSerializer):
+    """Serializer cho admin create/update Ingredient, hỗ trợ gán đơn vị."""
+    default_unit_id = serializers.PrimaryKeyRelatedField(
+        source='default_unit',
+        queryset=Unit.objects.filter(is_active=True),
+        required=False,
+        allow_null=True,
+        write_only=True,
+        error_messages={
+            'does_not_exist': 'Đơn vị với ID {pk_value} không tồn tại hoặc đã bị vô hiệu hóa.',
+            'incorrect_type': 'ID đơn vị không hợp lệ.',
+        },
+    )
+    allowed_unit_ids = serializers.PrimaryKeyRelatedField(
+        source='allowed_units',
+        queryset=Unit.objects.filter(is_active=True),
+        many=True,
+        required=False,
+        write_only=True,
+        error_messages={
+            'does_not_exist': 'Đơn vị với ID {pk_value} không tồn tại hoặc đã bị vô hiệu hóa.',
+            'incorrect_type': 'ID đơn vị không hợp lệ.',
+        },
+    )
+
+    class Meta(IngredientSerializer.Meta):
+        fields = IngredientSerializer.Meta.fields + ('default_unit_id', 'allowed_unit_ids')
+
+    def validate(self, attrs):
+        """Đảm bảo đơn vị mặc định nằm trong danh sách được phép khi danh sách được gửi lên."""
+        attrs = super().validate(attrs)
+        default_unit = attrs.get('default_unit')
+        allowed_units = attrs.get('allowed_units')
+        if default_unit is not None and allowed_units and default_unit not in allowed_units:
+            raise serializers.ValidationError({
+                'default_unit_id': 'Đơn vị mặc định phải nằm trong danh sách đơn vị được phép.'
+            })
+        return attrs

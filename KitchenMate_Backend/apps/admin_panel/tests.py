@@ -276,6 +276,77 @@ class DashboardChartViewSetTest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
 
+class AdminIngredientUnitAssignmentTest(TestCase):
+    """Test admin ingredient create/update keeps selected units."""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.admin = make_user(is_superuser=True, is_staff=True)
+        self.client.force_authenticate(user=self.admin)
+
+    def test_create_assigns_default_and_allowed_units(self):
+        """Creating an ingredient with unit IDs stores both unit relations."""
+        from apps.ingredients.models import Ingredient, Unit
+
+        suffix = uuid.uuid4().hex[:6]
+        gram = Unit.objects.create(name='Gram test', slug=f'g{suffix}')
+        kilogram = Unit.objects.create(name='Kilogram test', slug=f'kg{suffix}')
+
+        response = self.client.post(
+            '/api/admin/ingredients/',
+            {
+                'name': f'Thịt bò {uuid.uuid4().hex[:6]}',
+                'category': 'PROTEIN',
+                'default_unit_id': gram.id,
+                'allowed_unit_ids': [gram.id, kilogram.id],
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        ingredient = Ingredient.objects.get(pk=response.data['data']['id'])
+        self.assertEqual(ingredient.default_unit_id, gram.id)
+        self.assertCountEqual(
+            ingredient.allowed_units.values_list('id', flat=True),
+            [gram.id, kilogram.id]
+        )
+        self.assertEqual(response.data['data']['default_unit']['id'], gram.id)
+        self.assertCountEqual(
+            [unit['id'] for unit in response.data['data']['allowed_units']],
+            [gram.id, kilogram.id]
+        )
+
+    def test_partial_update_assigns_default_and_allowed_units(self):
+        """Updating an ingredient with unit IDs stores both unit relations."""
+        from apps.ingredients.models import Ingredient, Unit
+
+        suffix = uuid.uuid4().hex[:6]
+        gram = Unit.objects.create(name='Gram test', slug=f'g{suffix}')
+        kilogram = Unit.objects.create(name='Kilogram test', slug=f'kg{suffix}')
+        ingredient = Ingredient.objects.create(
+            name=f'Cà rốt {uuid.uuid4().hex[:6]}',
+            category='VEG',
+            status='APPROVED'
+        )
+
+        response = self.client.patch(
+            f'/api/admin/ingredients/{ingredient.pk}/',
+            {
+                'default_unit_id': kilogram.id,
+                'allowed_unit_ids': [gram.id, kilogram.id],
+            },
+            format='json'
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        ingredient.refresh_from_db()
+        self.assertEqual(ingredient.default_unit_id, kilogram.id)
+        self.assertCountEqual(
+            ingredient.allowed_units.values_list('id', flat=True),
+            [gram.id, kilogram.id]
+        )
+
+
 class BlockNonexistentUserTest(TestCase):
     """Request for nonexistent user returns 404."""
     def setUp(self):

@@ -14,7 +14,7 @@ from core.permissions import IsAdminUser
 from apps.recipes.models import Recipe, RecipeView
 from apps.recipes.serializers import RecipeListSerializer
 from apps.ingredients.models import Ingredient
-from apps.ingredients.serializers import IngredientSerializer, UnitSerializer
+from apps.ingredients.serializers import AdminIngredientSerializer, IngredientSerializer, UnitSerializer
 from apps.accounts.serializers import UserSerializer
 
 User = get_user_model()
@@ -155,7 +155,7 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
         return Response({'success': True, 'data': serializer.data})
 
     def create(self, request):
-        serializer = IngredientSerializer(data=request.data)
+        serializer = AdminIngredientSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(
                 {'success': False, 'message': serializer.errors},
@@ -170,7 +170,7 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
 
     def update(self, request, pk=None):
         instance = self.get_object()
-        serializer = IngredientSerializer(instance, data=request.data)
+        serializer = AdminIngredientSerializer(instance, data=request.data)
         if not serializer.is_valid():
             errors = serializer.errors
             # Format: {"field": ["error1", "error2"]} -> "field: error1; field2: error2"
@@ -184,7 +184,7 @@ class AdminIngredientViewSet(viewsets.GenericViewSet,
 
     def partial_update(self, request, pk=None):
         instance = self.get_object()
-        serializer = IngredientSerializer(instance, data=request.data, partial=True)
+        serializer = AdminIngredientSerializer(instance, data=request.data, partial=True)
         if not serializer.is_valid():
             errors = serializer.errors
             msg = '; '.join(f'{k}: {", ".join(v)}' for k, v in errors.items())
