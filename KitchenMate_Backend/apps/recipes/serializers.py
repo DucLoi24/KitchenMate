@@ -42,6 +42,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
     user_avatar = serializers.SerializerMethodField()
     categories = RecipeCategorySerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
+    like_count = serializers.IntegerField(read_only=True, default=0)
     save_count = serializers.IntegerField(read_only=True, default=0)
     view_count = serializers.IntegerField(read_only=True, default=0)
     thumbnail_url = serializers.SerializerMethodField()
@@ -85,7 +86,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'user_name', 'user_avatar',
-            'categories', 'avg_rating', 'save_count', 'view_count',
+            'categories', 'avg_rating', 'like_count', 'save_count', 'view_count',
             'is_favorited', 'ai_moderation_attempted', 'ai_moderation_status', 'ai_processing',
             'is_deleted', 'deleted_at', 'created_at'
         )
@@ -98,6 +99,8 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     Computed field:
         - avg_rating (SerializerMethodField): Tính trung bình rating từ tất cả reviews
           của công thức, làm tròn 1 chữ số thập phân. Trả về None nếu chưa có review nào.
+        - like_count: Số user duy nhất đã lưu recipe vào collection "Yêu thích"
+        - save_count: Số user duy nhất đã thêm recipe vào collections không phải "Yêu thích"
 
     Nested serializers (read_only):
         - user (UserSerializer): Thông tin tác giả công thức (public-safe fields).
@@ -111,6 +114,8 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     recipe_ingredients = RecipeIngredientSerializer(many=True, read_only=True)
     steps = RecipeStepSerializer(many=True, read_only=True)
     avg_rating = serializers.SerializerMethodField()
+    like_count = serializers.IntegerField(read_only=True, default=0)
+    save_count = serializers.IntegerField(read_only=True, default=0)
     is_favorited = serializers.BooleanField(read_only=True, default=False)
 
     def get_avg_rating(self, obj):
@@ -125,6 +130,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'categories',
             'recipe_ingredients', 'steps', 'avg_rating',
+            'like_count', 'save_count',
             'is_favorited', 'ai_moderation_attempted', 'ai_moderation_status',
             'is_deleted', 'deleted_at',
             'created_at', 'updated_at'

@@ -71,13 +71,27 @@ class RecipeViewSet(viewsets.GenericViewSet):
         return Response({'success': True, 'data': serializer.data})
 
     def get_queryset(self):
+        from django.db.models import Count, Exists, OuterRef, Q
+        from apps.social.models import Collection, CollectionRecipe
+
         base_qs = Recipe.objects.select_related('user').prefetch_related(
             'categories', 'recipe_ingredients__ingredient', 'steps'
         )
         if self.action in ('list', 'retrieve'):
             queryset = base_qs.annotate(
                 avg_rating=Coalesce(Avg('reviews__rating'), 0.0),
-                save_count=Count('saved_in_collections', distinct=True),
+                # like_count: số user DUY NHẤT đã lưu vào collection "Yêu thích"
+                like_count=Count(
+                    'saved_in_collections__collection',
+                    filter=Q(saved_in_collections__collection__is_favorites=True),
+                    distinct=True
+                ),
+                # save_count: số user DUY NHẤT đã thêm vào collections KHÔNG phải "Yêu thích"
+                save_count=Count(
+                    'saved_in_collections__collection',
+                    filter=Q(saved_in_collections__collection__is_favorites=False),
+                    distinct=True
+                ),
             )
             # Annotate is_favorited if user is authenticated
             if self.request.user.is_authenticated:

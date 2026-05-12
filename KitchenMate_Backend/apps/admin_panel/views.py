@@ -32,7 +32,20 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
     permission_classes = [IsAdminUser]
 
     def list(self, request):
-        recipes = Recipe.objects.select_related('user')
+        from django.db.models import Count, Q
+
+        recipes = Recipe.objects.select_related('user').annotate(
+            like_count=Count(
+                'saved_in_collections__collection',
+                filter=Q(saved_in_collections__collection__is_favorites=True),
+                distinct=True
+            ),
+            save_count=Count(
+                'saved_in_collections__collection',
+                filter=Q(saved_in_collections__collection__is_favorites=False),
+                distinct=True
+            ),
+        )
 
         visibility = request.query_params.get('visibility')
         if visibility in ('PUBLIC', 'PRIVATE', 'PENDING'):
@@ -53,9 +66,22 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
 
     @action(detail=False, methods=['get'], url_path='pending')
     def pending(self, request):
+        from django.db.models import Count, Q
+
         recipes = Recipe.objects.filter(
             visibility='PENDING'
-        ).select_related('user').order_by('-created_at')
+        ).select_related('user').annotate(
+            like_count=Count(
+                'saved_in_collections__collection',
+                filter=Q(saved_in_collections__collection__is_favorites=True),
+                distinct=True
+            ),
+            save_count=Count(
+                'saved_in_collections__collection',
+                filter=Q(saved_in_collections__collection__is_favorites=False),
+                distinct=True
+            ),
+        ).order_by('-created_at')
         page = self._paginate(request, recipes, RecipeListSerializer)
         return page
 

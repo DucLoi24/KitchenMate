@@ -15,6 +15,8 @@ import {
   XCircle,
   Search,
   X,
+  Heart,
+  Bookmark,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -566,7 +568,14 @@ function RecipeListItem({ recipe, onApprove, onReject, onUnpublish }) {
                     {recipe.view_count || 0} lượt xem
                   </span>
                   <span>{recipe.avg_rating ? `${recipe.avg_rating.toFixed(1)} ★` : 'Chưa có đánh giá'}</span>
-                  <span>{recipe.save_count || 0} lượt lưu</span>
+                  <span className="flex items-center gap-1">
+                    <Heart className="w-4 h-4 text-red-400" />
+                    {recipe.like_count || 0} lượt thích
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <Bookmark className="w-4 h-4" />
+                    {recipe.save_count || 0} lượt lưu
+                  </span>
                 </div>
 
                 {/* Actions for PENDING recipes - can approve or reject */}

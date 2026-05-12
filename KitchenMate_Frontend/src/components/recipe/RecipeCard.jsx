@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { Clock, Star, Heart, Library } from 'lucide-react'
+import { Clock, Star, Heart, Bookmark, Library } from 'lucide-react'
 import { Badge } from '@/components/ui'
 import { CategoryBadge } from '@/components/ui/CategoryBadge'
 import { cn } from '@/utils'
@@ -54,6 +54,7 @@ export function RecipeCard({
     prep_time,
     difficulty,
     avg_rating,
+    like_count,
     save_count,
     is_favorited,
     is_in_collection,
@@ -221,10 +222,18 @@ export function RecipeCard({
             </span>
           )}
 
-          {/* Saves */}
+          {/* Like count */}
+          {like_count > 0 && (
+            <span className="flex items-center gap-1">
+              <Heart className="w-3.5 h-3.5 fill-red-400 text-red-400" />
+              {like_count}
+            </span>
+          )}
+
+          {/* Save count */}
           {save_count > 0 && (
             <span className="flex items-center gap-1">
-              <Heart className="w-3.5 h-3.5" />
+              <Bookmark className="w-3.5 h-3.5" />
               {save_count}
             </span>
           )}

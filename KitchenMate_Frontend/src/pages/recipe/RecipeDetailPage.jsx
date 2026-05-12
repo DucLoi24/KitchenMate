@@ -765,6 +765,9 @@ export function RecipeDetailPage() {
             >
               <Heart className={cn('w-5 h-5', recipe.is_favorited && 'fill-current')} />
               <span>{recipe.is_favorited ? 'Đã lưu' : 'Lưu'}</span>
+              {recipe.like_count > 0 && (
+                <span className="ml-1 text-sm">({recipe.like_count})</span>
+              )}
             </button>
             <button
               onClick={() => setShowCollectionModal(true)}
