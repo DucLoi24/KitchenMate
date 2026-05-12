@@ -19,6 +19,9 @@
 # Playwright
 .playwright-mcp
 
+# Docs (local only)
+docs/
+
 # Python / Django
 __pycache__/
 *.py[cod]
