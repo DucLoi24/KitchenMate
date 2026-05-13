@@ -334,38 +334,46 @@ function RecipeBottomSheet({ recipe, score, missingIngredients, onClose, onViewD
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+        onWheel={(e) => e.stopPropagation()}
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[70]"
       />
       <motion.div
-        initial={{ y: '100%' }}
-        animate={{ y: 0 }}
-        exit={{ y: '100%' }}
+        initial={{ scale: 0.95, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.95, opacity: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-        className="fixed inset-x-0 bottom-0 bg-[var(--color-surface)] rounded-t-[var(--radius-xl)] shadow-2xl z-50 max-h-[85vh] flex flex-col overflow-hidden"
+        onWheel={(e) => e.stopPropagation()}
+        className="fixed inset-4 md:inset-8 lg:inset-16 bg-[var(--color-surface)] rounded-[var(--radius-xl)] shadow-2xl z-[70] flex flex-col overflow-hidden"
       >
-        {/* Header with drag handle */}
+        {/* Header */}
         <div className="flex-shrink-0 px-6 py-4 flex items-center justify-between border-b border-[var(--color-border)]">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-1.5 bg-[var(--color-border)] rounded-full" />
-          </div>
+          <div />
           <h2 className="font-display text-xl font-semibold">Chi tiết công thức</h2>
           <button onClick={onClose} className="p-2.5 hover:bg-[var(--color-background-alt)] rounded-full transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          <div className="relative">
-            <img
-              src={recipe.thumbnail_url || '/placeholder-recipe.jpg'}
-              alt={recipe.title}
-              className="w-full aspect-video rounded-[var(--radius-lg)] object-cover shadow-lg"
-            />
-            <div className="absolute top-4 right-4 px-4 py-2 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-dark)] text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4" />
-              +{score} điểm
+        <div className="flex-1 overflow-y-auto p-6">
+          {/* Two-column layout: image left, content right on desktop */}
+          <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+            {/* Left: Image (45% width on desktop) */}
+            <div className="lg:w-[45%] flex-shrink-0">
+              <div className="relative">
+                <img
+                  src={recipe.thumbnail_url || '/placeholder-recipe.jpg'}
+                  alt={recipe.title}
+                  className="w-full aspect-[4/3] rounded-[var(--radius-lg)] object-cover shadow-lg"
+                />
+                <div className="absolute top-4 right-4 px-4 py-2 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-dark)] text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-1.5">
+                  <Sparkles className="w-4 h-4" />
+                  +{score} điểm
+                </div>
+              </div>
             </div>
-          </div>
+
+            {/* Right: Content (55% width on desktop) */}
+            <div className="lg:w-[55%] space-y-5">
 
           <div>
             <h3 className="font-display text-2xl font-semibold leading-tight">{recipe.title}</h3>
@@ -451,6 +459,8 @@ function RecipeBottomSheet({ recipe, score, missingIngredients, onClose, onViewD
               </ol>
             </div>
           )}
+            </div>
+          </div>
         </div>
 
         <div className="p-6 border-t border-[var(--color-border)] flex gap-4 bg-[var(--color-background)] flex-shrink-0">

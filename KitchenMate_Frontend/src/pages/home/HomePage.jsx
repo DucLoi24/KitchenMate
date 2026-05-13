@@ -13,21 +13,19 @@ import {
   UtensilsCrossed,
   ShoppingCart,
   Flame,
-  TrendingUp,
-  Lightbulb,
+    Lightbulb,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { useRecipes, useMyRecipes } from '@/hooks/useRecipes'
 import { useSuggestion } from '@/hooks/useSuggestion'
 import { usePantry } from '@/hooks/useKitchen'
-import { categoryApi, FALLBACK_CATEGORIES } from '@/api/categoryApi'
 import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { RecipeCardSkeleton } from '@/components/recipe/RecipeCardSkeleton'
 import { useCollections } from '@/hooks/useCollections'
 import { StatsBar } from '@/components/home/StatsBar'
-import { cn, getEmojiForCategory } from '@/utils'
+import { cn } from '@/utils'
 
 
 // Register GSAP plugins
@@ -602,16 +600,7 @@ export function HomePage() {
           />
         </section>
 
-        {/* Categories Preview */}
-        <section className="animate-section">
-          <SectionHeading
-            icon={TrendingUp}
-            title="Khám phá theo danh mục"
-            subtitle="Tìm công thức theo sở thích"
-          />
-          <CategoriesSection />
-        </section>
-
+        
         {/* Guest CTA */}
         {!isAuthenticated && (
           <section className="animate-section">
@@ -673,57 +662,6 @@ export function HomePage() {
 
       {/* Bottom padding for mobile nav */}
       <div className="lg:hidden h-20" />
-    </div>
-  )
-}
-
-// Categories section with API fetch and 3000ms timeout fallback (AC-10 compliance)
-function CategoriesSection() {
-  const [categories, setCategories] = useState([])
-  const [loading, setLoading] = useState(true)
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    // Promise.race with 3000ms timeout
-    const categoryPromise = categoryApi.getCategories()
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('timeout')), 3000)
-    )
-
-    Promise.race([categoryPromise, timeoutPromise])
-      .then(res => {
-        // API returns { success, data: { count, next, previous, results } }
-        setCategories(res.data?.results || [])
-      })
-      .catch(err => {
-        console.error('Failed to load categories:', err)
-        setCategories(FALLBACK_CATEGORIES)
-      })
-      .finally(() => setLoading(false))
-  }, [])
-
-  if (loading) {
-    return (
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-        {[...Array(FALLBACK_CATEGORIES.length)].map((_, i) => (
-          <div key={i} className="h-24 bg-[var(--color-surface)] animate-pulse rounded-[var(--radius-lg)]" />
-        ))}
-      </div>
-    )
-  }
-
-  return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-      {categories.map(cat => (
-        <button
-          key={cat.id}
-          onClick={() => navigate(`/explore?categories=${cat.slug}`)}
-          className="flex flex-col items-center p-4 rounded-[var(--radius-lg)] bg-[var(--color-surface)] border border-[var(--color-border)] hover:border-[var(--color-primary)] transition-colors"
-        >
-          <span className="text-3xl mb-2">{getEmojiForCategory(cat.slug)}</span>
-          <span className="text-sm font-medium text-[var(--color-text)]">{cat.name}</span>
-        </button>
-      ))}
     </div>
   )
 }
