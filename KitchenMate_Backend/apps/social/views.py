@@ -2,7 +2,7 @@
 Views cho social app — ReviewViewSet, CollectionViewSet.
 """
 from django.db import IntegrityError
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Value, BooleanField
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
@@ -147,7 +147,7 @@ class CollectionViewSet(viewsets.GenericViewSet,
                 )
             )
         else:
-            queryset = queryset.annotate(is_in=False)
+            queryset = queryset.annotate(is_in=Value(False, output_field=BooleanField()))
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
