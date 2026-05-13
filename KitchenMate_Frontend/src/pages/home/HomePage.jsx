@@ -26,6 +26,8 @@ import { Button } from '@/components/ui'
 import { Badge } from '@/components/ui'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { RecipeCardSkeleton } from '@/components/recipe/RecipeCardSkeleton'
+import { useCollections } from '@/hooks/useCollections'
+import { StatsBar } from '@/components/home/StatsBar'
 import { cn, getEmojiForCategory } from '@/utils'
 
 
@@ -315,6 +317,7 @@ export function HomePage() {
   const { data: recipesData, isLoading: isRecipesLoading } = useRecipes({ ordering: '-created_at' })
   const { data: suggestionsData, isLoading: isSuggestionsLoading } = useSuggestion('COOK_NOW')
   const { data: pantryData } = usePantry()
+  const { data: collections } = useCollections()
 
   // Handle various API response shapes
   const recipes = Array.isArray(recipesData)
@@ -331,6 +334,28 @@ export function HomePage() {
     : hour < 18
       ? 'Chào buổi chiều'
       : 'Chào buổi tối'
+
+  // Stats values
+  const myRecipesCount = Array.isArray(recipesData)
+    ? recipesData.length
+    : (recipesData?.results || []).length
+
+  const pantryCount = Array.isArray(pantryData)
+    ? pantryData.length
+    : (pantryData?.results || []).length
+
+  const favoritesCount = collections?.find(c => c.is_favorites)?.recipe_count || 0
+
+  const savedCount = Array.isArray(collections)
+    ? collections.reduce((sum, c) => c.is_favorites ? sum : sum + (c.recipe_count || 0), 0)
+    : 0
+
+  const statsValues = {
+    myRecipes: myRecipesCount,
+    pantry: pantryCount,
+    favorites: favoritesCount,
+    saved: savedCount,
+  }
 
   // Hero carousel images
   const heroImages = [
@@ -495,44 +520,7 @@ export function HomePage() {
 
       {/* Stats Bar (authenticated only) */}
       {isAuthenticated && (
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="relative -mt-8 max-w-7xl mx-auto px-4 lg:px-8"
-        >
-          <div className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] border border-[var(--color-border)] shadow-[var(--shadow-lg)] p-6">
-            <div className="grid grid-cols-3 gap-6">
-              {stats.map((stat, index) => (
-                <motion.div
-                  key={stat.label}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + index * 0.1 }}
-                  className="text-center"
-                >
-                  <div className={cn(
-                    'w-12 h-12 rounded-full mx-auto mb-3 flex items-center justify-center',
-                    stat.color === 'primary' && 'bg-[var(--color-primary)]/10',
-                    stat.color === 'secondary' && 'bg-[var(--color-secondary)]/10',
-                    stat.color === 'accent' && 'bg-[var(--color-accent)]/10',
-                  )}>
-                    <stat.icon className={cn(
-                      'w-6 h-6',
-                      stat.color === 'primary' && 'text-[var(--color-primary)]',
-                      stat.color === 'secondary' && 'text-[var(--color-secondary)]',
-                      stat.color === 'accent' && 'text-[var(--color-accent)]',
-                    )} />
-                  </div>
-                  <div className="font-display text-2xl font-bold text-[var(--color-text)]">
-                    {stat.value}
-                  </div>
-                  <div className="text-sm text-[var(--color-text-secondary)]">{stat.label}</div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.section>
+        <StatsBar stats={statsValues} />
       )}
 
       {/* Main Content */}
