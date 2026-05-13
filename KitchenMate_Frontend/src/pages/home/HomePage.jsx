@@ -322,10 +322,25 @@ export function HomePage() {
   // Handle various API response shapes
   const suggestions = Array.isArray(suggestionsData)
     ? suggestionsData
-    : suggestionsData?.results || []
+    : suggestionsData?.data?.results || suggestionsData?.results || []
   const allRecipes = Array.isArray(allRecipesData)
     ? allRecipesData
-    : allRecipesData?.results || []
+    : (allRecipesData?.data?.results || allRecipesData?.results || []).map((recipe) => ({
+        id: recipe.id,
+        title: recipe.title,
+        thumbnail: recipe.thumbnail_url,
+        author: {
+          full_name: recipe.user_name,
+          avatar: recipe.user_avatar,
+        },
+        prep_time: recipe.prep_time,
+        difficulty: recipe.difficulty,
+        avg_rating: recipe.avg_rating,
+        like_count: recipe.like_count,
+        save_count: recipe.save_count,
+        is_favorited: recipe.is_favorited,
+        categories: recipe.categories || [],
+      }))
 
   // Greeting based on time
   const hour = new Date().getHours()
