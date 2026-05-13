@@ -2,6 +2,7 @@
 Views cho social app — ReviewViewSet, CollectionViewSet.
 """
 from django.db import IntegrityError
+from django.db.models import Exists, OuterRef
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
@@ -135,6 +136,18 @@ class CollectionViewSet(viewsets.GenericViewSet,
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
+        recipe_id = request.query_params.get('recipe_id')
+        if recipe_id:
+            queryset = queryset.annotate(
+                is_in=Exists(
+                    CollectionRecipe.objects.filter(
+                        collection_id=OuterRef('pk'),
+                        recipe_id=recipe_id
+                    )
+                )
+            )
+        else:
+            queryset = queryset.annotate(is_in=False)
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)

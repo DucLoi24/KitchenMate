@@ -29,7 +29,7 @@ export function AddToCollectionModal({
         setLoading(true)
         setError('')
         try {
-          const res = await socialApi.getCollections()
+          const res = await socialApi.getCollections(recipeId)
           const list = res.data?.results || res.data?.data || res.data || res || []
           setCollections(list.filter(c => !c.is_favorites))
         } catch {
@@ -40,7 +40,7 @@ export function AddToCollectionModal({
       }
       fetchCollections()
     }
-  }, [isOpen, user])
+  }, [isOpen, user, recipeId])
 
   const handleToggleCollection = async (collection, isInCollection) => {
     if (submitting) return

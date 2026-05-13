@@ -42,9 +42,10 @@ export const socialApi = {
   },
 
   // Collections
-  getCollections: async () => {
+  getCollections: async (recipeId) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
-    const { data } = await axiosInstance.get('/social/collections/')
+    const params = recipeId ? { recipe_id: recipeId } : {}
+    const { data } = await axiosInstance.get('/social/collections/', { params })
     return data
   },
 

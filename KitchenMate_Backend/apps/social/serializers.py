@@ -48,8 +48,9 @@ class CollectionSerializer(serializers.ModelSerializer):
     """Serializer cho Collection — bao gom nested recipes va recipe_count."""
     collection_recipes = CollectionRecipeSerializer(many=True, read_only=True)
     recipe_count = serializers.IntegerField(source='collection_recipes.count', read_only=True)
+    is_in = serializers.BooleanField(read_only=True, default=False)
 
     class Meta:
         model = Collection
-        fields = ('id', 'name', 'is_favorites', 'recipe_count', 'collection_recipes', 'created_at')
+        fields = ('id', 'name', 'is_favorites', 'recipe_count', 'collection_recipes', 'is_in', 'created_at')
         read_only_fields = ('id', 'created_at')
