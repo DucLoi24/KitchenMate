@@ -4,14 +4,7 @@ import { X, Plus } from 'lucide-react'
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { IngredientSearchInput } from '@/components/ui'
-
-const UNITS = [
-  { value: 'gram', label: 'gam (g)' },
-  { value: 'kilogram', label: 'kg' },
-  { value: 'ml', label: 'ml' },
-  { value: 'liter', label: 'lít (L)' },
-  { value: 'piece', label: 'cái' },
-]
+import { adminApi } from '@/api/adminApi'
 
 export function PantryAddBottomSheet({
   isOpen,
@@ -22,17 +15,61 @@ export function PantryAddBottomSheet({
   const [selectedIngredient, setSelectedIngredient] = useState(null)
   const [quantity, setQuantity] = useState('1')
   const [unit, setUnit] = useState('gram')
+  const [availableUnits, setAvailableUnits] = useState([])
   const [error, setError] = useState('')
 
-  const handleSelectIngredient = (ingredient) => {
+  const handleSelectIngredient = async (ingredient) => {
     setSelectedIngredient(ingredient)
     setError('')
+
+    // Build units list from ingredient's allowed_units or fallback to all active units
+    let unitsList
+
+    if (ingredient.allowed_units && ingredient.allowed_units.length > 0) {
+      // Filter to only active units and transform to dropdown format
+      unitsList = ingredient.allowed_units
+        .filter(u => u.is_active !== false)
+        .map(u => ({ value: u.slug, label: u.name }))
+    } else {
+      // Fallback: fetch all active units from admin API
+      try {
+        const response = await adminApi.getUnits()
+        const allUnits = response?.data || []
+        unitsList = allUnits
+          .filter(u => u.is_active !== false)
+          .map(u => ({ value: u.slug, label: u.name }))
+      } catch (err) {
+        console.error('Failed to fetch units:', err)
+        unitsList = []
+      }
+    }
+
+    setAvailableUnits(unitsList)
+
+    // Set default unit: default_unit.slug > first allowed_unit > first available
+    if (unitsList.length > 0) {
+      let selectedUnitSlug
+
+      if (ingredient.default_unit?.slug) {
+        selectedUnitSlug = ingredient.default_unit.slug
+      } else if (ingredient.allowed_units && ingredient.allowed_units.length > 0) {
+        const firstActive = ingredient.allowed_units.find(u => u.is_active !== false)
+        selectedUnitSlug = firstActive?.slug || unitsList[0].value
+      } else {
+        selectedUnitSlug = unitsList[0].value
+      }
+
+      setUnit(selectedUnitSlug)
+    } else {
+      setUnit('')
+    }
   }
 
   const handleClear = () => {
     setSelectedIngredient(null)
     setQuantity('1')
     setUnit('gram')
+    setAvailableUnits([])
     setError('')
   }
 
@@ -61,7 +98,7 @@ export function PantryAddBottomSheet({
     onClose()
   }
 
-  const isValid = selectedIngredient && quantity && parseFloat(quantity) > 0
+  const isValid = selectedIngredient && quantity && parseFloat(quantity) > 0 && availableUnits.length > 0
 
   return (
     <AnimatePresence>
@@ -159,6 +196,7 @@ export function PantryAddBottomSheet({
                   <select
                     value={unit}
                     onChange={(e) => setUnit(e.target.value)}
+                    disabled={availableUnits.length === 0}
                     className={cn(
                       'w-full h-12 px-4 rounded-[var(--radius-md)]',
                       'border border-[var(--color-border)]',
@@ -166,14 +204,19 @@ export function PantryAddBottomSheet({
                       'text-[var(--color-text)]',
                       'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
                       'transition-all duration-[var(--transition-fast)]',
-                      'cursor-pointer'
+                      'cursor-pointer',
+                      availableUnits.length === 0 && 'opacity-50 cursor-not-allowed'
                     )}
                   >
-                    {UNITS.map(({ value, label }) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
+                    {availableUnits.length === 0 ? (
+                      <option value="">Chưa có đơn vị</option>
+                    ) : (
+                      availableUnits.map(({ value, label }) => (
+                        <option key={value} value={value}>
+                          {label}
+                        </option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>
