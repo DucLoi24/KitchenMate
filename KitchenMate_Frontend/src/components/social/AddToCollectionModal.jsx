@@ -196,7 +196,10 @@ export function AddToCollectionModal({
                 {collections.map(collection => (
                   <button
                     key={collection.id}
-                    onClick={() => handleToggleCollection(collection, collection.is_in)}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handleToggleCollection(collection, collection.is_in)
+                    }}
                     disabled={submitting}
                     className={cn(
                       'w-full flex items-center gap-3 p-3 rounded-[var(--radius-md)]',
