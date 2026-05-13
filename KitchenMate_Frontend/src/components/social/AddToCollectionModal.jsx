@@ -114,7 +114,10 @@ export function AddToCollectionModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            onClick={handleClose}
+            onClick={(e) => {
+              e.stopPropagation()
+              handleClose()
+            }}
             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
           />
 
@@ -124,6 +127,7 @@ export function AddToCollectionModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            onClick={(e) => e.stopPropagation()}
             className={cn(
               'fixed bottom-0 left-0 right-0 bg-[var(--color-surface)]',
               'rounded-t-[2rem] z-[110] p-6 pb-10 max-h-[85vh] overflow-y-auto'
@@ -143,7 +147,10 @@ export function AddToCollectionModal({
                 </h2>
               </div>
               <button
-                onClick={handleClose}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  handleClose()
+                }}
                 className="p-2 rounded-full hover:bg-[var(--color-background-alt)] transition-colors"
               >
                 <X className="w-5 h-5 text-[var(--color-text-secondary)]" />
@@ -257,7 +264,8 @@ export function AddToCollectionModal({
                   <Button
                     variant="outline"
                     className="flex-1 h-11"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation()
                       setShowCreateForm(false)
                       setNewCollectionName('')
                     }}
@@ -280,7 +288,10 @@ export function AddToCollectionModal({
               <Button
                 variant="outline"
                 className="w-full h-11 border-dashed"
-                onClick={() => setShowCreateForm(true)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowCreateForm(true)
+                }}
               >
                 <Plus className="w-4 h-4" />
                 Tạo danh sách mới
