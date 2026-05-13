@@ -17,7 +17,7 @@ import {
   Lightbulb,
 } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
-import { useRecipes } from '@/hooks/useRecipes'
+import { useRecipes, useMyRecipes } from '@/hooks/useRecipes'
 import { useSuggestion } from '@/hooks/useSuggestion'
 import { usePantry } from '@/hooks/useKitchen'
 import { categoryApi, FALLBACK_CATEGORIES } from '@/api/categoryApi'
@@ -313,18 +313,19 @@ export function HomePage() {
   const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.5])
 
   // Fetch data
-  const { data: recipesData, isLoading: isRecipesLoading } = useRecipes({ ordering: '-created_at' })
+  const { data: myRecipesData } = useMyRecipes()
   const { data: suggestionsData, isLoading: isSuggestionsLoading } = useSuggestion('COOK_NOW')
   const { data: pantryData } = usePantry()
   const { data: collections } = useCollections()
+  const { data: allRecipesData, isLoading: isAllRecipesLoading } = useRecipes({ ordering: '-created_at' })
 
   // Handle various API response shapes
-  const recipes = Array.isArray(recipesData)
-    ? recipesData
-    : recipesData?.results || []
   const suggestions = Array.isArray(suggestionsData)
     ? suggestionsData
     : suggestionsData?.results || []
+  const allRecipes = Array.isArray(allRecipesData)
+    ? allRecipesData
+    : allRecipesData?.results || []
 
   // Greeting based on time
   const hour = new Date().getHours()
@@ -335,13 +336,9 @@ export function HomePage() {
       : 'Chào buổi tối'
 
   // Stats values
-  const myRecipesCount = Array.isArray(recipesData)
-    ? recipesData.length
-    : (recipesData?.results || []).length
+  const myRecipesCount = myRecipesData?.data?.count || myRecipesData?.data?.results?.length || 0
 
-  const pantryCount = Array.isArray(pantryData)
-    ? pantryData.length
-    : (pantryData?.results || []).length
+  const pantryCount = pantryData?.data?.count || pantryData?.data?.results?.length || 0
 
   const favoritesCount = collections?.find(c => c.is_favorites)?.recipe_count || 0
 
@@ -584,8 +581,8 @@ export function HomePage() {
             onAction={() => navigate('/explore')}
           />
           <RecipeCarousel
-            recipes={recipes.slice(0, 8)}
-            isLoading={isRecipesLoading}
+            recipes={allRecipes.slice(0, 8)}
+            isLoading={isAllRecipesLoading}
             onRecipeClick={handleRecipeClick}
           />
         </section>
