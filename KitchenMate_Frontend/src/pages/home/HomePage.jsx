@@ -13,7 +13,6 @@ import {
   UtensilsCrossed,
   ShoppingCart,
   Flame,
-  Leaf,
   TrendingUp,
   Lightbulb,
 } from 'lucide-react'
@@ -400,15 +399,6 @@ export function HomePage() {
   const handleRecipeClick = (recipe) => {
     navigate(`/recipe/${recipe.id}`)
   }
-
-  // Stat cards data - only show when authenticated
-  const stats = isAuthenticated
-    ? [
-        { label: 'Công thức', value: recipes.length, icon: UtensilsCrossed, color: 'primary' },
-        { label: 'Nguyên liệu', value: Array.isArray(pantryData) ? pantryData.length : 0, icon: Leaf, color: 'secondary' },
-        { label: 'Gợi ý', value: suggestions.length, icon: Sparkles, color: 'accent' },
-      ]
-    : []
 
   return (
     <div className="min-h-screen bg-[var(--color-background)]">

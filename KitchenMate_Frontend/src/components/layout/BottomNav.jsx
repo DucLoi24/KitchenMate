@@ -66,6 +66,7 @@ export function MobileSidebar({ isOpen, onClose }) {
     if (isOpen) {
       onClose()
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname])
 
   return (
