@@ -115,7 +115,7 @@ export function AddToCollectionModal({
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             onClick={handleClose}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
           />
 
           {/* Sheet */}
@@ -126,7 +126,7 @@ export function AddToCollectionModal({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
               'fixed bottom-0 left-0 right-0 bg-[var(--color-surface)]',
-              'rounded-t-[2rem] z-50 p-6 pb-10 max-h-[85vh] overflow-y-auto'
+              'rounded-t-[2rem] z-[110] p-6 pb-10 max-h-[85vh] overflow-y-auto'
             )}
           >
             {/* Drag handle */}

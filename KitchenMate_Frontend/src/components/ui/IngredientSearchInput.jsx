@@ -155,7 +155,7 @@ export function IngredientSearchInput({
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.15 }}
             onWheel={handleWheel}
-            className="absolute left-0 z-[60] w-full mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)]"
+            className="absolute left-0 z-[70] w-full mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)]"
             style={{ overflow: 'visible' }}
           >
             <ul onWheel={handleWheel} className="max-h-60 overflow-y-auto py-1">
@@ -198,7 +198,7 @@ export function IngredientSearchInput({
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute left-0 z-[60] w-full mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] p-4 text-center"
+          className="absolute left-0 z-[70] w-full mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] shadow-[var(--shadow-lg)] p-4 text-center"
         >
           <p className="text-sm text-[var(--color-text-muted)] mb-3">
             Không tìm thấy nguyên liệu phù hợp
