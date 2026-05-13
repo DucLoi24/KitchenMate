@@ -45,3 +45,25 @@ const DEFAULT_CATEGORY_EMOJI = '🍽️'
 export function getEmojiForCategory(slug) {
   return CATEGORY_EMOJI_MAP[slug] || DEFAULT_CATEGORY_EMOJI
 }
+
+/**
+ * Build unit dropdown options from ingredient units data.
+ * Returns options as { value: slug, label: name } pairs and a default value.
+ *
+ * @param {object} data - { default_unit, allowed_units[] } from GET /ingredients/{id}/units/
+ * @returns {{ options: {value: string, label: string}[], defaultValue: string }}
+ */
+export function buildIngredientUnitOptions(data) {
+  const rawUnits = data?.allowed_units || []
+  const activeUnits = rawUnits.filter(u => u.is_active !== false)
+  const options = activeUnits.map(u => ({ value: u.slug, label: u.name }))
+
+  let defaultValue = ''
+  if (data?.default_unit?.slug) {
+    defaultValue = data.default_unit.slug
+  } else if (options.length > 0) {
+    defaultValue = options[0].value
+  }
+
+  return { options, defaultValue }
+}

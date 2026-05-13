@@ -21,6 +21,8 @@ import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 import { recipeApi } from '@/api/recipeApi'
 import { ReviewsSection } from '@/components/recipe/ReviewsSection'
 import { ReportModal } from '@/components/report/ReportModal'
+import { adminApi } from '@/api/adminApi'
+import { buildIngredientUnitOptions } from '@/utils'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -195,38 +197,59 @@ function RatingDisplay({ rating, reviewCount }) {
 function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients = [], pantryIngredients = [] }) {
   const [addingIngredient, setAddingIngredient] = useState(null)
   const [editQuantity, setEditQuantity] = useState('')
-  const [editUnit, setEditUnit] = useState('gram')
+  const [editUnit, setEditUnit] = useState('')
+  const [availableUnits, setAvailableUnits] = useState([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
 
   // Create sets for fast lookup - check by ingredient id (recipe_ingredients has 'ingredient' field)
   const shoppingIds = new Set(shoppingIngredients.map(i => i.ingredient).filter(Boolean))
   const pantryIds = new Set(pantryIngredients.map(i => i.ingredient?.id || i.ingredient).filter(Boolean))
 
-  const UNITS = [
-    { value: 'gram', label: 'gam' },
-    { value: 'kilogram', label: 'kg' },
-    { value: 'ml', label: 'ml' },
-    { value: 'liter', label: 'L' },
-    { value: 'piece', label: 'cái' },
-  ]
-
-  const handleStartAdd = (ing) => {
+  const handleStartAdd = async (ing) => {
     setAddingIngredient(ing)
     setEditQuantity(String(ing.quantity || 1))
-    setEditUnit(ing.unit || 'gram')
+    setEditUnit('')
+    setAvailableUnits([])
+    setIsLoadingUnits(true)
+
+    try {
+      let unitData = null
+
+      if (ing.allowed_units?.length) {
+        unitData = {
+          default_unit: ing.default_unit || null,
+          allowed_units: ing.allowed_units,
+        }
+      } else {
+        const response = await adminApi.getIngredientUnits(ing.ingredient)
+        unitData = response?.data || null
+      }
+
+      const { options, defaultValue } = buildIngredientUnitOptions(unitData)
+      setAvailableUnits(options)
+      setEditUnit(defaultValue)
+    } catch {
+      setAvailableUnits([])
+      setEditUnit('')
+    } finally {
+      setIsLoadingUnits(false)
+    }
   }
 
   const handleCancelAdd = () => {
     setAddingIngredient(null)
     setEditQuantity('')
+    setEditUnit('')
+    setAvailableUnits([])
+    setIsLoadingUnits(false)
   }
 
   const handleConfirmAdd = () => {
     const qty = parseFloat(editQuantity)
-    if (qty > 0 && addingIngredient) {
+    if (qty > 0 && addingIngredient && editUnit) {
       onAddToShoppingList(addingIngredient, qty, editUnit)
     }
-    setAddingIngredient(null)
-    setEditQuantity('')
+    handleCancelAdd()
   }
 
   if (!ingredients?.length) return null
@@ -317,11 +340,18 @@ function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients 
                   <select
                     value={editUnit}
                     onChange={(e) => setEditUnit(e.target.value)}
-                    className="w-full h-12 px-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-center text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] cursor-pointer"
+                    disabled={isLoadingUnits || availableUnits.length === 0}
+                    className="w-full h-12 px-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-center text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {UNITS.map(u => (
-                      <option key={u.value} value={u.value}>{u.label}</option>
-                    ))}
+                    {isLoadingUnits ? (
+                      <option value="">Đang tải đơn vị...</option>
+                    ) : availableUnits.length === 0 ? (
+                      <option value="">Chưa có đơn vị</option>
+                    ) : (
+                      availableUnits.map((u) => (
+                        <option key={u.value} value={u.value}>{u.label}</option>
+                      ))
+                    )}
                   </select>
                 </div>
               </div>
@@ -329,7 +359,7 @@ function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients 
                 <Button variant="outline" className="flex-1 h-12" onClick={handleCancelAdd}>
                   Hủy
                 </Button>
-                <Button variant="primary" className="flex-1 h-12" onClick={handleConfirmAdd}>
+                <Button variant="primary" className="flex-1 h-12" onClick={handleConfirmAdd} disabled={!editUnit || isLoadingUnits}>
                   Thêm
                 </Button>
               </div>
