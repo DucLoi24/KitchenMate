@@ -12,7 +12,7 @@ import { createPortal } from 'react-dom'
 
 import { useRecipe } from '@/hooks/useRecipes'
 import { useAddToShoppingList, useShoppingList, usePantry } from '@/hooks/useKitchen'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/components/auth/useAuth'
 import { socialApi } from '@/api/socialApi'
 import { Badge, Button, CategoryBadge, StarRatingDisplay } from '@/components/ui'
 import { cn } from '@/utils'

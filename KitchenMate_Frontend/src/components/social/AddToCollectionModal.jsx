@@ -4,7 +4,7 @@ import { X, Plus, Check, Bookmark, AlertCircle } from 'lucide-react'
 import { cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { socialApi } from '@/api/socialApi'
-import { useAuth } from '@/hooks/useAuth'
+import { useAuth } from '@/components/auth/useAuth'
 
 export function AddToCollectionModal({
   isOpen,

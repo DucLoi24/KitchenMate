@@ -93,10 +93,13 @@ class RecipeViewSet(viewsets.GenericViewSet):
                     distinct=True
                 ),
             )
-            # Annotate is_favorited if user is authenticated
+            # Annotate is_favorited and is_in_collection if user is authenticated
             if self.request.user.is_authenticated:
                 favorites_collection = Collection.objects.filter(
                     user=self.request.user, is_favorites=True
+                ).values_list('id', flat=True)
+                user_collections = Collection.objects.filter(
+                    user=self.request.user
                 ).values_list('id', flat=True)
                 queryset = queryset.annotate(
                     is_favorited=Exists(
@@ -104,7 +107,13 @@ class RecipeViewSet(viewsets.GenericViewSet):
                             collection_id__in=favorites_collection,
                             recipe_id=OuterRef('pk')
                         )
-                    )
+                    ),
+                    is_in_collection=Exists(
+                        CollectionRecipe.objects.filter(
+                            collection_id__in=user_collections,
+                            recipe_id=OuterRef('pk')
+                        )
+                    ),
                 )
             return queryset
         return base_qs

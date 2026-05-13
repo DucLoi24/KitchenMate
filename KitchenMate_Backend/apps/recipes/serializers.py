@@ -47,6 +47,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
     view_count = serializers.IntegerField(read_only=True, default=0)
     thumbnail_url = serializers.SerializerMethodField()
     is_favorited = serializers.BooleanField(read_only=True, default=False)
+    is_in_collection = serializers.BooleanField(read_only=True, default=False)
     ai_moderation_attempted = serializers.BooleanField(read_only=True, default=False)
     ai_moderation_status = serializers.CharField(read_only=True, default='PENDING')
     ai_processing = serializers.SerializerMethodField()
@@ -87,7 +88,7 @@ class RecipeListSerializer(serializers.ModelSerializer):
             'id', 'title', 'description', 'difficulty', 'prep_time',
             'thumbnail_url', 'visibility', 'user', 'user_name', 'user_avatar',
             'categories', 'avg_rating', 'like_count', 'save_count', 'view_count',
-            'is_favorited', 'ai_moderation_attempted', 'ai_moderation_status', 'ai_processing',
+            'is_favorited', 'is_in_collection', 'ai_moderation_attempted', 'ai_moderation_status', 'ai_processing',
             'is_deleted', 'deleted_at', 'created_at'
         )
 
