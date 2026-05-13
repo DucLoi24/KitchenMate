@@ -261,7 +261,7 @@ function RecipeCarousel({ recipes, isLoading, onRecipeClick }) {
             transition={{ delay: index * 0.1 }}
             className="flex-shrink-0 w-72"
           >
-            <RecipeCard recipe={recipe} onClick={onRecipeClick} />
+            <RecipeCard recipe={recipe} onClick={onRecipeClick} showFavoriteButton />
           </motion.div>
         ))}
       </div>

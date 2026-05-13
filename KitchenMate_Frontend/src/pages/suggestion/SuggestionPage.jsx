@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { suggestionApi } from '@/api/suggestionApi'
 import { shoppingListApi, pantryApi } from '@/api/kitchenApi'
-import { Clock, Flame, Plus, X, AlertCircle, ShoppingCart, ChefHat, Search, Sparkles } from 'lucide-react'
+import { socialApi } from '@/api/socialApi'
+import { useAuth } from '@/hooks/useAuth'
+import { GuestCTA } from '@/components/auth/GuestCTA'
+import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
+import { cn } from '@/utils'
+import { Clock, Flame, Plus, X, AlertCircle, ShoppingCart, ChefHat, Search, Sparkles, Heart, Library } from 'lucide-react'
 
 // Animation variants for staggered reveal
 const containerVariants = {
@@ -166,57 +171,155 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
   )
 }
 
-// Recipe Card Component
-function RecipeCard({ recipe, score, missingIngredients, onClick }) {
+// Suggestion Recipe Card (custom card with score badge)
+function SuggestionRecipeCard({ recipe, score, missingIngredients, onClick }) {
+  const { isAuthenticated } = useAuth()
+  const [showGuestCTA, setShowGuestCTA] = useState(false)
+  const [showCollectionModal, setShowCollectionModal] = useState(false)
+  const [favorited, setFavorited] = useState(!!recipe.is_favorited)
+  const [inCollection] = useState(!!recipe.is_in_collection)
+  const debounceRef = useRef(null)
+
+  const handleFavoriteToggle = useCallback(async (e) => {
+    e.stopPropagation()
+    if (debounceRef.current) return
+    debounceRef.current = setTimeout(() => { debounceRef.current = null }, 300)
+
+    if (!isAuthenticated) {
+      setShowGuestCTA(true)
+      return
+    }
+
+    const prev = favorited
+    setFavorited(!prev)
+
+    try {
+      const res = await socialApi.toggleFavorite(recipe.id)
+      setFavorited(res.is_favorited)
+    } catch {
+      setFavorited(prev)
+    }
+  }, [isAuthenticated, favorited, recipe.id])
+
+  const handleCollectionToggle = useCallback((e) => {
+    e.stopPropagation()
+    if (!isAuthenticated) {
+      setShowGuestCTA(true)
+      return
+    }
+    setShowCollectionModal(true)
+  }, [isAuthenticated])
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-      whileHover={{ y: -8, transition: { duration: 0.2 } }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      className="group bg-[var(--color-surface)] rounded-[var(--radius-xl)] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300"
-    >
-      <div className="aspect-[16/10] relative overflow-hidden">
-        <img
-          src={recipe.thumbnail_url || '/placeholder-recipe.jpg'}
-          alt={recipe.title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-        />
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-        {/* Score badge */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 300 }}
-          className="absolute top-3 right-3 px-3 py-1.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-dark)] text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-1"
-        >
-          <Sparkles className="w-3.5 h-3.5" />
-          +{score}
-        </motion.div>
-      </div>
-      <div className="p-5">
-        <h3 className="font-display text-[var(--color-text)] font-semibold text-lg leading-snug line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors">
-          {recipe.title}
-        </h3>
-        <div className="mt-3 flex items-center gap-3 text-sm text-[var(--color-text-secondary)]">
-          <span className="flex items-center gap-1.5 px-3 py-1 bg-[var(--color-background-alt)] rounded-full">
-            <Clock className="w-4 h-4 text-[var(--color-primary)]" />
-            <span className="font-medium">{recipe.prep_time || 0}</span>
-            <span className="text-[var(--color-text-muted)]">phút</span>
-          </span>
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+        whileHover={{ y: -8, transition: { duration: 0.2 } }}
+        whileTap={{ scale: 0.98 }}
+        onClick={onClick}
+        className="group bg-[var(--color-surface)] rounded-[var(--radius-xl)] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-shadow duration-300"
+      >
+        <div className="aspect-[16/10] relative overflow-hidden">
+          <img
+            src={recipe.thumbnail_url || '/placeholder-recipe.jpg'}
+            alt={recipe.title}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+          {/* Gradient overlay */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+          {/* Action Buttons - Vertical Stack (top-right, below score badge) */}
+          <div className="absolute top-3 right-3 flex flex-col gap-1">
+            {/* Favorite (Heart) + Count */}
+            <div className="flex flex-col items-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleFavoriteToggle}
+                className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
+              >
+                <Heart
+                  className={cn(
+                    'w-4 h-4 transition-colors',
+                    favorited ? 'fill-red-500 text-red-500' : 'text-gray-400 hover:text-red-500'
+                  )}
+                />
+              </motion.button>
+              {recipe.like_count > 0 && (
+                <span className="text-xs text-white mt-0.5">{recipe.like_count}</span>
+              )}
+            </div>
+
+            {/* Collection + Count */}
+            <div className="flex flex-col items-center">
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                onClick={handleCollectionToggle}
+                className="w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-[var(--shadow-sm)] hover:bg-white transition-colors"
+              >
+                <Library
+                  className={cn(
+                    'w-4 h-4 transition-colors',
+                    inCollection ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400 hover:text-yellow-500'
+                  )}
+                />
+              </motion.button>
+              {recipe.save_count > 0 && (
+                <span className="text-xs text-white mt-0.5">{recipe.save_count}</span>
+              )}
+            </div>
+          </div>
+
+          {/* Score badge (left side) */}
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 300 }}
+            className="absolute bottom-3 left-3 px-3 py-1.5 bg-gradient-to-br from-[var(--color-accent)] to-[var(--color-accent-dark)] text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-1"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            +{score}
+          </motion.div>
         </div>
-        {missingIngredients.length > 0 && (
-          <div className="mt-3 flex items-center gap-2">
-            <span className="text-xs px-2.5 py-1 bg-[var(--color-background-alt)] rounded-full border border-[var(--color-border)]">
-              Thiếu <span className="font-semibold text-[var(--color-primary)]">{missingIngredients.length}</span> nguyên liệu
+        <div className="p-5">
+          <h3 className="font-display text-[var(--color-text)] font-semibold text-lg leading-snug line-clamp-2 group-hover:text-[var(--color-primary)] transition-colors">
+            {recipe.title}
+          </h3>
+          <div className="mt-3 flex items-center gap-3 text-sm text-[var(--color-text-secondary)]">
+            <span className="flex items-center gap-1.5 px-3 py-1 bg-[var(--color-background-alt)] rounded-full">
+              <Clock className="w-4 h-4 text-[var(--color-primary)]" />
+              <span className="font-medium">{recipe.prep_time || 0}</span>
+              <span className="text-[var(--color-text-muted)]">phút</span>
             </span>
           </div>
-        )}
-      </div>
-    </motion.div>
+          {missingIngredients.length > 0 && (
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-xs px-2.5 py-1 bg-[var(--color-background-alt)] rounded-full border border-[var(--color-border)]">
+                Thiếu <span className="font-semibold text-[var(--color-primary)]">{missingIngredients.length}</span> nguyên liệu
+              </span>
+            </div>
+          )}
+        </div>
+      </motion.div>
+
+      {/* Guest CTA Modal */}
+      {showGuestCTA && (
+        <GuestCTA
+          context="collections"
+          onClose={() => setShowGuestCTA(false)}
+        />
+      )}
+
+      {/* Add to Collection Modal */}
+      <AddToCollectionModal
+        isOpen={showCollectionModal}
+        onClose={() => setShowCollectionModal(false)}
+        recipeId={recipe.id}
+      />
+    </>
   )
 }
 
@@ -797,13 +900,12 @@ export default function SuggestionPage() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
             >
               {recipes.map((item) => (
-                <RecipeCard
+                <SuggestionRecipeCard
                   key={item.recipe.id}
                   recipe={item.recipe}
                   score={item.score}
                   missingIngredients={item.missing_ingredients}
                   onClick={() => handleRecipeClick(item.recipe, item.score, item.missing_ingredients)}
-                  showFavoriteButton
                 />
               ))}
             </motion.div>
