@@ -35,6 +35,8 @@ const UNIT_LABELS = {
   piece: 'cái',
 }
 
+const getUnitLabel = (item) => item.unit_display || UNIT_LABELS[item.unit] || item.unit
+
 export function PantryItem({
   item,
   onUpdate,
@@ -145,7 +147,7 @@ export function PantryItem({
                 autoFocus
               />
               <span className="text-xs text-[var(--color-text-secondary)]">
-                {UNIT_LABELS[item.unit] || item.unit}
+                {getUnitLabel(item)}
               </span>
               <div className="flex items-center gap-0.5 ml-auto">
                 <Button size="sm" variant="primary" onClick={handleSaveEdit} isLoading={isUpdating} className="h-7 w-7 p-0">
@@ -162,7 +164,7 @@ export function PantryItem({
                 {item.quantity}
               </span>
               <span className="text-xs text-[var(--color-text-muted)]">
-                {UNIT_LABELS[item.unit] || item.unit}
+                {getUnitLabel(item)}
               </span>
             </div>
           )}

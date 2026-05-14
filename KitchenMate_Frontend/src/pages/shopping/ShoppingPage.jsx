@@ -128,6 +128,7 @@ function ShoppingItem({
   onUpdate,
   isUpdating,
 }) {
+  const unitLabel = item.unit_display || item.unit
   const [isEditing, setIsEditing] = useState(false)
   const [editQuantity, setEditQuantity] = useState(item.quantity)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -209,7 +210,7 @@ function ShoppingItem({
                 autoFocus
               />
               <span className="text-sm text-[var(--color-text-secondary)] font-medium">
-                {item.unit}
+                {unitLabel}
               </span>
               <div className="flex items-center gap-1 ml-auto">
                 <Button size="sm" variant="primary" onClick={handleSaveEdit} className="h-8 w-8 p-0">
@@ -229,7 +230,7 @@ function ShoppingItem({
                 {item.quantity}
               </span>
               <span className="text-sm text-[var(--color-text-secondary)]">
-                {item.unit}
+                {unitLabel}
               </span>
               {!item.is_purchased && (
                 <button
