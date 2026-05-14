@@ -31,15 +31,22 @@ class RecipeCategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = RecipeCategory.objects.all()
-        # Filter by is_active if provided in query params
         is_active = self.request.query_params.get('is_active')
+        include_inactive = self.request.query_params.get('include_inactive')
+
         if is_active is not None:
             is_active_bool = is_active.lower() in ('true', '1', 'yes')
-            queryset = queryset.filter(is_active=is_active_bool)
-        elif self.action in ['list', 'retrieve']:
-            # Default to active only for public access
-            queryset = queryset.filter(is_active=True)
-        return queryset
+            return queryset.filter(is_active=is_active_bool)
+
+        if self.action == 'restore':
+            return queryset
+
+        if self.action == 'list' and getattr(self.request.user, 'is_staff', False):
+            include_inactive_bool = str(include_inactive).lower() in ('true', '1', 'yes')
+            if include_inactive_bool:
+                return queryset
+
+        return queryset.filter(is_active=True)
 
     def destroy(self, request, *args, **kwargs):
         """Soft delete - set is_active=False thay vì xóa."""

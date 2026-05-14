@@ -164,10 +164,13 @@ class TestRecipeCategorySerializer:
 class TestRecipeCategoryViewSetPermissions:
     """Tests permission của RecipeCategoryViewSet."""
 
-    def test_list_public_no_auth(self, api_client, categories):
-        """GET /api/recipes/categories/ → ai cũng xem được (200)."""
+    def test_list_public_no_auth(self, api_client, categories, inactive_category):
+        """GET /api/recipes/categories/ public chỉ trả về category active."""
         response = api_client.get('/api/recipes/categories/')
         assert response.status_code == 200
+        returned_slugs = {item['slug'] for item in response.data.get('results', response.data)}
+        assert 'mon-viet-cat' in returned_slugs
+        assert inactive_category.slug not in returned_slugs
 
     def test_retrieve_public_no_auth(self, api_client, categories):
         """GET /api/recipes/categories/{slug}/ → ai cũng xem được (200)."""
@@ -201,6 +204,24 @@ class TestRecipeCategoryViewSetPermissions:
         response = api_client.put('/api/recipes/categories/mon-viet-cat/', {'name': 'Updated'})
         assert response.status_code == 401
 
+    def test_list_admin_without_filter_returns_only_active(self, api_client, admin_user, categories, inactive_category):
+        """GET /api/recipes/categories/ bởi admin không truyền filter vẫn chỉ trả về category active."""
+        api_client.force_authenticate(user=admin_user)
+        response = api_client.get('/api/recipes/categories/')
+        assert response.status_code == 200
+        returned_slugs = {item['slug'] for item in response.data.get('results', response.data)}
+        assert 'mon-viet-cat' in returned_slugs
+        assert inactive_category.slug not in returned_slugs
+
+    def test_list_admin_with_include_inactive_returns_active_and_inactive(self, api_client, admin_user, categories, inactive_category):
+        """GET /api/recipes/categories/?include_inactive=true bởi admin → trả về cả active lẫn inactive."""
+        api_client.force_authenticate(user=admin_user)
+        response = api_client.get('/api/recipes/categories/?include_inactive=true')
+        assert response.status_code == 200
+        returned_slugs = {item['slug'] for item in response.data.get('results', response.data)}
+        assert 'mon-viet-cat' in returned_slugs
+        assert inactive_category.slug in returned_slugs
+
     def test_destroy_soft_deletes(self, api_client, admin_user, categories):
         """DELETE /api/recipes/categories/{slug}/ → is_active=False."""
         api_client.force_authenticate(user=admin_user)
@@ -208,6 +229,14 @@ class TestRecipeCategoryViewSetPermissions:
         assert response.status_code == 204
         cat = RecipeCategory.objects.get(slug='mon-viet-cat')
         assert cat.is_active is False
+
+    def test_restore_inactive_category(self, api_client, admin_user, inactive_category):
+        """POST /api/recipes/categories/{slug}/restore/ → khôi phục category inactive."""
+        api_client.force_authenticate(user=admin_user)
+        response = api_client.post(f'/api/recipes/categories/{inactive_category.slug}/restore/')
+        assert response.status_code == 200
+        inactive_category.refresh_from_db()
+        assert inactive_category.is_active is True
 
 
 @pytest.mark.unit

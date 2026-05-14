@@ -641,9 +641,11 @@ export function CategoryManagementPage() {
         ordering: sort,
       }
 
-      // Filter by is_active based on tab
+      // Filter by tab in admin management only
       if (activeTab === 'active') {
         params.is_active = true
+      } else if (activeTab === 'all') {
+        params.include_inactive = true
       }
 
       const res = await categoryApi.getCategories(params)
