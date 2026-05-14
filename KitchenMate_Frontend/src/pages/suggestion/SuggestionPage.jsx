@@ -1,10 +1,11 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { suggestionApi } from '@/api/suggestionApi'
 import { shoppingListApi, pantryApi } from '@/api/kitchenApi'
 import { socialApi } from '@/api/socialApi'
+import { adminApi } from '@/api/adminApi'
 import { useAuth } from '@/components/auth/useAuth'
 import { GuestCTA } from '@/components/auth/GuestCTA'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
@@ -99,7 +100,7 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
   })
 
   const handleSelect = (ingredient) => {
-    onChange([...selected, ingredient])
+    onChange([...selected, ingredient.id])
     setSearchText('')
     setShowDropdown(false)
   }
@@ -172,13 +173,13 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
 }
 
 // Suggestion Recipe Card (custom card with score badge)
-function SuggestionRecipeCard({ recipe, score, missingIngredients, onClick }) {
+function SuggestionRecipeCard({ recipe, score, missingIngredients, onClick, onRecipeStateChange }) {
   const { isAuthenticated } = useAuth()
   const [showGuestCTA, setShowGuestCTA] = useState(false)
   const [showCollectionModal, setShowCollectionModal] = useState(false)
   const [favorited, setFavorited] = useState(!!recipe.is_favorited)
-  const [inCollection] = useState(!!recipe.is_in_collection)
   const debounceRef = useRef(null)
+  const inCollection = !!recipe.is_in_collection
 
   const handleFavoriteToggle = useCallback(async (e) => {
     e.stopPropagation()
@@ -196,10 +197,11 @@ function SuggestionRecipeCard({ recipe, score, missingIngredients, onClick }) {
     try {
       const res = await socialApi.toggleFavorite(recipe.id)
       setFavorited(res.is_favorited)
+      onRecipeStateChange?.()
     } catch {
       setFavorited(prev)
     }
-  }, [isAuthenticated, favorited, recipe.id])
+  }, [isAuthenticated, favorited, recipe.id, onRecipeStateChange])
 
   const handleCollectionToggle = useCallback((e) => {
     e.stopPropagation()
@@ -318,6 +320,7 @@ function SuggestionRecipeCard({ recipe, score, missingIngredients, onClick }) {
         isOpen={showCollectionModal}
         onClose={() => setShowCollectionModal(false)}
         recipeId={recipe.id}
+        onSuccess={onRecipeStateChange}
       />
     </>
   )
@@ -496,14 +499,59 @@ function AddToShoppingModal({ missingIngredients, onClose, onSuccess }) {
     missingIngredients.map((ing) => ({
       ingredient_id: ing.id,
       name: ing.name,
-      quantity: '',
-      unit: 'g',
+      quantity: ing.quantity ? String(ing.quantity) : '',
+      unit: ing.unit || '',
+      allowed_units: [],
     }))
   )
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const units = ['g', 'kg', 'ml', 'l', 'tsp', 'tbsp', 'cup', 'quả', 'cái', 'gói']
+  useEffect(() => {
+    let isMounted = true
+
+    const loadIngredientUnits = async () => {
+      const nextItems = await Promise.all(
+        missingIngredients.map(async (ing) => {
+          try {
+            const response = await adminApi.getIngredientUnits(ing.id)
+            const allowedUnits = (response?.data?.allowed_units || [])
+              .filter((unit) => unit.is_active !== false)
+              .map((unit) => ({ value: unit.slug, label: unit.name }))
+            const defaultUnit = response?.data?.default_unit?.slug
+            const recipeUnit = ing.unit && allowedUnits.some((unit) => unit.value === ing.unit) ? ing.unit : ''
+            const fallbackUnit = defaultUnit || recipeUnit || allowedUnits[0]?.value || ''
+
+            return {
+              ingredient_id: ing.id,
+              name: ing.name,
+              quantity: ing.quantity ? String(ing.quantity) : '',
+              unit: fallbackUnit,
+              allowed_units: allowedUnits,
+            }
+          } catch {
+            return {
+              ingredient_id: ing.id,
+              name: ing.name,
+              quantity: ing.quantity ? String(ing.quantity) : '',
+              unit: ing.unit || '',
+              allowed_units: ing.unit ? [{ value: ing.unit, label: ing.unit }] : [],
+            }
+          }
+        })
+      )
+
+      if (isMounted) {
+        setItems(nextItems)
+      }
+    }
+
+    loadIngredientUnits()
+
+    return () => {
+      isMounted = false
+    }
+  }, [missingIngredients])
 
   const handleQuantityChange = (index, value) => {
     const newItems = [...items]
@@ -527,13 +575,13 @@ function AddToShoppingModal({ missingIngredients, onClose, onSuccess }) {
 
     setIsSubmitting(true)
     try {
-      await shoppingListApi.addToShoppingList({
-        items: validItems.map((item) => ({
-          ingredient_id: item.ingredient_id,
+      await Promise.all(
+        validItems.map((item) => shoppingListApi.addToShoppingList({
+          ingredient: item.ingredient_id,
           quantity: parseFloat(item.quantity),
           unit: item.unit,
-        })),
-      })
+        }))
+      )
       onSuccess()
     } catch {
       setError('Không thể thêm vào danh sách. Vui lòng thử lại.')
@@ -548,7 +596,7 @@ function AddToShoppingModal({ missingIngredients, onClose, onSuccess }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[80] flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -594,11 +642,16 @@ function AddToShoppingModal({ missingIngredients, onClose, onSuccess }) {
                 <select
                   value={item.unit}
                   onChange={(e) => handleUnitChange(index, e.target.value)}
-                  className="w-20 px-2 py-2.5 bg-white border border-[var(--color-border)] rounded-[var(--radius-md)] text-sm focus:outline-none focus:border-[var(--color-secondary)]"
+                  disabled={item.allowed_units.length === 0}
+                  className="w-24 px-2 py-2.5 bg-white border border-[var(--color-border)] rounded-[var(--radius-md)] text-sm focus:outline-none focus:border-[var(--color-secondary)] disabled:opacity-50"
                 >
-                  {units.map((u) => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
+                  {item.allowed_units.length === 0 ? (
+                    <option value="">Chưa có đơn vị</option>
+                  ) : (
+                    item.allowed_units.map(({ value, label }) => (
+                      <option key={value} value={value}>{label}</option>
+                    ))
+                  )}
                 </select>
               </motion.div>
             ))}
@@ -795,8 +848,11 @@ export default function SuggestionPage() {
   })
 
   const recipes = data?.data || []
+  const pantryItems = Array.isArray(pantryData?.data)
+    ? pantryData.data
+    : pantryData?.data?.results || []
 
-  const isPantryEmpty = !pantryData || pantryData.length === 0
+  const isPantryEmpty = pantryItems.length === 0
 
   const handleModeChange = (newMode) => {
     setMode(newMode)
@@ -829,6 +885,10 @@ export default function SuggestionPage() {
     setShowAddToShopping(false)
     setSelectedRecipe(null)
     queryClient.invalidateQueries({ queryKey: ['shopping-list'] })
+  }
+
+  const handleRecipeStateChange = () => {
+    queryClient.invalidateQueries({ queryKey: ['suggestions'] })
   }
 
   const handleSwitchMode = () => {
@@ -915,6 +975,7 @@ export default function SuggestionPage() {
                   recipe={item.recipe}
                   score={item.score}
                   missingIngredients={item.missing_ingredients}
+                  onRecipeStateChange={handleRecipeStateChange}
                   onClick={() => handleRecipeClick(item.recipe, item.score, item.missing_ingredients)}
                 />
               ))}

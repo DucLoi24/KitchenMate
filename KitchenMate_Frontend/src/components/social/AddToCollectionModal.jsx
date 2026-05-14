@@ -11,6 +11,7 @@ export function AddToCollectionModal({
   onClose,
   recipeId,
   initialCollections = [],
+  onSuccess,
 }) {
   const { user } = useAuth()
   const [collections, setCollections] = useState(initialCollections)
@@ -61,6 +62,7 @@ export function AddToCollectionModal({
         await socialApi.addToCollection(collection.id, recipeId)
         setToast(`Đã thêm vào "${collection.name}"`)
       }
+      onSuccess?.()
     } catch {
       // Revert on failure
       setCollections(prevCollections)
@@ -89,6 +91,7 @@ export function AddToCollectionModal({
       setToast(`Đã tạo "${newCollectionName}" và thêm công thức`)
       setNewCollectionName('')
       setShowCreateForm(false)
+      onSuccess?.()
     } catch (err) {
       setError(err?.response?.data?.error?.message || 'Không thể tạo danh sách mới')
     } finally {

@@ -118,6 +118,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
     like_count = serializers.IntegerField(read_only=True, default=0)
     save_count = serializers.IntegerField(read_only=True, default=0)
     is_favorited = serializers.BooleanField(read_only=True, default=False)
+    is_in_collection = serializers.BooleanField(read_only=True, default=False)
 
     def get_avg_rating(self, obj):
         val = getattr(obj, 'avg_rating', None)
@@ -132,7 +133,7 @@ class RecipeDetailSerializer(serializers.ModelSerializer):
             'thumbnail_url', 'visibility', 'user', 'categories',
             'recipe_ingredients', 'steps', 'avg_rating',
             'like_count', 'save_count',
-            'is_favorited', 'ai_moderation_attempted', 'ai_moderation_status',
+            'is_favorited', 'is_in_collection', 'ai_moderation_attempted', 'ai_moderation_status',
             'is_deleted', 'deleted_at',
             'created_at', 'updated_at'
         )

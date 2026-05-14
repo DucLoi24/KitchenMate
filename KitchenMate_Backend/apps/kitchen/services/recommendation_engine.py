@@ -11,6 +11,9 @@ Mode:
   COOK_NOW  — chi tra ve recipe co missing_count == 0
   ADD_MORE  — tra ve recipe co missing_count <= 2 VA score >= 0
 """
+from django.db.models import Count, Exists, OuterRef, Q
+
+
 
 PENALTY = {
     'PROTEIN': -100,
@@ -48,6 +51,8 @@ def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids):
                 'id': ri.ingredient_id,
                 'name': ri.ingredient.name,
                 'category': ri.ingredient.category,
+                'quantity': ri.quantity,
+                'unit': ri.unit,
             })
 
     if recipe.id in saved_recipe_ids:
@@ -70,7 +75,7 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
         Da sap xep theo score giam dan.
     """
     from apps.recipes.models import Recipe
-    from apps.social.models import CollectionRecipe
+    from apps.social.models import Collection, CollectionRecipe
 
     pantry_ingredient_ids = set(
         user.pantry_items.values_list('ingredient_id', flat=True)
@@ -81,12 +86,42 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
         ).values_list('recipe_id', flat=True)
     )
 
+    favorites_collection = Collection.objects.filter(
+        user=user, is_favorites=True
+    ).values_list('id', flat=True)
+    user_collections = Collection.objects.filter(
+        user=user
+    ).values_list('id', flat=True)
+
     recipes = Recipe.objects.filter(
         visibility='PUBLIC'
     ).select_related('user').prefetch_related(
         'recipe_ingredients__ingredient',
         'categories',
         'steps'
+    ).annotate(
+        like_count=Count(
+            'saved_in_collections__collection',
+            filter=Q(saved_in_collections__collection__is_favorites=True),
+            distinct=True
+        ),
+        save_count=Count(
+            'saved_in_collections__collection',
+            filter=Q(saved_in_collections__collection__is_favorites=False),
+            distinct=True
+        ),
+        is_favorited=Exists(
+            CollectionRecipe.objects.filter(
+                collection_id__in=favorites_collection,
+                recipe_id=OuterRef('pk')
+            )
+        ),
+        is_in_collection=Exists(
+            CollectionRecipe.objects.filter(
+                collection_id__in=user_collections,
+                recipe_id=OuterRef('pk')
+            )
+        ),
     )
 
     if exclude_ingredient_ids:
