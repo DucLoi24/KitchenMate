@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, AlertTriangle } from 'lucide-react'
 import { cn } from '@/utils'
@@ -35,6 +36,21 @@ export function ReportModal({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
 
+  useEffect(() => {
+    if (!isOpen) return undefined
+
+    const bodyOverflow = document.body.style.overflow
+    const htmlOverflow = document.documentElement.style.overflow
+
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = bodyOverflow
+      document.documentElement.style.overflow = htmlOverflow
+    }
+  }, [isOpen])
+
   const handleSubmit = async () => {
     if (!reason) {
       setError('Vui lòng chọn lý do báo cáo')
@@ -69,7 +85,7 @@ export function ReportModal({
     onClose()
   }
 
-  return (
+  const modalContent = (
     <AnimatePresence>
       {isOpen && (
         <>
@@ -81,7 +97,8 @@ export function ReportModal({
             transition={{ duration: 0.2 }}
             onClick={handleClose}
             onWheel={(e) => e.stopPropagation()}
-            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40"
+            style={{ zIndex: 1000 }}
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[100]"
           />
 
           {/* Sheet */}
@@ -90,9 +107,13 @@ export function ReportModal({
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            data-lenis-prevent
+            data-lenis-prevent-wheel
+            onWheel={(e) => e.stopPropagation()}
+            style={{ zIndex: 1001 }}
             className={cn(
               'fixed bottom-0 left-0 right-0 bg-[var(--color-surface)]',
-              'rounded-t-[2rem] z-50 p-6 pb-10 max-h-[85vh] overflow-y-auto'
+              'rounded-t-[2rem] z-[110] p-6 pb-10 max-h-[85vh] overflow-y-auto overscroll-contain'
             )}
           >
             {/* Drag handle */}
@@ -200,6 +221,8 @@ export function ReportModal({
       )}
     </AnimatePresence>
   )
+
+  return createPortal(modalContent, document.body)
 }
 
 export default ReportModal
