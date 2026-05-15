@@ -172,6 +172,23 @@ def test_search_finds_ingredient_by_keyword(db):
 
 
 @pytest.mark.django_db
+def test_search_matches_vietnamese_names_without_accents(db):
+    """
+    GET /api/ingredients/search/?q=ga tìm được nguyên liệu có dấu như "Thịt gà".
+    """
+    client = APIClient()
+    ing = Ingredient.objects.create(name='Thịt gà search accent', category='PROTEIN', status='APPROVED')
+
+    response = client.get('/api/ingredients/search/?q=ga')
+    assert response.status_code == 200
+
+    names = [r['name'] for r in response.json().get('data', [])]
+    assert ing.name in names
+
+    ing.delete()
+
+
+@pytest.mark.django_db
 def test_search_nonexistent_returns_empty(db):
     """
     GET /api/ingredients/search/?q=xyz_khong_ton_tai → HTTP 200 với data=[].

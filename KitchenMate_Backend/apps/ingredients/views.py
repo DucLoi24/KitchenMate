@@ -1,6 +1,8 @@
 """
 Views cho ingredients app.
 """
+import unicodedata
+
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
@@ -11,6 +13,16 @@ from django_filters.rest_framework import DjangoFilterBackend
 from .models import Ingredient, Unit
 from .serializers import IngredientSerializer, UnitSerializer, IngredientUnitsSerializer
 from core.services.ai_moderator import moderate_text, ModerationTimeoutError, ModerationServiceError
+
+
+def normalize_search_text(value):
+    """Chuẩn hóa text để search tiếng Việt không phụ thuộc dấu."""
+    normalized = unicodedata.normalize('NFD', value or '').lower()
+    without_marks = ''.join(
+        char for char in normalized
+        if unicodedata.category(char) != 'Mn'
+    )
+    return without_marks.replace('đ', 'd')
 
 
 class UnitViewSet(viewsets.GenericViewSet,
@@ -91,7 +103,7 @@ class IngredientViewSet(viewsets.GenericViewSet,
                     • YES / SUSPECT → Lưu với status=PENDING, chờ Admin duyệt.
                     • NO            → Trả về 400, không lưu.
                     • AI lỗi        → Graceful degradation: lưu PENDING, không block user.
-        search  — AllowAny. Tìm kiếm nguyên liệu APPROVED theo tên (icontains).
+        search  — AllowAny. Tìm kiếm nguyên liệu APPROVED theo tên, hỗ trợ không dấu.
                   Trả về tối đa 10 kết quả. Trả về [] nếu query rỗng.
     """
     serializer_class = IngredientSerializer
@@ -156,15 +168,21 @@ class IngredientViewSet(viewsets.GenericViewSet,
     def search(self, request):
         """
         GET /api/ingredients/search/?q={keyword}
-        Tìm kiếm nguyên liệu APPROVED theo tên, trả về tối đa 10 kết quả.
+        Tìm kiếm nguyên liệu APPROVED theo tên, hỗ trợ query không dấu.
+        Trả về tối đa 10 kết quả.
         Trả về [] nếu q rỗng.
         """
         q = request.query_params.get('q', '').strip()
         if not q:
             return Response({'success': True, 'data': []})
-        results = Ingredient.objects.filter(
-            name__icontains=q, status='APPROVED'
-        ).order_by('name')[:10]
+        normalized_query = normalize_search_text(q)
+        results = []
+        candidates = Ingredient.objects.filter(status='APPROVED').order_by('name')
+        for ingredient in candidates:
+            if normalized_query in normalize_search_text(ingredient.name):
+                results.append(ingredient)
+                if len(results) == 10:
+                    break
         return Response({'success': True, 'data': IngredientSerializer(results, many=True).data})
 
     @action(detail=True, methods=['get', 'patch'], url_path='units')

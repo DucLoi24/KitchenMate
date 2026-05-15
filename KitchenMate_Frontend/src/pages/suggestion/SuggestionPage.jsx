@@ -87,19 +87,23 @@ function SegmentedControl({ mode, onModeChange }) {
 function ExcludeIngredientsFilter({ selected, onChange }) {
   const [searchText, setSearchText] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
+  const [selectedIngredientsById, setSelectedIngredientsById] = useState({})
+  const query = searchText.trim()
 
   const { data: searchResults } = useQuery({
-    queryKey: ['ingredient-search', searchText],
+    queryKey: ['ingredient-search', query],
     queryFn: async () => {
-      if (searchText.length < 2) return []
+      if (query.length < 2) return []
       const { default: axiosInstance } = await import('@/lib/axiosInstance')
-      const { data } = await axiosInstance.get('/ingredients/', { params: { search: searchText } })
-      return data.results?.filter((ing) => !selected.includes(ing.id)) || []
+      const { data } = await axiosInstance.get('/ingredients/search/', { params: { q: query } })
+      const results = Array.isArray(data?.data) ? data.data : []
+      return results.filter((ing) => !selected.includes(ing.id))
     },
-    enabled: searchText.length >= 2,
+    enabled: query.length >= 2,
   })
 
   const handleSelect = (ingredient) => {
+    setSelectedIngredientsById((prev) => ({ ...prev, [ingredient.id]: ingredient }))
     onChange([...selected, ingredient.id])
     setSearchText('')
     setShowDropdown(false)
@@ -147,7 +151,7 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
           className="flex flex-wrap gap-2"
         >
           {selected.map((id, index) => {
-            const ing = searchResults?.find((r) => r.id === id)
+            const ing = selectedIngredientsById[id] || searchResults?.find((r) => r.id === id)
             return (
               <motion.span
                 key={id}
