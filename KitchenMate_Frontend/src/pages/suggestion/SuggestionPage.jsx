@@ -130,7 +130,10 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
           className="w-full pl-12 pr-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] text-sm focus:outline-none focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-primary)]/20 transition-all"
         />
         {showDropdown && searchResults?.length > 0 && (
-          <div className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-lg z-20 max-h-56 overflow-y-auto">
+          <div 
+            onWheel={(e) => e.stopPropagation()}
+            className="absolute top-full left-0 right-0 mt-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-lg)] shadow-lg z-20 max-h-56 overflow-y-auto"
+          >
             {searchResults.map((ing) => (
               <button
                 key={ing.id}
