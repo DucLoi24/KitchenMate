@@ -610,7 +610,7 @@ function AddToShoppingModal({ missingIngredients, onClose, onSuccess }) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] w-full max-w-md max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"
+          className="bg-[var(--color-surface)] rounded-[var(--radius-xl)] w-full max-w-[28rem] max-h-[80vh] overflow-hidden flex flex-col shadow-2xl"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="p-6 border-b border-[var(--color-border)] flex items-center justify-between bg-gradient-to-r from-[var(--color-secondary)] to-[var(--color-secondary-light)]">
@@ -716,7 +716,7 @@ function EmptyState({ onGoToPantry }) {
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center"
+      className="flex flex-col items-center justify-center min-h-[38vh] px-4 py-12 text-center"
     >
       <motion.div
         initial={{ scale: 0 }}
@@ -727,7 +727,7 @@ function EmptyState({ onGoToPantry }) {
         <ChefHat className="w-14 h-14 text-[var(--color-primary)]" />
       </motion.div>
       <h3 className="font-display text-3xl font-semibold mb-4">Tủ lạnh trống</h3>
-      <p className="text-[var(--color-text-secondary)] text-lg mb-8 max-w-md leading-relaxed">
+      <p className="text-[var(--color-text-secondary)] text-lg mb-8 max-w-[32rem] leading-relaxed">
         Thêm nguyên liệu vào tủ lạnh để nhận gợi ý món ăn phù hợp với bạn
       </p>
       <motion.button
@@ -748,7 +748,7 @@ function ErrorState({ onRetry }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center"
+      className="flex flex-col items-center justify-center min-h-[38vh] px-4 py-12 text-center"
     >
       <motion.div
         initial={{ scale: 0 }}
@@ -759,7 +759,7 @@ function ErrorState({ onRetry }) {
         <AlertCircle className="w-14 h-14 text-red-500" />
       </motion.div>
       <h3 className="font-display text-3xl font-semibold mb-4">Không thể tải gợi ý</h3>
-      <p className="text-[var(--color-text-secondary)] text-lg mb-8 max-w-md">
+      <p className="text-[var(--color-text-secondary)] text-lg mb-8 max-w-[32rem]">
         Đã xảy ra lỗi khi tải dữ liệu. Vui lòng thử lại.
       </p>
       <motion.button
@@ -780,7 +780,7 @@ function NoResultsState({ currentMode, onSwitchMode }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center"
+      className="flex flex-col items-center justify-center min-h-[38vh] px-4 py-12 text-center"
     >
       <motion.div
         initial={{ scale: 0 }}
@@ -791,8 +791,8 @@ function NoResultsState({ currentMode, onSwitchMode }) {
         <Search className="w-14 h-14 text-[var(--color-accent)]" />
       </motion.div>
       <h3 className="font-display text-3xl font-semibold mb-4">Không tìm thấy công thức</h3>
-      <p className="text-[var(--color-text-secondary)] text-lg mb-8 max-w-md">
-        Không có công thức nào phù hợp với bộ lọc hiện tại
+      <p className="text-[var(--color-text-secondary)] text-lg mb-8 max-w-[32rem]">
+        Không có công thức nào phù hợp với bộ lọc hiện tại. Bạn có thể đổi chế độ hoặc bỏ bớt nguyên liệu loại trừ ở phần bộ lọc phía trên.
       </p>
       <motion.button
         whileHover={{ scale: 1.05 }}
@@ -848,7 +848,7 @@ export default function SuggestionPage() {
   })
 
   // Fetch pantry to check if empty
-  const { data: pantryData } = useQuery({
+  const { data: pantryData, isLoading: isPantryLoading } = useQuery({
     queryKey: ['pantry'],
     queryFn: () => pantryApi.getPantry(),
   })
@@ -858,7 +858,7 @@ export default function SuggestionPage() {
     ? pantryData.data
     : pantryData?.data?.results || []
 
-  const isPantryEmpty = pantryItems.length === 0
+  const isPantryEmpty = !isPantryLoading && pantryItems.length === 0
 
   const handleModeChange = (newMode) => {
     setMode(newMode)
@@ -905,30 +905,9 @@ export default function SuggestionPage() {
     navigate('/pantry')
   }
 
-  // Determine which state to show
-  if (isPantryEmpty && !isLoading) {
-    return (
-      <div className="min-h-screen">
-        <EmptyState onGoToPantry={handleGoToPantry} />
-      </div>
-    )
-  }
-
-  if (isError && !isLoading) {
-    return (
-      <div className="min-h-screen">
-        <ErrorState onRetry={refetch} />
-      </div>
-    )
-  }
-
-  if (!isLoading && recipes.length === 0) {
-    return (
-      <div className="min-h-screen">
-        <NoResultsState currentMode={mode} onSwitchMode={handleSwitchMode} />
-      </div>
-    )
-  }
+  const showEmptyPantryState = isPantryEmpty && !isLoading
+  const showErrorState = isError && !isLoading
+  const showNoResultsState = !isLoading && !showEmptyPantryState && !showErrorState && recipes.length === 0
 
   return (
     <motion.div
@@ -967,26 +946,30 @@ export default function SuggestionPage() {
               <RecipeSkeleton key={i} />
             ))}
           </motion.div>
+        ) : showEmptyPantryState ? (
+          <EmptyState onGoToPantry={handleGoToPantry} />
+        ) : showErrorState ? (
+          <ErrorState onRetry={refetch} />
+        ) : showNoResultsState ? (
+          <NoResultsState currentMode={mode} onSwitchMode={handleSwitchMode} />
         ) : (
-          <>
-            <motion.div
-              variants={containerVariants}
-              initial="hidden"
-              animate="visible"
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
-            >
-              {recipes.map((item) => (
-                <SuggestionRecipeCard
-                  key={item.recipe.id}
-                  recipe={item.recipe}
-                  score={item.score}
-                  missingIngredients={item.missing_ingredients}
-                  onRecipeStateChange={handleRecipeStateChange}
-                  onClick={() => handleRecipeClick(item.recipe, item.score, item.missing_ingredients)}
-                />
-              ))}
-            </motion.div>
-          </>
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5"
+          >
+            {recipes.map((item) => (
+              <SuggestionRecipeCard
+                key={item.recipe.id}
+                recipe={item.recipe}
+                score={item.score}
+                missingIngredients={item.missing_ingredients}
+                onRecipeStateChange={handleRecipeStateChange}
+                onClick={() => handleRecipeClick(item.recipe, item.score, item.missing_ingredients)}
+              />
+            ))}
+          </motion.div>
         )}
       </div>
 

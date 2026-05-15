@@ -168,4 +168,23 @@ describe('SuggestionPage exclude ingredient search', () => {
       expect(mockGetSuggestions).toHaveBeenCalledWith('COOK_NOW', [18])
     })
   })
+
+  it('keeps filters and mode controls visible when no suggestions match', async () => {
+    mockGetSuggestions.mockResolvedValue({
+      success: true,
+      data: [],
+    })
+
+    renderSuggestionPage()
+
+    expect(await screen.findByText('Không tìm thấy công thức')).toBeInTheDocument()
+    expect(screen.getByText('Loại trừ nguyên liệu')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Loại trừ nguyên liệu bạn không muốn nấu...')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: 'Thêm chút nữa' }))
+
+    await waitFor(() => {
+      expect(mockGetSuggestions).toHaveBeenCalledWith('ADD_MORE', [])
+    })
+  })
 })
