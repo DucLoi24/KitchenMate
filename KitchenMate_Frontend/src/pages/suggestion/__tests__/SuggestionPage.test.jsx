@@ -8,6 +8,7 @@ import SuggestionPage from '../SuggestionPage'
 const mockAxiosGet = vi.hoisted(() => vi.fn())
 const mockGetSuggestions = vi.hoisted(() => vi.fn())
 const mockGetPantry = vi.hoisted(() => vi.fn())
+const mockGetCategories = vi.hoisted(() => vi.fn())
 
 vi.mock('@/lib/axiosInstance', () => ({
   default: {
@@ -27,6 +28,12 @@ vi.mock('@/api/kitchenApi', () => ({
   },
   shoppingListApi: {
     addToShoppingList: vi.fn(),
+  },
+}))
+
+vi.mock('@/api/categoryApi', () => ({
+  categoryApi: {
+    getCategories: mockGetCategories,
   },
 }))
 
@@ -65,6 +72,8 @@ vi.mock('framer-motion', () => ({
 
 vi.mock('lucide-react', () => ({
   AlertCircle: () => <span data-testid="alert-icon" />,
+  ChevronLeft: () => <span data-testid="chevron-left-icon" />,
+  ChevronRight: () => <span data-testid="chevron-right-icon" />,
   ChefHat: () => <span data-testid="chef-icon" />,
   Clock: () => <span data-testid="clock-icon" />,
   Flame: () => <span data-testid="flame-icon" />,
@@ -73,6 +82,7 @@ vi.mock('lucide-react', () => ({
   Plus: () => <span data-testid="plus-icon" />,
   Search: () => <span data-testid="search-icon" />,
   ShoppingCart: () => <span data-testid="shopping-cart-icon" />,
+  SlidersHorizontal: () => <span data-testid="sliders-icon" />,
   Sparkles: () => <span data-testid="sparkles-icon" />,
   X: () => <span data-testid="x-icon" />,
 }))
@@ -114,6 +124,7 @@ describe('SuggestionPage exclude ingredient search', () => {
     mockAxiosGet.mockReset()
     mockGetSuggestions.mockReset()
     mockGetPantry.mockReset()
+    mockGetCategories.mockReset()
 
     mockGetSuggestions.mockResolvedValue({
       success: true,
@@ -122,6 +133,13 @@ describe('SuggestionPage exclude ingredient search', () => {
     mockGetPantry.mockResolvedValue({
       success: true,
       data: [{ id: 1, ingredient: { id: 18, name: 'Thịt gà' }, quantity: 1, unit: 'kg' }],
+    })
+    mockGetCategories.mockResolvedValue({
+      success: true,
+      data: [
+        { id: 'category-1', name: 'Món Việt', slug: 'mon-viet', is_active: true },
+        { id: 'category-2', name: 'Món chay', slug: 'mon-chay', is_active: true },
+      ],
     })
     mockAxiosGet.mockResolvedValue({
       data: {
@@ -165,7 +183,14 @@ describe('SuggestionPage exclude ingredient search', () => {
       expect(screen.getByText('Thịt gà')).toBeInTheDocument()
     })
     await waitFor(() => {
-      expect(mockGetSuggestions).toHaveBeenCalledWith('COOK_NOW', [18])
+      expect(mockGetSuggestions).toHaveBeenCalledWith({
+        mode: 'COOK_NOW',
+        excludeIngredients: [18],
+        cookingTime: [],
+        categories: [],
+        page: 1,
+        pageSize: 9,
+      })
     })
   })
 
@@ -184,7 +209,63 @@ describe('SuggestionPage exclude ingredient search', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Thêm chút nữa' }))
 
     await waitFor(() => {
-      expect(mockGetSuggestions).toHaveBeenCalledWith('ADD_MORE', [])
+      expect(mockGetSuggestions).toHaveBeenCalledWith({
+        mode: 'ADD_MORE',
+        excludeIngredients: [],
+        cookingTime: [],
+        categories: [],
+        page: 1,
+        pageSize: 9,
+      })
+    })
+  })
+
+  it('loads recipe categories from backend and sends selected filters to suggestions', async () => {
+    renderSuggestionPage()
+
+    expect(await screen.findByText('Loại món ăn')).toBeInTheDocument()
+    expect(mockGetCategories).toHaveBeenCalledWith()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Món Việt' }))
+    fireEvent.click(screen.getByRole('button', { name: '15 - 30 phút' }))
+
+    await waitFor(() => {
+      expect(mockGetSuggestions).toHaveBeenLastCalledWith({
+        mode: 'COOK_NOW',
+        excludeIngredients: [],
+        cookingTime: [30],
+        categories: ['category-1'],
+        page: 1,
+        pageSize: 9,
+      })
+    })
+  })
+
+  it('shows numbered pagination and requests the selected page', async () => {
+    mockGetSuggestions.mockResolvedValue({
+      success: true,
+      data: {
+        count: 18,
+        next: 'http://testserver/api/recommendations/suggest/?page=2',
+        previous: null,
+        results: [{ recipe, score: 20, missing_ingredients: [] }],
+      },
+    })
+
+    renderSuggestionPage()
+
+    expect(await screen.findByText('Trang 1 / 2')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: '2' }))
+
+    await waitFor(() => {
+      expect(mockGetSuggestions).toHaveBeenLastCalledWith({
+        mode: 'COOK_NOW',
+        excludeIngredients: [],
+        cookingTime: [],
+        categories: [],
+        page: 2,
+        pageSize: 9,
+      })
     })
   })
 })

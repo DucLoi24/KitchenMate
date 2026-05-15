@@ -1,7 +1,11 @@
 """
 Views cho kitchen app — PantryViewSet, ShoppingListViewSet, RecommendationView.
 """
+import uuid
+from math import ceil
+
 from django.db import transaction
+from django.core.paginator import EmptyPage, Paginator
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -284,6 +288,61 @@ class RecommendationView(APIView):
     """
     permission_classes = [IsAuthenticated]
 
+    def _as_list(self, value):
+        if value in (None, ''):
+            return []
+        if isinstance(value, (list, tuple)):
+            return list(value)
+        if isinstance(value, str):
+            return [item.strip() for item in value.split(',') if item.strip()]
+        return [value]
+
+    def _parse_category_ids(self, value):
+        category_ids = []
+        for item in self._as_list(value):
+            try:
+                category_ids.append(str(uuid.UUID(str(item))))
+            except (TypeError, ValueError):
+                return None
+        return category_ids
+
+    def _parse_page_int(self, value, default, minimum=1, maximum=None):
+        try:
+            parsed = int(value)
+        except (TypeError, ValueError):
+            parsed = default
+        parsed = max(minimum, parsed)
+        if maximum is not None:
+            parsed = min(maximum, parsed)
+        return parsed
+
+    def _pagination_link(self, request, page_number, page_size):
+        if page_number is None:
+            return None
+        return request.build_absolute_uri(
+            f'{request.path}?page={page_number}&page_size={page_size}'
+        )
+
+    def _paginate_results(self, request, results):
+        page_number = self._parse_page_int(request.data.get('page'), 1)
+        page_size = self._parse_page_int(request.data.get('page_size'), 20, minimum=1, maximum=100)
+        paginator = Paginator(results, page_size)
+        total_pages = max(ceil(paginator.count / page_size), 1)
+
+        try:
+            page = paginator.page(page_number)
+        except EmptyPage:
+            page = paginator.page(total_pages)
+
+        next_page = page.next_page_number() if page.has_next() else None
+        previous_page = page.previous_page_number() if page.has_previous() else None
+        return {
+            'count': paginator.count,
+            'next': self._pagination_link(request, next_page, page_size),
+            'previous': self._pagination_link(request, previous_page, page_size),
+            'results': list(page.object_list),
+        }
+
     def post(self, request):
         """
         Trả về danh sách công thức được gợi ý dựa trên tủ lạnh của user.
@@ -291,7 +350,11 @@ class RecommendationView(APIView):
         Request Body:
             {
                 "mode": "COOK_NOW" | "ADD_MORE",   (bắt buộc)
-                "exclude_ingredients": [<id>, ...]  (tùy chọn — loại trừ nguyên liệu khỏi tính toán)
+                "exclude_ingredients": [<id>, ...],  (tùy chọn — loại trừ nguyên liệu khỏi tính toán)
+                "cooking_time": [15 | 30 | 60 | 120, ...],  (tùy chọn)
+                "categories": [<uuid>, ...],  (tùy chọn — danh mục công thức active)
+                "page": <int>,  (tùy chọn — nếu có sẽ trả response phân trang)
+                "page_size": <int>  (tùy chọn)
             }
 
         Response (200):
@@ -322,7 +385,21 @@ class RecommendationView(APIView):
             )
 
         exclude_ids = request.data.get('exclude_ingredients', [])
-        results = get_recommendations(request.user, mode, exclude_ids if exclude_ids else None)
+        cooking_time = self._as_list(request.data.get('cooking_time', []))
+        category_ids = self._parse_category_ids(request.data.get('categories', []))
+        if category_ids is None:
+            return Response(
+                {'success': False, 'error': {'message': 'Danh muc cong thuc khong hop le.'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        results = get_recommendations(
+            request.user,
+            mode,
+            exclude_ids if exclude_ids else None,
+            cooking_time if cooking_time else None,
+            category_ids if category_ids else None,
+        )
 
         data = []
         for item in results:
@@ -331,5 +408,8 @@ class RecommendationView(APIView):
                 'score': item['score'],
                 'missing_ingredients': item['missing_ingredients'],
             })
+
+        if 'page' in request.data or 'page_size' in request.data:
+            return Response({'success': True, 'data': self._paginate_results(request, data)})
 
         return Response({'success': True, 'data': data})

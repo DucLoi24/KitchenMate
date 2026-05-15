@@ -6,11 +6,21 @@ import { suggestionApi } from '@/api/suggestionApi'
 import { shoppingListApi, pantryApi } from '@/api/kitchenApi'
 import { socialApi } from '@/api/socialApi'
 import { adminApi } from '@/api/adminApi'
+import { categoryApi } from '@/api/categoryApi'
 import { useAuth } from '@/components/auth/useAuth'
 import { GuestCTA } from '@/components/auth/GuestCTA'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 import { cn } from '@/utils'
-import { Clock, Flame, Plus, X, AlertCircle, ShoppingCart, ChefHat, Search, Sparkles, Heart, Library } from 'lucide-react'
+import { Clock, Flame, Plus, X, AlertCircle, ShoppingCart, ChefHat, Search, Sparkles, Heart, Library, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react'
+
+const PAGE_SIZE = 9
+
+const TIME_RANGES = [
+  { value: 15, label: 'Dưới 15 phút' },
+  { value: 30, label: '15 - 30 phút' },
+  { value: 60, label: '30 - 60 phút' },
+  { value: 120, label: 'Hơn 60 phút' },
+]
 
 // Animation variants for staggered reveal
 const containerVariants = {
@@ -176,6 +186,166 @@ function ExcludeIngredientsFilter({ selected, onChange }) {
         </motion.div>
       )}
     </div>
+  )
+}
+
+function normalizeCategoryResponse(response) {
+  const data = response?.data ?? response
+  if (Array.isArray(data)) return data
+  if (Array.isArray(data?.results)) return data.results
+  if (Array.isArray(response?.results)) return response.results
+  return []
+}
+
+function FilterChip({ active, children, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'min-h-11 px-4 py-2 rounded-full border text-sm font-medium transition-all duration-[var(--transition-fast)]',
+        active
+          ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-[var(--shadow-sm)]'
+          : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
+      )}
+    >
+      {children}
+    </button>
+  )
+}
+
+function SuggestionFilters({
+  categories,
+  isCategoryLoading,
+  isCategoryError,
+  selectedCategories,
+  cookingTime,
+  onCategoriesChange,
+  onTimeChange,
+  onClear,
+  hasActiveFilters,
+}) {
+  const toggleCategory = (categoryId) => {
+    onCategoriesChange(
+      selectedCategories.includes(categoryId)
+        ? selectedCategories.filter((id) => id !== categoryId)
+        : [...selectedCategories, categoryId]
+    )
+  }
+
+  const toggleTime = (value) => {
+    onTimeChange(
+      cookingTime.includes(value)
+        ? cookingTime.filter((item) => item !== value)
+        : [...cookingTime, value]
+    )
+  }
+
+  return (
+    <div className="mb-6 rounded-[var(--radius-xl)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-[var(--shadow-sm)]">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <SlidersHorizontal className="w-5 h-5 text-[var(--color-primary)]" />
+          <h2 className="font-display text-lg font-semibold text-[var(--color-text)]">Bộ lọc gợi ý</h2>
+        </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={onClear}
+            className="min-h-11 px-3 text-sm font-medium text-[var(--color-primary)] hover:text-[var(--color-primary-dark)] transition-colors"
+          >
+            Xóa lọc
+          </button>
+        )}
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-2">
+        <section>
+          <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">Thời gian nấu</h3>
+          <div className="flex flex-wrap gap-2">
+            {TIME_RANGES.map(({ value, label }) => (
+              <FilterChip
+                key={value}
+                active={cookingTime.includes(value)}
+                onClick={() => toggleTime(value)}
+              >
+                {label}
+              </FilterChip>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h3 className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wide mb-3">Loại món ăn</h3>
+          {isCategoryLoading ? (
+            <div className="h-11 w-full max-w-[24rem] rounded-full bg-[var(--color-background-alt)] animate-pulse" />
+          ) : isCategoryError ? (
+            <p className="text-sm text-[var(--color-text-secondary)]">Không tải được danh mục món ăn.</p>
+          ) : categories.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-secondary)]">Chưa có danh mục món ăn.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {categories.map((category) => (
+                <FilterChip
+                  key={category.id}
+                  active={selectedCategories.includes(category.id)}
+                  onClick={() => toggleCategory(category.id)}
+                >
+                  {category.name}
+                </FilterChip>
+              ))}
+            </div>
+          )}
+        </section>
+      </div>
+    </div>
+  )
+}
+
+function SuggestionPagination({ currentPage, totalPages, onPageChange }) {
+  if (totalPages <= 1) return null
+
+  const pages = Array.from({ length: totalPages }, (_, index) => index + 1)
+
+  return (
+    <nav className="mt-8 flex flex-col items-center gap-3" aria-label="Phân trang gợi ý">
+      <p className="text-sm font-medium text-[var(--color-text-secondary)]">Trang {currentPage} / {totalPages}</p>
+      <div className="flex flex-wrap items-center justify-center gap-2">
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage <= 1}
+          className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] disabled:opacity-40 disabled:pointer-events-none hover:border-[var(--color-primary)] transition-colors"
+          aria-label="Trang trước"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        {pages.map((page) => (
+          <button
+            key={page}
+            type="button"
+            onClick={() => onPageChange(page)}
+            className={cn(
+              'min-h-11 min-w-11 rounded-full border text-sm font-semibold transition-all',
+              page === currentPage
+                ? 'bg-[var(--color-primary)] text-white border-[var(--color-primary)] shadow-[var(--shadow-sm)]'
+                : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border-[var(--color-border)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]'
+            )}
+          >
+            {page}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage >= totalPages}
+          className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] disabled:opacity-40 disabled:pointer-events-none hover:border-[var(--color-primary)] transition-colors"
+          aria-label="Trang sau"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </nav>
   )
 }
 
@@ -833,10 +1003,11 @@ export default function SuggestionPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
-  // Filter states - backend only supports mode and exclude_ingredients
-  // TODO: Backend needs enhancement for cook_time, categories, and pagination support
   const [mode, setMode] = useState('COOK_NOW')
   const [excludeIngredients, setExcludeIngredients] = useState([])
+  const [cookingTime, setCookingTime] = useState([])
+  const [categories, setCategories] = useState([])
+  const [page, setPage] = useState(1)
 
   // UI states
   const [selectedRecipe, setSelectedRecipe] = useState(null)
@@ -844,10 +1015,26 @@ export default function SuggestionPage() {
 
   // Fetch suggestions
   const { data, isLoading, isError, refetch } = useQuery({
-    queryKey: ['suggestions', mode, excludeIngredients],
+    queryKey: ['suggestions', mode, excludeIngredients, cookingTime, categories, page],
     queryFn: () =>
-      suggestionApi.getSuggestions(mode, excludeIngredients),
+      suggestionApi.getSuggestions({
+        mode,
+        excludeIngredients,
+        cookingTime,
+        categories,
+        page,
+        pageSize: PAGE_SIZE,
+      }),
     placeholderData: (prev) => prev,
+  })
+
+  const {
+    data: categoryData,
+    isLoading: isCategoryLoading,
+    isError: isCategoryError,
+  } = useQuery({
+    queryKey: ['recipe-categories'],
+    queryFn: () => categoryApi.getCategories(),
   })
 
   // Fetch pantry to check if empty
@@ -856,7 +1043,14 @@ export default function SuggestionPage() {
     queryFn: () => pantryApi.getPantry(),
   })
 
-  const recipes = data?.data || []
+  const suggestionData = data?.data
+  const isPaginated = suggestionData && !Array.isArray(suggestionData) && Array.isArray(suggestionData.results)
+  const recipes = Array.isArray(suggestionData)
+    ? suggestionData
+    : suggestionData?.results || []
+  const totalCount = isPaginated ? suggestionData.count : recipes.length
+  const totalPages = isPaginated ? Math.max(1, Math.ceil(totalCount / PAGE_SIZE)) : 1
+  const recipeCategories = normalizeCategoryResponse(categoryData)
   const pantryItems = Array.isArray(pantryData?.data)
     ? pantryData.data
     : pantryData?.data?.results || []
@@ -865,10 +1059,28 @@ export default function SuggestionPage() {
 
   const handleModeChange = (newMode) => {
     setMode(newMode)
+    setPage(1)
   }
 
   const handleExcludeIngredientsChange = (newExclude) => {
     setExcludeIngredients(newExclude)
+    setPage(1)
+  }
+
+  const handleCookingTimeChange = (newCookingTime) => {
+    setCookingTime(newCookingTime)
+    setPage(1)
+  }
+
+  const handleCategoriesChange = (newCategories) => {
+    setCategories(newCategories)
+    setPage(1)
+  }
+
+  const handleClearSuggestionFilters = () => {
+    setCookingTime([])
+    setCategories([])
+    setPage(1)
   }
 
   const handleRecipeClick = (recipe, score, missing) => {
@@ -902,6 +1114,7 @@ export default function SuggestionPage() {
 
   const handleSwitchMode = () => {
     setMode(mode === 'COOK_NOW' ? 'ADD_MORE' : 'COOK_NOW')
+    setPage(1)
   }
 
   const handleGoToPantry = () => {
@@ -911,6 +1124,7 @@ export default function SuggestionPage() {
   const showEmptyPantryState = isPantryEmpty && !isLoading
   const showErrorState = isError && !isLoading
   const showNoResultsState = !isLoading && !showEmptyPantryState && !showErrorState && recipes.length === 0
+  const hasActiveSuggestionFilters = cookingTime.length > 0 || categories.length > 0
 
   return (
     <motion.div
@@ -926,6 +1140,18 @@ export default function SuggestionPage() {
         <div className="mb-5">
           <SegmentedControl mode={mode} onModeChange={handleModeChange} />
         </div>
+
+        <SuggestionFilters
+          categories={recipeCategories}
+          isCategoryLoading={isCategoryLoading}
+          isCategoryError={isCategoryError}
+          selectedCategories={categories}
+          cookingTime={cookingTime}
+          onCategoriesChange={handleCategoriesChange}
+          onTimeChange={handleCookingTimeChange}
+          onClear={handleClearSuggestionFilters}
+          hasActiveFilters={hasActiveSuggestionFilters}
+        />
 
         {/* Exclude Ingredients Filter */}
         <div className="mb-6">
@@ -973,6 +1199,13 @@ export default function SuggestionPage() {
               />
             ))}
           </motion.div>
+        )}
+        {!isLoading && !showEmptyPantryState && !showErrorState && !showNoResultsState && (
+          <SuggestionPagination
+            currentPage={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
         )}
       </div>
 

@@ -64,7 +64,7 @@ def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids, unit
     return score, missing
 
 
-def get_recommendations(user, mode, exclude_ingredient_ids=None):
+def get_recommendations(user, mode, exclude_ingredient_ids=None, cooking_time=None, category_ids=None):
     """
     Lay danh sach cong thuc goi y theo mode COOK_NOW hoac ADD_MORE.
 
@@ -72,6 +72,8 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
         user: User instance
         mode: 'COOK_NOW' hoac 'ADD_MORE'
         exclude_ingredient_ids: list cac ingredient_id can loai tru (optional)
+        cooking_time: list cac moc thoi gian 15, 30, 60, 120 (optional)
+        category_ids: list UUID danh muc cong thuc active can loc (optional)
 
     Returns:
         list of dict: [{'recipe': Recipe, 'score': int, 'missing_ingredients': list}]
@@ -131,6 +133,31 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
     if exclude_ingredient_ids:
         recipes = recipes.exclude(
             recipe_ingredients__ingredient_id__in=exclude_ingredient_ids
+        ).distinct()
+
+    if cooking_time:
+        time_values = {
+            int(value)
+            for value in cooking_time
+            if str(value).strip().isdigit()
+        }
+        time_filter = Q()
+        for value in time_values:
+            if value == 15:
+                time_filter |= Q(prep_time__lte=15)
+            elif value == 30:
+                time_filter |= Q(prep_time__gte=15, prep_time__lte=30)
+            elif value == 60:
+                time_filter |= Q(prep_time__gte=30, prep_time__lte=60)
+            elif value == 120:
+                time_filter |= Q(prep_time__gte=60)
+        if time_filter:
+            recipes = recipes.filter(time_filter).distinct()
+
+    if category_ids:
+        recipes = recipes.filter(
+            categories__id__in=category_ids,
+            categories__is_active=True
         ).distinct()
 
     # Evaluate queryset thành list để đảm bảo prefetch_related hoạt động đúng

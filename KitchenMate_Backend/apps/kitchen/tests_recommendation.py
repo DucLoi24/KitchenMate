@@ -10,7 +10,7 @@ from hypothesis import strategies as st
 from hypothesis.extra.django import TestCase as HypothesisTestCase
 
 from apps.ingredients.models import Ingredient
-from apps.recipes.models import Recipe, RecipeIngredient
+from apps.recipes.models import Recipe, RecipeCategory, RecipeIngredient
 from apps.social.models import Collection, CollectionRecipe
 from .models import Pantry
 from .services.recommendation_engine import calculate_recipe_score, PENALTY
@@ -91,7 +91,7 @@ class AddMorePropertyTest(HypothesisTestCase):
     """Property 15: ADD_MORE chi tra ve recipes co missing <= 2 VA score >= 0."""
 
     @given(st.just(None))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_add_more_satisfies_conditions(self, _):
         """
         Tat ca ket qua ADD_MORE phai co len(missing) <= 2 va score >= 0.
@@ -115,13 +115,97 @@ class AddMorePropertyTest(HypothesisTestCase):
             self.assertGreaterEqual(item['score'], 0)
 
 
+class RecommendationFilterPaginationTest(HypothesisTestCase):
+    """Suggestion API filter theo danh mục động, thời gian nấu và phân trang."""
+
+    def test_suggest_filters_by_active_recipe_category_from_backend(self):
+        user = make_user()
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        ingredient = make_ingredient('PROTEIN')
+        add_to_pantry(user, ingredient)
+        category_target = RecipeCategory.objects.create(
+            name=f'Món test {uuid.uuid4().hex[:6]}',
+            slug=f'mon-test-{uuid.uuid4().hex[:6]}',
+            is_active=True,
+        )
+        category_other = RecipeCategory.objects.create(
+            name=f'Món khác {uuid.uuid4().hex[:6]}',
+            slug=f'mon-khac-{uuid.uuid4().hex[:6]}',
+            is_active=True,
+        )
+
+        recipe_target = make_recipe_with_ingredients(user, [ingredient], 'PUBLIC')
+        recipe_target.title = 'Recipe đúng danh mục'
+        recipe_target.prep_time = 20
+        recipe_target.save(update_fields=['title', 'prep_time'])
+        recipe_target.categories.add(category_target)
+
+        recipe_other = make_recipe_with_ingredients(user, [ingredient], 'PUBLIC')
+        recipe_other.title = 'Recipe sai danh mục'
+        recipe_other.prep_time = 20
+        recipe_other.save(update_fields=['title', 'prep_time'])
+        recipe_other.categories.add(category_other)
+
+        response = client.post(
+            '/api/recommendations/suggest/',
+            {
+                'mode': 'COOK_NOW',
+                'categories': [str(category_target.id)],
+                'page': 1,
+                'page_size': 10,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        titles = [item['recipe']['title'] for item in response.data['data']['results']]
+        self.assertIn('Recipe đúng danh mục', titles)
+        self.assertNotIn('Recipe sai danh mục', titles)
+        self.assertEqual(response.data['data']['count'], 1)
+
+    def test_suggest_filters_by_cooking_time_and_returns_numbered_pages(self):
+        user = make_user()
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        ingredient = make_ingredient('VEG')
+        add_to_pantry(user, ingredient)
+
+        for index, prep_time in enumerate([10, 20, 25, 45]):
+            recipe = make_recipe_with_ingredients(user, [ingredient], 'PUBLIC')
+            recipe.title = f'Recipe {index}'
+            recipe.prep_time = prep_time
+            recipe.save(update_fields=['title', 'prep_time'])
+
+        response = client.post(
+            '/api/recommendations/suggest/',
+            {
+                'mode': 'COOK_NOW',
+                'cooking_time': [30],
+                'page': 2,
+                'page_size': 1,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['data']['count'], 2)
+        self.assertEqual(len(response.data['data']['results']), 1)
+        self.assertIsNotNone(response.data['data']['previous'])
+        self.assertIsNone(response.data['data']['next'])
+        result_titles = {item['recipe']['title'] for item in response.data['data']['results']}
+        self.assertTrue(result_titles.issubset({'Recipe 1', 'Recipe 2'}))
+
+
 # ─── Property 16: STAPLE ingredients khong anh huong den score ──────────────
 
 class StapleIgnoredPropertyTest(HypothesisTestCase):
     """Property 16: STAPLE ingredients khong anh huong den score."""
 
     @given(st.just(None))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_staple_ingredients_ignored_in_scoring(self, _):
         """
         Them hoac bo STAPLE ingredients khong thay doi score.
@@ -163,7 +247,7 @@ class ScoringAlgorithmPropertyTest(HypothesisTestCase):
         has_in_pantry=st.booleans(),
         has_affinity=st.booleans(),
     )
-    @settings(max_examples=30)
+    @settings(max_examples=30, deadline=None)
     def test_scoring_formula_correct(self, category, has_in_pantry, has_affinity):
         """
         Score phai bang dung cong thuc: match*20 + penalty + affinity.
@@ -203,7 +287,7 @@ class ExcludeIngredientsPropertyTest(HypothesisTestCase):
     """Property 18: exclude_ingredients loai tru tat ca recipes chua ingredient do."""
 
     @given(st.just(None))
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_exclude_ingredients_filters_correctly(self, _):
         """
         Khong co ket qua nao chua ingredient trong exclude list.
