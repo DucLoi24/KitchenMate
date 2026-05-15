@@ -414,7 +414,9 @@ function RecipeBottomSheet({ recipe, score, missingIngredients, onClose, onViewD
                   <li key={ing.id} className="text-sm flex items-center gap-3 p-2 bg-[var(--color-background-alt)] rounded-lg">
                     <span className="w-2 h-2 rounded-full bg-[var(--color-border-strong)]" />
                     <span className="flex-1 font-medium">{ing.ingredient_name}</span>
-                    <span className="text-[var(--color-text-secondary)]">{ing.quantity} {ing.unit}</span>
+                    <span className="text-[var(--color-text-secondary)]">
+                      {ing.quantity} {ing.unit_display || ing.unit}
+                    </span>
                   </li>
                 ))}
                 {recipe.recipe_ingredients.length > 8 && (

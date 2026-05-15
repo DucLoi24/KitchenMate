@@ -27,15 +27,7 @@ const CATEGORY_CONFIG = {
   },
 }
 
-const UNIT_LABELS = {
-  gram: 'g',
-  kilogram: 'kg',
-  ml: 'ml',
-  liter: 'L',
-  piece: 'cái',
-}
-
-const getUnitLabel = (item) => item.unit_display || UNIT_LABELS[item.unit] || item.unit
+const getUnitLabel = (item) => item.unit_display || item.unit
 
 export function PantryItem({
   item,

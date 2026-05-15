@@ -4,6 +4,19 @@ import { Eye, EyeOff, Globe, Lock, AlertTriangle } from 'lucide-react'
 import { cn } from '@/utils'
 import { DIFFICULTY_CONFIG, VISIBILITY } from '@/hooks/useRecipeDraft'
 
+const getPreviewUnitLabel = (ingredient) => {
+  if (ingredient.unit_display) return ingredient.unit_display
+
+  const options = Array.isArray(ingredient.allowed_units) ? ingredient.allowed_units : []
+  const match = options.find((unit) => {
+    const value = unit?.value || unit?.slug
+    const label = unit?.label || unit?.name
+    return value === ingredient.unit || label === ingredient.unit
+  })
+
+  return match?.label || match?.name || ingredient.unit
+}
+
 export function RecipePreview({ recipeData, onVisibilityChange }) {
   const [showPreview, setShowPreview] = useState(true)
   const [visibility, setVisibility] = useState(recipeData.visibility || VISIBILITY.PRIVATE)
@@ -100,7 +113,7 @@ export function RecipePreview({ recipeData, onVisibilityChange }) {
                     {recipeData.ingredients.slice(0, 5).map((ing, i) => (
                       <li key={i} className="text-sm text-[var(--color-text-secondary)] flex items-center gap-2">
                         <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-primary)]" />
-                        {ing.quantity} {ing.unit} {ing.ingredient_name}
+                        {ing.quantity} {getPreviewUnitLabel(ing)} {ing.ingredient_name}
                       </li>
                     ))}
                     {recipeData.ingredients.length > 5 && (

@@ -24,7 +24,7 @@ PENALTY = {
 }
 
 
-def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids):
+def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids, unit_display_map=None):
     """
     Tinh diem goi y cho mot cong thuc dua tren pantry cua user.
     Bo qua nguyen lieu STAPLE.
@@ -33,12 +33,14 @@ def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids):
         recipe: Recipe instance (da prefetch recipe_ingredients__ingredient)
         pantry_ingredient_ids: set cac ingredient_id co trong pantry
         saved_recipe_ids: set cac recipe_id da luu trong Collection
+        unit_display_map: dict map Unit.slug -> Unit.name de hien thi unit
 
     Returns:
         (score: int, missing_ingredients: list)
     """
     score = 0
     missing = []
+    unit_display_map = unit_display_map or {}
 
     for ri in recipe.recipe_ingredients.all():
         if ri.ingredient.category == 'STAPLE':
@@ -53,6 +55,7 @@ def calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids):
                 'category': ri.ingredient.category,
                 'quantity': ri.quantity,
                 'unit': ri.unit,
+                'unit_display': unit_display_map.get(ri.unit, ri.unit),
             })
 
     if recipe.id in saved_recipe_ids:
@@ -76,6 +79,7 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
     """
     from apps.recipes.models import Recipe
     from apps.social.models import Collection, CollectionRecipe
+    from apps.ingredients.models import Unit
 
     pantry_ingredient_ids = set(
         user.pantry_items.values_list('ingredient_id', flat=True)
@@ -131,10 +135,19 @@ def get_recommendations(user, mode, exclude_ingredient_ids=None):
 
     # Evaluate queryset thành list để đảm bảo prefetch_related hoạt động đúng
     recipes_list = list(recipes)
+    unit_display_map = {
+        slug: name
+        for slug, name in Unit.objects.values_list('slug', 'name')
+    }
 
     results = []
     for recipe in recipes_list:
-        score, missing = calculate_recipe_score(recipe, pantry_ingredient_ids, saved_recipe_ids)
+        score, missing = calculate_recipe_score(
+            recipe,
+            pantry_ingredient_ids,
+            saved_recipe_ids,
+            unit_display_map=unit_display_map
+        )
         missing_count = len(missing)
 
         if mode == 'COOK_NOW' and missing_count == 0:

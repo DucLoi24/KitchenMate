@@ -6,6 +6,7 @@ from rest_framework import serializers
 from django.db.models import Avg
 
 from apps.accounts.serializers import UserSerializer
+from apps.ingredients.models import Unit
 from .models import Recipe, RecipeCategory, RecipeIngredient, RecipeStep
 
 
@@ -22,10 +23,25 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
     """Serializer cho nguyên liệu trong công thức."""
     ingredient_name = serializers.CharField(source='ingredient.name', read_only=True)
     ingredient_category = serializers.CharField(source='ingredient.category', read_only=True)
+    unit_display = serializers.SerializerMethodField()
+
+    @property
+    def unit_display_map(self):
+        if not hasattr(self, '_unit_display_map'):
+            self._unit_display_map = {
+                slug: name
+                for slug, name in Unit.objects.values_list('slug', 'name')
+            }
+        return self._unit_display_map
+
+    def get_unit_display(self, obj):
+        if not obj.unit:
+            return obj.unit
+        return self.unit_display_map.get(obj.unit, obj.unit)
 
     class Meta:
         model = RecipeIngredient
-        fields = ('id', 'ingredient', 'ingredient_name', 'ingredient_category', 'quantity', 'unit')
+        fields = ('id', 'ingredient', 'ingredient_name', 'ingredient_category', 'quantity', 'unit', 'unit_display')
 
 
 class RecipeStepSerializer(serializers.ModelSerializer):

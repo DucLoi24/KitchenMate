@@ -29,8 +29,6 @@ export const CATEGORY_COLORS = {
   OTHER: 'bg-slate-100 text-slate-600',
 }
 
-export const UNITS = ['g', 'kg', 'ml', 'l', 'cups', 'tbsp', 'tsp', 'piece', 'bun', 'clove', 'slice']
-
 export function useDebounceCallback(callback, delay) {
   const timeoutRef = useRef(null)
   return useCallback((...args) => {
@@ -220,4 +218,4 @@ export function useIngredients(searchQuery = '') {
   }
 }
 
-export default { useRecipeDraft, useIngredients, useDebounceCallback, VISIBILITY, DIFFICULTY, DIFFICULTY_CONFIG, CATEGORY_COLORS, UNITS }
+export default { useRecipeDraft, useIngredients, useDebounceCallback, VISIBILITY, DIFFICULTY, DIFFICULTY_CONFIG, CATEGORY_COLORS }

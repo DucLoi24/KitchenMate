@@ -1,10 +1,17 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, Trash2, Search } from 'lucide-react'
-import { cn } from '@/utils'
-import { CATEGORY_COLORS, UNITS } from '@/hooks/useRecipeDraft'
+import { cn, buildIngredientUnitOptions } from '@/utils'
+import { CATEGORY_COLORS } from '@/hooks/useRecipeDraft'
 import { IngredientSearchInput } from '@/components/ui'
 import { IngredientContributeModal } from '@/components/ui/IngredientContributeModal'
+
+const normalizeUnitText = (value) =>
+  String(value || '').trim().toLocaleLowerCase('vi-VN')
+
+const createCurrentUnitOption = (unit) => {
+  return { value: unit, label: unit }
+}
 
 // Fetch units for an ingredient from backend
 const fetchIngredientUnits = async (ingredientId) => {
@@ -17,11 +24,162 @@ const fetchIngredientUnits = async (ingredientId) => {
   }
 }
 
+const normalizeUnitOption = (unit) => {
+  if (!unit) return null
+
+  if (typeof unit === 'string') {
+    return createCurrentUnitOption(unit)
+  }
+
+  const value = unit.value || unit.slug
+  const label = unit.label || unit.name || value
+  if (!value) return null
+
+  return { value, label }
+}
+
+// Convert stored/API units to dropdown format. value is always slug, label is display name.
+const buildUnitOptions = (units = []) => {
+  if (!Array.isArray(units)) return []
+  return units.map(normalizeUnitOption).filter(Boolean)
+}
+
+const buildUnitsFromApiData = (unitsData) => {
+  const { options, defaultValue } = buildIngredientUnitOptions(unitsData)
+  return { options, defaultValue }
+}
+
+const normalizeUnitValue = (unit, options = [], defaultValue = '') => {
+  if (!unit) return defaultValue || options[0]?.value || ''
+
+  if (options.some((option) => option.value === unit)) {
+    return unit
+  }
+
+  const labelMatch = options.find(
+    (option) => normalizeUnitText(option.label) === normalizeUnitText(unit)
+  )
+  if (labelMatch) return labelMatch.value
+
+  return unit
+}
+
 export function IngredientList({ onChange, data, errors = {} }) {
-  const ingredients = data?.ingredients || []
+  const ingredients = useMemo(() => data?.ingredients || [], [data?.ingredients])
   const [searchOpen, setSearchOpen] = useState(false)
   const [contributeModalOpen, setContributeModalOpen] = useState(false)
   const [contributeQuery, setContributeQuery] = useState('')
+
+  // State to store hydrated units for ingredients loaded from existing recipes
+  // Key: ingredient.id, Value: { options: { value, label }[], defaultValue }
+  const [hydratedUnits, setHydratedUnits] = useState({})
+  const hydratedUnitsRef = useRef({})
+
+  // Get unit options for an ingredient
+  const getUnitOptions = useCallback((ingredient) => {
+    // Priority 1: allowed_units already set on ingredient (from add flow or old draft)
+    const ownOptions = buildUnitOptions(ingredient.allowed_units)
+    if (ownOptions.length > 0) {
+      return ownOptions
+    }
+
+    // Priority 2: hydrated units from API (for existing recipe ingredients)
+    const hydrated = ingredient.ingredient ? hydratedUnits[ingredient.ingredient] : null
+    if (hydrated?.options?.length > 0) {
+      return hydrated.options
+    }
+
+    // Priority 3: preserve an existing stored value, but do not invent generic choices.
+    if (ingredient.unit) {
+      return [createCurrentUnitOption(ingredient.unit)]
+    }
+
+    return []
+  }, [hydratedUnits])
+
+  // Hydrate units for ingredients that don't have allowed_units but DO have an ingredient ID
+  useEffect(() => {
+    const ingredientsNeedingHydration = ingredients.filter(
+      ing => ing.ingredient && (!ing.allowed_units || ing.allowed_units.length === 0)
+    )
+
+    if (ingredientsNeedingHydration.length === 0) return
+
+    let isActive = true
+
+    Promise.all(
+      ingredientsNeedingHydration.map(async (ing) => {
+        if (hydratedUnitsRef.current[ing.ingredient]) return
+        const unitsData = await fetchIngredientUnits(ing.ingredient)
+        if (!isActive) return
+        const unitConfig = buildUnitsFromApiData(unitsData)
+        if (unitConfig.options.length > 0 || unitConfig.defaultValue) {
+          hydratedUnitsRef.current[ing.ingredient] = unitConfig
+        }
+      })
+    ).then(() => {
+      if (!isActive) return
+      setHydratedUnits({ ...hydratedUnitsRef.current })
+    })
+
+    return () => {
+      isActive = false
+    }
+  }, [ingredients])
+
+  // Normalize legacy values such as "Gram" to the canonical slug "g" once options are known.
+  useEffect(() => {
+    if (ingredients.length === 0) return
+
+    let changed = false
+    const normalizedIngredients = ingredients.map((ingredient) => {
+      const hasConfiguredOptions =
+        buildUnitOptions(ingredient.allowed_units).length > 0 ||
+        (ingredient.ingredient && hydratedUnits[ingredient.ingredient]?.options?.length > 0)
+
+      if (!hasConfiguredOptions) return ingredient
+
+      const options = getUnitOptions(ingredient)
+      if (options.length === 0) return ingredient
+
+      const normalizedUnit = normalizeUnitValue(ingredient.unit, options)
+      const normalizedAllowedUnits = buildUnitOptions(ingredient.allowed_units)
+      const hydratedOptions = ingredient.ingredient ? hydratedUnits[ingredient.ingredient]?.options || [] : []
+      const nextIngredient = { ...ingredient }
+      let itemChanged = false
+
+      if (normalizedUnit && normalizedUnit !== ingredient.unit) {
+        nextIngredient.unit = normalizedUnit
+        changed = true
+        itemChanged = true
+      }
+
+      if (
+        ingredient.allowed_units?.length > 0 &&
+        normalizedAllowedUnits.length > 0 &&
+        typeof ingredient.allowed_units[0] !== 'object'
+      ) {
+        nextIngredient.allowed_units = normalizedAllowedUnits
+        changed = true
+        itemChanged = true
+      }
+
+      if (
+        (!ingredient.allowed_units || ingredient.allowed_units.length === 0) &&
+        hydratedOptions.length > 0
+      ) {
+        nextIngredient.allowed_units = hydratedOptions
+        changed = true
+        itemChanged = true
+      }
+
+      return itemChanged ? nextIngredient : ingredient
+    })
+
+    if (changed) {
+      onChange({ ...data, ingredients: normalizedIngredients })
+    }
+  }, [ingredients, getUnitOptions, onChange, data, hydratedUnits])
 
   const handleRequestContribute = (query) => {
     setContributeQuery(query)
@@ -35,13 +193,20 @@ export function IngredientList({ onChange, data, errors = {} }) {
   }
 
   const handleAddIngredient = async (ingredient) => {
-    // Fetch allowed units from backend
-    const unitsData = await fetchIngredientUnits(ingredient.id)
-    const allowedUnits = unitsData.allowed_units || []
-    const defaultUnit = unitsData.default_unit
+    let unitsData = await fetchIngredientUnits(ingredient.id)
 
-    // Get the default unit name or fallback to 'g'
-    const defaultUnitName = defaultUnit?.name || 'g'
+    if (
+      (!unitsData.allowed_units || unitsData.allowed_units.length === 0) &&
+      ingredient.allowed_units?.length > 0
+    ) {
+      unitsData = {
+        default_unit: ingredient.default_unit || null,
+        allowed_units: ingredient.allowed_units,
+      }
+    }
+
+    const { options: unitOptions, defaultValue } = buildUnitsFromApiData(unitsData)
+    const defaultUnitSlug = normalizeUnitValue(defaultValue, unitOptions)
 
     const newIngredient = {
       id: `temp-${Date.now()}`,
@@ -49,8 +214,8 @@ export function IngredientList({ onChange, data, errors = {} }) {
       ingredient_name: ingredient.name,
       ingredient_category: ingredient.category || 'OTHER',
       quantity: '',
-      unit: defaultUnitName,
-      allowed_units: allowedUnits.map(u => u.name), // Store allowed unit names for dropdown
+      unit: defaultUnitSlug,
+      allowed_units: unitOptions,
     }
     const currentIngredients = data?.ingredients || []
     onChange({ ...data, ingredients: [...currentIngredients, newIngredient] })
@@ -66,14 +231,6 @@ export function IngredientList({ onChange, data, errors = {} }) {
   const handleRemoveIngredient = (index) => {
     const currentIngredients = (data?.ingredients || []).filter((_, i) => i !== index)
     onChange({ ...data, ingredients: currentIngredients })
-  }
-
-  // Get unit options for an ingredient - use allowed_units if available, otherwise fallback to UNITS
-  const getUnitOptions = (ingredient) => {
-    if (ingredient.allowed_units && ingredient.allowed_units.length > 0) {
-      return ingredient.allowed_units
-    }
-    return UNITS
   }
 
   return (
@@ -177,17 +334,39 @@ export function IngredientList({ onChange, data, errors = {} }) {
                     className="w-20 h-8 px-2 text-sm text-center bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                   />
                   <select
-                    value={ingredient.unit}
+                    value={normalizeUnitValue(ingredient.unit, getUnitOptions(ingredient))}
                     onChange={(e) =>
                       handleUpdateIngredient(index, 'unit', e.target.value)
                     }
+                    disabled={getUnitOptions(ingredient).length === 0}
                     className="h-8 px-2 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--color-primary)] transition-colors cursor-pointer"
                   >
-                    {getUnitOptions(ingredient).map((unit) => (
-                      <option key={unit} value={unit}>
-                        {unit}
-                      </option>
-                    ))}
+                    {(() => {
+                      const opts = getUnitOptions(ingredient)
+                      if (opts.length === 0) {
+                        return <option value="">Chưa có đơn vị</option>
+                      }
+
+                      const selectedValue = normalizeUnitValue(ingredient.unit, opts)
+                      const currentInOptions = opts.some(o => o.value === selectedValue)
+                      if (!currentInOptions && selectedValue) {
+                        return [
+                          <option key="__current__" value={selectedValue}>
+                            {selectedValue}
+                          </option>,
+                          ...opts.map((unit) => (
+                            <option key={unit.value} value={unit.value}>
+                              {unit.label}
+                            </option>
+                          ))
+                        ]
+                      }
+                      return opts.map((unit) => (
+                        <option key={unit.value} value={unit.value}>
+                          {unit.label}
+                        </option>
+                      ))
+                    })()}
                   </select>
                 </div>
 

@@ -2,10 +2,11 @@ import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Plus, ShoppingBasket, RefreshCw, Check, Trash2, X, Loader2, ChefHat, Search } from 'lucide-react'
 import { toast } from 'react-hot-toast'
-import { cn } from '@/utils'
+import { cn, buildIngredientUnitOptions } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { IngredientSearchInput } from '@/components/ui'
 import { useShoppingList, useAddToShoppingList, useUpdateShoppingItem, useRemoveFromShoppingList, useMarkAsPurchased, useMarkAsUnpurchased } from '@/hooks/useKitchen'
+import { adminApi } from '@/api/adminApi'
 
 // Skeleton loading
 function LoadingSkeleton() {
@@ -311,15 +312,9 @@ function AddItemForm({ onAdd, isAdding }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedIngredient, setSelectedIngredient] = useState(null)
   const [quantity, setQuantity] = useState('')
-  const [unit, setUnit] = useState('gram')
-
-  const UNITS = [
-    { value: 'gram', label: 'gram' },
-    { value: 'kilogram', label: 'kg' },
-    { value: 'ml', label: 'ml' },
-    { value: 'liter', label: 'L' },
-    { value: 'piece', label: 'cái' },
-  ]
+  const [unit, setUnit] = useState('')
+  const [availableUnits, setAvailableUnits] = useState([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -327,26 +322,59 @@ function AddItemForm({ onAdd, isAdding }) {
       toast.error('Số lượng phải lớn hơn 0')
       return
     }
+    if (!selectedIngredient) {
+      toast.error('Vui lòng chọn nguyên liệu')
+      return
+    }
+    if (!unit) {
+      toast.error('Nguyên liệu này chưa có đơn vị hợp lệ')
+      return
+    }
 
     try {
       await onAdd({
-        ingredient: selectedIngredient?.id || null,
-        ingredient_name: selectedIngredient ? undefined : selectedIngredient?.name || '',
+        ingredient: selectedIngredient.id,
         quantity: parseFloat(quantity),
         unit,
       })
       setSearchQuery('')
       setSelectedIngredient(null)
       setQuantity('')
-      setUnit('gram')
+      setUnit('')
+      setAvailableUnits([])
     } catch {
       // Error handled by caller
     }
   }
 
-  const handleSelectIngredient = (ingredient) => {
+  const handleSelectIngredient = async (ingredient) => {
     setSelectedIngredient(ingredient)
     setSearchQuery(ingredient.name)
+    setAvailableUnits([])
+    setUnit('')
+    setIsLoadingUnits(true)
+
+    try {
+      let unitData = null
+      if (ingredient.allowed_units?.length) {
+        unitData = {
+          default_unit: ingredient.default_unit || null,
+          allowed_units: ingredient.allowed_units,
+        }
+      } else {
+        const response = await adminApi.getIngredientUnits(ingredient.id)
+        unitData = response?.data || null
+      }
+
+      const { options, defaultValue } = buildIngredientUnitOptions(unitData)
+      setAvailableUnits(options)
+      setUnit(defaultValue || options[0]?.value || '')
+    } catch {
+      setAvailableUnits([])
+      setUnit('')
+    } finally {
+      setIsLoadingUnits(false)
+    }
   }
 
   return (
@@ -356,7 +384,12 @@ function AddItemForm({ onAdd, isAdding }) {
         <div className="relative flex-1">
           <IngredientSearchInput
             value={searchQuery}
-            onChange={(val) => { setSearchQuery(val); setSelectedIngredient(null) }}
+            onChange={(val) => {
+              setSearchQuery(val)
+              setSelectedIngredient(null)
+              setAvailableUnits([])
+              setUnit('')
+            }}
             onSelect={handleSelectIngredient}
             placeholder="Tìm hoặc thêm nguyên liệu..."
           />
@@ -404,16 +437,24 @@ function AddItemForm({ onAdd, isAdding }) {
             <select
               value={unit}
               onChange={(e) => setUnit(e.target.value)}
+              disabled={isLoadingUnits || availableUnits.length === 0}
               className={cn(
                 'w-full h-11 px-2 rounded-[var(--radius-md)]',
                 'border border-[var(--color-border)] bg-[var(--color-surface)]',
                 'text-[var(--color-text)] text-center font-medium',
-                'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
+                'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+                (isLoadingUnits || availableUnits.length === 0) && 'opacity-50 cursor-not-allowed'
               )}
             >
-              {UNITS.map(u => (
-                <option key={u.value} value={u.value}>{u.label}</option>
-              ))}
+              {isLoadingUnits ? (
+                <option value="">Đang tải...</option>
+              ) : availableUnits.length === 0 ? (
+                <option value="">Chưa có đơn vị</option>
+              ) : (
+                availableUnits.map(u => (
+                  <option key={u.value} value={u.value}>{u.label}</option>
+                ))
+              )}
             </select>
           </div>
           <div className="flex items-end">

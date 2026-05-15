@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Plus } from 'lucide-react'
-import { cn } from '@/utils'
+import { cn, buildIngredientUnitOptions } from '@/utils'
 import { Button } from '@/components/ui/Button'
 import { IngredientSearchInput } from '@/components/ui'
 import { adminApi } from '@/api/adminApi'
@@ -14,7 +14,7 @@ export function PantryAddBottomSheet({
 }) {
   const [selectedIngredient, setSelectedIngredient] = useState(null)
   const [quantity, setQuantity] = useState('1')
-  const [unit, setUnit] = useState('gram')
+  const [unit, setUnit] = useState('')
   const [availableUnits, setAvailableUnits] = useState([])
   const [error, setError] = useState('')
 
@@ -22,53 +22,30 @@ export function PantryAddBottomSheet({
     setSelectedIngredient(ingredient)
     setError('')
 
-    // Build units list from ingredient's allowed_units or fallback to all active units
-    let unitsList
+    let unitData = {
+      default_unit: ingredient.default_unit || null,
+      allowed_units: ingredient.allowed_units || [],
+    }
 
-    if (ingredient.allowed_units && ingredient.allowed_units.length > 0) {
-      // Filter to only active units and transform to dropdown format
-      unitsList = ingredient.allowed_units
-        .filter(u => u.is_active !== false)
-        .map(u => ({ value: u.slug, label: u.name }))
-    } else {
-      // Fallback: fetch all active units from admin API
+    if (!unitData.allowed_units.length) {
       try {
-        const response = await adminApi.getUnits()
-        const allUnits = response?.data || []
-        unitsList = allUnits
-          .filter(u => u.is_active !== false)
-          .map(u => ({ value: u.slug, label: u.name }))
+        const response = await adminApi.getIngredientUnits(ingredient.id)
+        unitData = response?.data || unitData
       } catch (err) {
-        console.error('Failed to fetch units:', err)
-        unitsList = []
+        console.error('Failed to fetch ingredient units:', err)
       }
     }
+
+    const { options: unitsList, defaultValue } = buildIngredientUnitOptions(unitData)
 
     setAvailableUnits(unitsList)
-
-    // Set default unit: default_unit.slug > first allowed_unit > first available
-    if (unitsList.length > 0) {
-      let selectedUnitSlug
-
-      if (ingredient.default_unit?.slug) {
-        selectedUnitSlug = ingredient.default_unit.slug
-      } else if (ingredient.allowed_units && ingredient.allowed_units.length > 0) {
-        const firstActive = ingredient.allowed_units.find(u => u.is_active !== false)
-        selectedUnitSlug = firstActive?.slug || unitsList[0].value
-      } else {
-        selectedUnitSlug = unitsList[0].value
-      }
-
-      setUnit(selectedUnitSlug)
-    } else {
-      setUnit('')
-    }
+    setUnit(defaultValue || unitsList[0]?.value || '')
   }
 
   const handleClear = () => {
     setSelectedIngredient(null)
     setQuantity('1')
-    setUnit('gram')
+    setUnit('')
     setAvailableUnits([])
     setError('')
   }

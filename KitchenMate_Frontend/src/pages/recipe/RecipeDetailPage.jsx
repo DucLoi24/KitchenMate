@@ -15,14 +15,13 @@ import { useAddToShoppingList, useShoppingList, usePantry } from '@/hooks/useKit
 import { useAuth } from '@/components/auth/useAuth'
 import { socialApi } from '@/api/socialApi'
 import { Badge, Button, CategoryBadge, StarRatingDisplay } from '@/components/ui'
-import { cn } from '@/utils'
+import { cn, buildIngredientUnitOptions } from '@/utils'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
 import { AddToCollectionModal } from '@/components/social/AddToCollectionModal'
 import { recipeApi } from '@/api/recipeApi'
 import { ReviewsSection } from '@/components/recipe/ReviewsSection'
 import { ReportModal } from '@/components/report/ReportModal'
 import { adminApi } from '@/api/adminApi'
-import { buildIngredientUnitOptions } from '@/utils'
 
 gsap.registerPlugin(ScrollTrigger)
 
@@ -266,6 +265,7 @@ function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients 
           const inShoppingList = shoppingIds.has(ing.ingredient)
           const inPantry = pantryIds.has(ing.ingredient)
           const isAdded = inShoppingList || inPantry
+          const unitLabel = ing.unit_display || ing.unit
 
           return (
             <li key={ing.id}>
@@ -275,7 +275,7 @@ function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients 
                     {ing.ingredient_name}
                   </span>
                   <span className="text-sm text-[var(--color-text-secondary)]">
-                    {ing.quantity} {ing.unit}
+                    {ing.quantity} {unitLabel}
                   </span>
                 </div>
                 {!isAdded && (
@@ -635,7 +635,9 @@ function CookModeOverlay({ recipe, isOpen, onClose }) {
             {ingredients.map((ing) => (
               <li key={ing.id} className="text-sm text-[var(--color-dark-text-secondary)]">
                 <span className="text-[var(--color-dark-text)]">{ing.ingredient_name}</span>
-                <span className="ml-1">- {ing.quantity} {ing.unit}</span>
+                <span className="ml-1">
+                  - {ing.quantity} {ing.unit_display || ing.unit}
+                </span>
               </li>
             ))}
           </ul>
