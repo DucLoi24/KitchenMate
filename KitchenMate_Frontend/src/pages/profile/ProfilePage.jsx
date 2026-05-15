@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Camera, User, Mail, BookOpen, FolderOpen, Save, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Camera, User, Mail, BookOpen, FolderOpen, Save, X, Users, UserCheck, Star, Calendar } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -26,7 +27,13 @@ export function ProfilePage() {
   const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [stats, setStats] = useState({ recipe_count: 0, total_likes: 0, average_rating: null })
+  const [stats, setStats] = useState({
+    recipe_count: 0,
+    total_likes: 0,
+    average_rating: null,
+    followers_count: 0,
+    following_count: 0,
+  })
   const [formData, setFormData] = useState({
     full_name: user?.full_name || '',
     bio: user?.bio || '',
@@ -209,6 +216,18 @@ export function ProfilePage() {
                         <BookOpen className="w-3.5 h-3.5 mr-1" />
                         {stats.recipe_count || 0} công thức
                       </Badge>
+                      <Link to={`/profile/${user?.id}/followers`} aria-label={`${stats.followers_count || 0} người theo dõi`}>
+                        <Badge variant="muted" size="md">
+                          <Users className="w-3.5 h-3.5 mr-1" />
+                          {stats.followers_count || 0} người theo dõi
+                        </Badge>
+                      </Link>
+                      <Link to={`/profile/${user?.id}/following`} aria-label={`${stats.following_count || 0} đang theo dõi`}>
+                        <Badge variant="muted" size="md">
+                          <UserCheck className="w-3.5 h-3.5 mr-1" />
+                          {stats.following_count || 0} đang theo dõi
+                        </Badge>
+                      </Link>
                       <Badge variant="muted" size="md">
                         <FolderOpen className="w-3.5 h-3.5 mr-1" />
                         {stats.total_likes || 0} lượt thích
@@ -325,23 +344,34 @@ export function ProfilePage() {
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                   {[
                     { label: 'Công thức', value: stats.recipe_count || 0, icon: BookOpen },
+                    { label: 'Người theo dõi', value: stats.followers_count || 0, icon: Users, to: `/profile/${user?.id}/followers` },
+                    { label: 'Đang theo dõi', value: stats.following_count || 0, icon: UserCheck, to: `/profile/${user?.id}/following` },
                     { label: 'Lượt thích', value: stats.total_likes || 0, icon: FolderOpen },
-                    { label: 'Đánh giá', value: stats.average_rating ? stats.average_rating.toFixed(1) : '—', icon: '★' },
-                    { label: 'Ngày tham gia', value: user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' }) : '—', icon: '📅' }
+                    { label: 'Đánh giá', value: stats.average_rating ? stats.average_rating.toFixed(1) : '—', icon: Star },
+                    { label: 'Ngày tham gia', value: user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN', { month: 'short', day: 'numeric', year: 'numeric' }) : '—', icon: Calendar }
                   ].map((stat) => (
-                    <div
-                      key={stat.label}
-                      className="bg-[var(--color-background-alt)] rounded-[var(--radius-md)] p-4 text-center"
-                    >
-                      <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
-                        {typeof stat.icon === 'string' ? (
-                          <span className="text-lg">{stat.icon}</span>
-                        ) : (
-                          <stat.icon className="w-5 h-5 text-[var(--color-primary)]" />
-                        )}
-                      </div>
-                      <p className="text-2xl font-bold text-[var(--color-text)]">{stat.value}</p>
-                      <p className="text-sm text-[var(--color-text-muted)]">{stat.label}</p>
+                    <div key={stat.label} className="contents">
+                      {stat.to ? (
+                        <Link
+                          to={stat.to}
+                          aria-label={`Xem ${stat.label.toLowerCase()}`}
+                          className="bg-[var(--color-background-alt)] rounded-[var(--radius-md)] p-4 text-center transition-colors hover:bg-[var(--color-border)]"
+                        >
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+                            <stat.icon className="w-5 h-5 text-[var(--color-primary)]" />
+                          </div>
+                          <p className="text-2xl font-bold text-[var(--color-text)]">{stat.value}</p>
+                          <p className="text-sm text-[var(--color-text-muted)]">{stat.label}</p>
+                        </Link>
+                      ) : (
+                        <div className="bg-[var(--color-background-alt)] rounded-[var(--radius-md)] p-4 text-center">
+                          <div className="w-10 h-10 mx-auto mb-2 rounded-full bg-[var(--color-primary)]/10 flex items-center justify-center">
+                            <stat.icon className="w-5 h-5 text-[var(--color-primary)]" />
+                          </div>
+                          <p className="text-2xl font-bold text-[var(--color-text)]">{stat.value}</p>
+                          <p className="text-sm text-[var(--color-text-muted)]">{stat.label}</p>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

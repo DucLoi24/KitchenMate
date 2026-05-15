@@ -66,6 +66,29 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'email', 'created_at', 'is_staff')
 
 
+class FollowUserSerializer(serializers.ModelSerializer):
+    """Serializer cho user card trong danh sách followers/following."""
+    followers_count = serializers.SerializerMethodField()
+    is_following = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar_url', 'bio', 'followers_count', 'is_following')
+
+    def get_followers_count(self, obj):
+        if hasattr(obj, 'followers_count'):
+            return obj.followers_count
+        return obj.follower_relations.count()
+
+    def get_is_following(self, obj):
+        request = self.context.get('request')
+        if not request or not request.user.is_authenticated:
+            return False
+        if request.user.pk == obj.pk:
+            return False
+        return obj.follower_relations.filter(follower=request.user).exists()
+
+
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """Serializer cập nhật profile (chỉ cho phép sửa một số trường)."""
 

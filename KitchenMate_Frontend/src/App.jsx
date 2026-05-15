@@ -4,7 +4,7 @@ import { AuthProvider } from '@/components/auth/AuthContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { AdminGuard } from '@/components/auth/AdminGuard'
 import { LoginPage, RegisterPage, ForgotPasswordPage, ResetPasswordPage, GoogleOAuthCallbackPage } from '@/pages/auth'
-import { ProfilePage, PublicProfilePage } from '@/pages/profile'
+import { FollowListPage, ProfilePage, PublicProfilePage } from '@/pages/profile'
 import { HomePage } from '@/pages/home'
 import { ExplorePage } from '@/pages/explore'
 import { RecipeDetailPage, RecipeEditorPage, MyRecipesPage } from '@/pages/recipe'
@@ -96,6 +96,8 @@ function App() {
                 <Route path="/profile" element={
                   <AuthGuard><ProfilePage /></AuthGuard>
                 } />
+                <Route path="/profile/:userId/followers" element={<FollowListPage />} />
+                <Route path="/profile/:userId/following" element={<FollowListPage />} />
                 <Route path="/profile/:userId" element={<PublicProfilePage />} />
 
                 {/* Admin routes */}

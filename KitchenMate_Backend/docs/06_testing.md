@@ -4,14 +4,14 @@
 
 Dự án sử dụng **pytest** kết hợp **Hypothesis** (Property-Based Testing) để đảm bảo tính đúng đắn của hệ thống.
 
-**Kết quả:** 192 tests pass (tính đến Phase 11)
+Test suite có cả unit, integration, performance và property-based tests. Số lượng test thay đổi theo từng feature; dùng `pytest` để kiểm tra trạng thái hiện tại.
 
 | Loại test | Số lượng | Mô tả |
 |---|---|---|
-| Unit tests | 70 | Test models, serializers, permissions, services |
-| Integration tests | 29 | Test API endpoints, auth flow, workflows |
-| Performance tests | 5 | Test response time, N+1 query |
-| Phase 8-10 tests | 88 | Upload, filter, stats |
+| Unit tests | Nhiều file | Test models, serializers, permissions, services |
+| Integration tests | Nhiều file | Test API endpoints, auth flow, workflows |
+| Performance tests | Nhiều file | Test response time, N+1 query |
+| Property-based tests | Nhiều file | Test invariants bằng Hypothesis |
 
 ---
 
@@ -36,6 +36,7 @@ tests/
 ├── # Phase 10 — Statistics
 ├── test_phase10_stats_properties.py        # PBT: stats calculations
 ├── test_phase10_stats_integration.py       # Integration: stats endpoints
+├── test_user_follow_api.py                 # Integration: follow/unfollow + followers/following
 │
 ├── # Phase 11 — Full Test Suite
 ├── test_phase11_unit_models.py             # Unit: models validation
@@ -169,6 +170,16 @@ Sử dụng **Hypothesis** để kiểm tra các tính chất bất biến của
 - **Logout:** Blacklist refresh token.
 - **Blacklist:** Refresh token đã blacklist không dùng được nữa.
 - **Forgot-password:** Luôn trả về 200 (không lộ email tồn tại hay không).
+
+### test_user_follow_api.py
+
+Kiểm tra luồng theo dõi người dùng:
+
+- **Follow success:** User đăng nhập có thể theo dõi user khác, stats cập nhật `followers_count`, `following_count`, `is_following`.
+- **Self-follow blocked:** Không thể theo dõi chính mình, trả `400`.
+- **Duplicate follow:** Follow trùng không tạo quan hệ duplicate, trả trạng thái đang theo dõi.
+- **Unfollow:** Hủy theo dõi trả `is_following=false` và cập nhật stats.
+- **Public lists:** `/followers/` và `/following/` public, có pagination và trả user card.
 
 ### test_phase11_integration_workflows.py
 

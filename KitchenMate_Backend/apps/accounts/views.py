@@ -12,6 +12,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Count
 from django.http import JsonResponse, HttpResponse
 from django.views import View
 from django.utils.decorators import method_decorator
@@ -35,13 +36,23 @@ from .serializers import (
     RegisterSerializer,
     UserSerializer,
     UserProfileUpdateSerializer,
+    FollowUserSerializer,
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
 )
+from .models import UserFollow
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
+
+
+def _is_following(request, user):
+    if not request.user.is_authenticated:
+        return False
+    if request.user.pk == user.pk:
+        return False
+    return UserFollow.objects.filter(follower=request.user, following=user).exists()
 
 
 class GoogleOAuthView(APIView):
@@ -573,6 +584,108 @@ class UserPublicProfileView(APIView):
         return Response({'success': True, 'data': serializer.data})
 
 
+class FollowUserView(APIView):
+    """
+    POST /api/accounts/{id}/follow/ - Theo dõi người dùng.
+    DELETE /api/accounts/{id}/follow/ - Hủy theo dõi người dùng.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_active=True)
+        if request.user.pk == user.pk:
+            return Response(
+                {'success': False, 'error': {'message': 'Bạn không thể theo dõi chính mình.'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        _, created = UserFollow.objects.get_or_create(
+            follower=request.user,
+            following=user,
+        )
+        return Response(
+            {
+                'success': True,
+                'message': 'Đã theo dõi người dùng.' if created else 'Bạn đã theo dõi người dùng này.',
+                'data': {'is_following': True},
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
+
+    def delete(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_active=True)
+        UserFollow.objects.filter(follower=request.user, following=user).delete()
+        return Response({
+            'success': True,
+            'message': 'Đã hủy theo dõi người dùng.',
+            'data': {'is_following': False},
+        })
+
+
+class UserFollowersView(APIView):
+    """
+    GET /api/accounts/{id}/followers/
+    Trả về danh sách người đang theo dõi user, public và có pagination.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_active=True)
+        followers = User.objects.filter(
+            following_relations__following=user,
+            is_active=True,
+        ).annotate(
+            followers_count=Count('follower_relations', distinct=True)
+        ).order_by('full_name', 'id')
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        page = paginator.paginate_queryset(followers, request)
+        serializer = FollowUserSerializer(page, many=True, context={'request': request})
+
+        return Response({
+            'success': True,
+            'data': {
+                'count': paginator.page.paginator.count,
+                'next': paginator.get_next_link(),
+                'previous': paginator.get_previous_link(),
+                'results': serializer.data,
+            }
+        })
+
+
+class UserFollowingView(APIView):
+    """
+    GET /api/accounts/{id}/following/
+    Trả về danh sách người user đang theo dõi, public và có pagination.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request, pk):
+        user = get_object_or_404(User, pk=pk, is_active=True)
+        following = User.objects.filter(
+            follower_relations__follower=user,
+            is_active=True,
+        ).annotate(
+            followers_count=Count('follower_relations', distinct=True)
+        ).order_by('full_name', 'id')
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        page = paginator.paginate_queryset(following, request)
+        serializer = FollowUserSerializer(page, many=True, context={'request': request})
+
+        return Response({
+            'success': True,
+            'data': {
+                'count': paginator.page.paginator.count,
+                'next': paginator.get_next_link(),
+                'previous': paginator.get_previous_link(),
+                'results': serializer.data,
+            }
+        })
+
+
 class ForgotPasswordView(APIView):
     """
     POST /api/auth/forgot-password/
@@ -720,11 +833,17 @@ class UserStatsView(APIView):
         if average_rating is not None:
             average_rating = round(average_rating, 2)
 
+        followers_count = UserFollow.objects.filter(following=user).count()
+        following_count = UserFollow.objects.filter(follower=user).count()
+
         return Response({
             'success': True,
             'data': {
                 'recipe_count': recipe_count,
                 'total_likes': total_likes,
                 'average_rating': average_rating,
+                'followers_count': followers_count,
+                'following_count': following_count,
+                'is_following': _is_following(request, user),
             }
         })

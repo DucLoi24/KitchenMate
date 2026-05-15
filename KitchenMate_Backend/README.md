@@ -190,10 +190,17 @@ Sau khi chạy server, truy cập:
 
 | Method | Endpoint | Mô tả | Auth Required |
 |--------|----------|-------|:---:|
-| GET | `/api/accounts/profile/` | Xem profile của mình | Yes |
-| PATCH | `/api/accounts/profile/` | Cập nhật profile | Yes |
-| POST | `/api/accounts/change-password/` | Đổi mật khẩu | Yes |
-| POST | `/api/accounts/upload/avatar/` | Upload ảnh đại diện | Yes |
+| GET | `/api/accounts/me/` | Xem profile của mình | Yes |
+| PATCH | `/api/accounts/me/` | Cập nhật profile | Yes |
+| POST | `/api/accounts/me/change-password/` | Đổi mật khẩu | Yes |
+| POST | `/api/accounts/me/avatar/` | Upload ảnh đại diện | Yes |
+| GET | `/api/accounts/{id}/` | Xem profile công khai | No |
+| GET | `/api/accounts/{id}/recipes/` | Danh sách công thức PUBLIC của user | No |
+| GET | `/api/accounts/{id}/stats/` | Thống kê user, gồm số followers/following | No |
+| POST | `/api/accounts/{id}/follow/` | Theo dõi user khác | Yes |
+| DELETE | `/api/accounts/{id}/follow/` | Hủy theo dõi user khác | Yes |
+| GET | `/api/accounts/{id}/followers/` | Danh sách người theo dõi user | No |
+| GET | `/api/accounts/{id}/following/` | Danh sách user đang theo dõi | No |
 
 ### Ingredients
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { PublicProfilePage } from './PublicProfilePage'
 
@@ -15,8 +15,10 @@ vi.mock('react-hot-toast', () => ({
   toast: { error: vi.fn(), success: vi.fn() },
 }))
 
+const mockCurrentUser = vi.hoisted(() => ({ value: null }))
+
 vi.mock('@/components/auth/useAuth', () => ({
-  useAuth: () => ({ user: null }),
+  useAuth: () => ({ user: mockCurrentUser.value }),
 }))
 
 vi.mock('@/components/report/ReportModal', () => ({
@@ -27,6 +29,8 @@ const mockAuthApi = vi.hoisted(() => ({
   getPublicProfile: vi.fn(),
   getUserStats: vi.fn(),
   getUserRecipes: vi.fn(),
+  followUser: vi.fn(),
+  unfollowUser: vi.fn(),
 }))
 
 vi.mock('@/api/authApi', () => ({
@@ -36,6 +40,7 @@ vi.mock('@/api/authApi', () => ({
 describe('PublicProfilePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCurrentUser.value = null
     mockAuthApi.getPublicProfile.mockResolvedValue({
       data: {
         id: 'user-1',
@@ -50,6 +55,9 @@ describe('PublicProfilePage', () => {
         recipe_count: 1,
         total_likes: 0,
         average_rating: null,
+        followers_count: 0,
+        following_count: 0,
+        is_following: false,
       },
     })
     mockAuthApi.getUserRecipes.mockResolvedValue({
@@ -83,5 +91,55 @@ describe('PublicProfilePage', () => {
     })
     expect(screen.getByText('Dễ')).toBeInTheDocument()
     expect(screen.queryByText('Bộ sưu tập')).not.toBeInTheDocument()
+  })
+
+  it('renders the existing following state from user stats', async () => {
+    mockCurrentUser.value = { id: 'viewer-1' }
+    mockAuthApi.getUserStats.mockResolvedValueOnce({
+      data: {
+        recipe_count: 1,
+        total_likes: 0,
+        average_rating: null,
+        followers_count: 7,
+        following_count: 3,
+        is_following: true,
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/profile/user-1']}>
+        <Routes>
+          <Route path="/profile/:userId" element={<PublicProfilePage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('button', { name: /Đã theo dõi/i })).toBeInTheDocument()
+    expect(screen.getByText('7')).toBeInTheDocument()
+    expect(screen.getByText('người theo dõi')).toBeInTheDocument()
+    expect(screen.getByText('3')).toBeInTheDocument()
+    expect(screen.getByText('đang theo dõi')).toBeInTheDocument()
+  })
+
+  it('calls follow API and updates the follow button', async () => {
+    mockCurrentUser.value = { id: 'viewer-1' }
+    mockAuthApi.followUser.mockResolvedValueOnce({
+      data: { is_following: true },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/profile/user-1']}>
+        <Routes>
+          <Route path="/profile/:userId" element={<PublicProfilePage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /^Theo dõi$/i }))
+
+    await waitFor(() => {
+      expect(mockAuthApi.followUser).toHaveBeenCalledWith('user-1')
+    })
+    expect(await screen.findByRole('button', { name: /Đã theo dõi/i })).toBeInTheDocument()
   })
 })

@@ -41,6 +41,7 @@ export function PublicProfilePage() {
   const [recipes, setRecipes] = useState([])
   const [isLoading, setIsLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
+  const [isFollowLoading, setIsFollowLoading] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
 
   const isOwnProfile = currentUser?.id === userId || currentUser?.uuid === userId
@@ -56,6 +57,7 @@ export function PublicProfilePage() {
 
         setProfile(profileRes.data)
         setStats(statsRes.data)
+        setIsFollowing(Boolean(statsRes.data?.is_following))
 
         const recipesRes = await authApi.getUserRecipes(userId)
         setRecipes(recipesRes.data?.results || [])
@@ -69,9 +71,32 @@ export function PublicProfilePage() {
     fetchProfileData()
   }, [userId])
 
-  const handleFollow = () => {
-    setIsFollowing(!isFollowing)
-    toast.success(isFollowing ? 'Đã hủy theo dõi' : 'Đã theo dõi')
+  const handleFollow = async () => {
+    if (!currentUser) {
+      toast.error('Vui lòng đăng nhập để theo dõi người dùng')
+      return
+    }
+
+    const nextIsFollowing = !isFollowing
+    setIsFollowLoading(true)
+    try {
+      if (nextIsFollowing) {
+        await authApi.followUser(userId)
+      } else {
+        await authApi.unfollowUser(userId)
+      }
+      setIsFollowing(nextIsFollowing)
+      setStats(prev => ({
+        ...prev,
+        followers_count: Math.max(0, (prev?.followers_count || 0) + (nextIsFollowing ? 1 : -1)),
+        is_following: nextIsFollowing,
+      }))
+      toast.success(nextIsFollowing ? 'Đã theo dõi' : 'Đã hủy theo dõi')
+    } catch {
+      toast.error('Không thể cập nhật trạng thái theo dõi')
+    } finally {
+      setIsFollowLoading(false)
+    }
   }
 
   if (isLoading) {
@@ -159,6 +184,7 @@ export function PublicProfilePage() {
                           variant={isFollowing ? 'outline' : 'primary'}
                           size="sm"
                           onClick={handleFollow}
+                          isLoading={isFollowLoading}
                           className="sm:ml-auto"
                           leftIcon={isFollowing ? <UserCheck className="w-4 h-4" /> : <UserPlus className="w-4 h-4" />}
                         >
@@ -201,6 +227,14 @@ export function PublicProfilePage() {
                         <span className="font-bold text-lg text-[var(--color-text)]">{stats?.recipe_count || 0}</span>
                         <span className="text-sm text-[var(--color-text-muted)] ml-1">công thức</span>
                       </div>
+                      <Link to={`/profile/${userId}/followers`} className="text-center sm:text-left hover:text-[var(--color-primary)] transition-colors">
+                        <span className="font-bold text-lg text-[var(--color-text)]">{stats?.followers_count || 0}</span>
+                        <span className="text-sm text-[var(--color-text-muted)] ml-1">người theo dõi</span>
+                      </Link>
+                      <Link to={`/profile/${userId}/following`} className="text-center sm:text-left hover:text-[var(--color-primary)] transition-colors">
+                        <span className="font-bold text-lg text-[var(--color-text)]">{stats?.following_count || 0}</span>
+                        <span className="text-sm text-[var(--color-text-muted)] ml-1">đang theo dõi</span>
+                      </Link>
                       <div className="text-center sm:text-left">
                         <span className="font-bold text-lg text-[var(--color-text)]">{stats?.total_likes || 0}</span>
                         <span className="text-sm text-[var(--color-text-muted)] ml-1">lượt thích</span>

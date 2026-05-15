@@ -308,7 +308,10 @@ Thống kê hoạt động của user.
   "data": {
     "recipe_count": 15,
     "total_likes": 42,
-    "average_rating": 4.35
+    "average_rating": 4.35,
+    "followers_count": 12,
+    "following_count": 5,
+    "is_following": true
   }
 }
 ```
@@ -318,6 +321,123 @@ Thống kê hoạt động của user.
 | `recipe_count` | Số công thức PUBLIC đã đăng |
 | `total_likes` | Tổng số lần công thức được lưu vào Collection |
 | `average_rating` | Điểm rating trung bình trên tất cả PUBLIC recipes (null nếu chưa có review) |
+| `followers_count` | Số người đang theo dõi user này |
+| `following_count` | Số user mà user này đang theo dõi |
+| `is_following` | `true` nếu requester đã đăng nhập và đang theo dõi user này; anonymous hoặc chính profile của mình trả `false` |
+
+---
+
+### POST `/api/accounts/{id}/follow/`
+Theo dõi user khác.
+
+**Permission:** IsAuthenticated
+
+**Path Params:**
+| Param | Mô tả |
+|---|---|
+| `id` | UUID của user cần theo dõi |
+
+**Request Body:** Không có.
+
+**Response 201** (tạo quan hệ mới):
+```json
+{
+  "success": true,
+  "message": "Đã theo dõi người dùng.",
+  "data": {
+    "is_following": true
+  }
+}
+```
+
+**Response 200** (đã theo dõi từ trước):
+```json
+{
+  "success": true,
+  "message": "Bạn đã theo dõi người dùng này.",
+  "data": {
+    "is_following": true
+  }
+}
+```
+
+**Lỗi:**
+- `400` — Không thể theo dõi chính mình: `"Bạn không thể theo dõi chính mình."`
+- `401` — Chưa đăng nhập.
+- `404` — User không tồn tại hoặc đã bị khóa.
+
+---
+
+### DELETE `/api/accounts/{id}/follow/`
+Hủy theo dõi user khác. Endpoint idempotent: nếu chưa theo dõi, vẫn trả về trạng thái không theo dõi.
+
+**Permission:** IsAuthenticated
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Đã hủy theo dõi người dùng.",
+  "data": {
+    "is_following": false
+  }
+}
+```
+
+**Lỗi:**
+- `401` — Chưa đăng nhập.
+- `404` — User không tồn tại hoặc đã bị khóa.
+
+---
+
+### GET `/api/accounts/{id}/followers/`
+Danh sách người đang theo dõi user. Endpoint public và có pagination.
+
+**Permission:** AllowAny
+
+**Query Params:**
+| Param | Mô tả |
+|---|---|
+| `page` | Số trang |
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "data": {
+    "count": 1,
+    "next": null,
+    "previous": null,
+    "results": [
+      {
+        "id": "uuid",
+        "full_name": "Nguyễn Văn A",
+        "avatar_url": null,
+        "bio": "Tôi yêu nấu ăn",
+        "followers_count": 3,
+        "is_following": false
+      }
+    ]
+  }
+}
+```
+
+`is_following` trong từng item phụ thuộc requester hiện tại. Anonymous luôn nhận `false`.
+
+**Lỗi:**
+- `404` — User không tồn tại hoặc đã bị khóa.
+
+---
+
+### GET `/api/accounts/{id}/following/`
+Danh sách user mà user này đang theo dõi. Endpoint public và có pagination.
+
+**Permission:** AllowAny
+
+Response giống `/api/accounts/{id}/followers/`.
+
+**Lỗi:**
+- `404` — User không tồn tại hoặc đã bị khóa.
 
 ---
 
