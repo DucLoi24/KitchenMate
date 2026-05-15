@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useParams, Link } from 'react-router-dom'
-import { User, Calendar, BookOpen, FolderOpen, ArrowLeft, Settings, UserPlus, UserCheck, Flag } from 'lucide-react'
+import { User, Calendar, BookOpen, ArrowLeft, Settings, UserPlus, UserCheck, Flag, Star } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -24,14 +24,21 @@ const itemVariants = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] } }
 }
 
+const difficultyConfig = {
+  EASY: { label: 'Dễ', variant: 'success' },
+  MEDIUM: { label: 'Trung bình', variant: 'warning' },
+  HARD: { label: 'Khó', variant: 'danger' },
+  Dễ: { label: 'Dễ', variant: 'success' },
+  'Trung bình': { label: 'Trung bình', variant: 'warning' },
+  Khó: { label: 'Khó', variant: 'danger' },
+}
+
 export function PublicProfilePage() {
   const { userId } = useParams()
   const { user: currentUser } = useAuth()
   const [profile, setProfile] = useState(null)
   const [stats, setStats] = useState(null)
   const [recipes, setRecipes] = useState([])
-  const [collections, setCollections] = useState([])
-  const [activeTab, setActiveTab] = useState('recipes')
   const [isLoading, setIsLoading] = useState(true)
   const [isFollowing, setIsFollowing] = useState(false)
   const [showReportModal, setShowReportModal] = useState(false)
@@ -52,7 +59,6 @@ export function PublicProfilePage() {
 
         const recipesRes = await authApi.getUserRecipes(userId)
         setRecipes(recipesRes.data?.results || [])
-        setCollections(recipesRes.data?.collections || [])
       } catch {
         toast.error('Không thể tải thông tin người dùng')
       } finally {
@@ -212,48 +218,32 @@ export function PublicProfilePage() {
             </Card>
           </motion.div>
 
-          {/* Tabs */}
+          {/* Public recipes */}
           <motion.div variants={itemVariants}>
-            <div className="flex border-b border-[var(--color-border)]">
-              {[
-                { id: 'recipes', label: 'Công thức', icon: BookOpen, count: recipes.length },
-                { id: 'collections', label: 'Bộ sưu tập', icon: FolderOpen, count: collections.length }
-              ].map(tab => (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-6 py-4 font-medium transition-colors relative ${
-                    activeTab === tab.id
-                      ? 'text-[var(--color-primary)]'
-                      : 'text-[var(--color-text-muted)] hover:text-[var(--color-text)]'
-                  }`}
-                >
-                  <tab.icon className="w-4 h-4" />
-                  {tab.label}
-                  <Badge variant="muted" size="sm">{tab.count}</Badge>
-                  {activeTab === tab.id && (
-                    <motion.div
-                      layoutId="activeTab"
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--color-primary)]"
-                    />
-                  )}
-                </button>
-              ))}
+            <div className="flex items-center gap-3 border-b border-[var(--color-border)] pb-4">
+              <BookOpen className="w-5 h-5 text-[var(--color-primary)]" />
+              <h3 className="font-display text-xl font-semibold text-[var(--color-text)]">
+                Công thức
+              </h3>
+              <Badge variant="muted" size="sm">{recipes.length}</Badge>
             </div>
-          </motion.div>
 
-          {/* Tab Content */}
-          <motion.div variants={itemVariants}>
-            {activeTab === 'recipes' && (
-              <div className="space-y-4">
-                {recipes.length > 0 ? (
-                  recipes.map(recipe => (
+            <div className="space-y-4 pt-4">
+              {recipes.length > 0 ? (
+                recipes.map(recipe => {
+                  const thumbnailUrl = recipe.thumbnail_url || recipe.thumbnail
+                  const avgRating = Number(recipe.avg_rating)
+                  const hasRating = Number.isFinite(avgRating) && avgRating > 0
+                  const ratingCount = recipe.rating_count ?? recipe.review_count ?? 0
+                  const difficulty = difficultyConfig[recipe.difficulty] || difficultyConfig.MEDIUM
+
+                  return (
                     <Card key={recipe.id} shadow="sm" border="default" hover>
                       <CardContent className="p-4">
                         <Link to={`/recipe/${recipe.id}`} className="flex gap-4">
                           <div className="w-20 h-20 rounded-[var(--radius-md)] bg-[var(--color-background-alt)] flex-shrink-0 overflow-hidden">
-                            {recipe.thumbnail ? (
-                              <img src={recipe.thumbnail} alt={recipe.title} className="w-full h-full object-cover" />
+                            {thumbnailUrl ? (
+                              <img src={thumbnailUrl} alt={recipe.title} className="w-full h-full object-cover" />
                             ) : (
                               <div className="w-full h-full flex items-center justify-center">
                                 <BookOpen className="w-8 h-8 text-[var(--color-text-muted)]" />
@@ -266,67 +256,36 @@ export function PublicProfilePage() {
                             </h3>
                             <div className="flex flex-wrap items-center gap-2 text-sm text-[var(--color-text-muted)]">
                               <span className="flex items-center gap-1">
-                                ★ {recipe.avg_rating.toFixed(1)}
-                                <span className="text-xs">({recipe.rating_count})</span>
+                                {hasRating ? (
+                                  <>
+                                    <Star className="w-4 h-4 fill-[var(--color-accent)] text-[var(--color-accent)]" />
+                                    {avgRating.toFixed(1)}
+                                  </>
+                                ) : 'Chưa có đánh giá'}
+                                {hasRating && <span className="text-xs">({ratingCount})</span>}
                               </span>
                               <span>•</span>
                               <span>{recipe.prep_time} phút</span>
                               <Badge
-                                variant={
-                                  recipe.difficulty === 'Dễ' ? 'success' :
-                                  recipe.difficulty === 'Trung bình' ? 'warning' : 'danger'
-                                }
+                                variant={difficulty.variant}
                                 size="sm"
                               >
-                                {recipe.difficulty}
+                                {difficulty.label}
                               </Badge>
                             </div>
                           </div>
                         </Link>
                       </CardContent>
                     </Card>
-                  ))
-                ) : (
-                  <div className="text-center py-12 bg-[var(--color-surface)] rounded-[var(--radius-lg)]">
-                    <BookOpen className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
-                    <p className="text-[var(--color-text-secondary)]">Chưa có công thức nào</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'collections' && (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {collections.length > 0 ? (
-                  collections.map(collection => (
-                    <Link key={collection.id} to={`/collection/${collection.id}`}>
-                      <Card shadow="sm" border="default" hover>
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-12 h-12 rounded-[var(--radius-md)] bg-[var(--color-primary)]/10 flex items-center justify-center flex-shrink-0">
-                              <FolderOpen className="w-6 h-6 text-[var(--color-primary)]" />
-                            </div>
-                            <div>
-                              <h3 className="font-semibold text-[var(--color-text)] mb-1">
-                                {collection.name}
-                              </h3>
-                              <p className="text-sm text-[var(--color-text-muted)]">
-                                {collection.recipe_count} công thức
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ))
-                ) : (
-                  <div className="col-span-2 text-center py-12 bg-[var(--color-surface)] rounded-[var(--radius-lg)]">
-                    <FolderOpen className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
-                    <p className="text-[var(--color-text-secondary)]">Chưa có bộ sưu tập nào</p>
-                  </div>
-                )}
-              </div>
-            )}
+                  )
+                })
+              ) : (
+                <div className="text-center py-12 bg-[var(--color-surface)] rounded-[var(--radius-lg)]">
+                  <BookOpen className="w-12 h-12 mx-auto mb-4 text-[var(--color-text-muted)]" />
+                  <p className="text-[var(--color-text-secondary)]">Chưa có công thức nào</p>
+                </div>
+              )}
+            </div>
           </motion.div>
         </motion.div>
       </main>

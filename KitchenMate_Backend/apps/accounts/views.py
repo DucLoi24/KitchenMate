@@ -662,6 +662,7 @@ class UserRecipesView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request, pk):
+        from django.db.models import Avg
         from apps.recipes.models import Recipe
         from apps.recipes.serializers import RecipeListSerializer
 
@@ -670,7 +671,9 @@ class UserRecipesView(APIView):
             user=user, visibility='PUBLIC'
         ).select_related('user').prefetch_related(
             'recipe_ingredients__ingredient', 'steps'
-        )
+        ).annotate(
+            avg_rating=Avg('reviews__rating')
+        ).order_by('-created_at')
 
         paginator = PageNumberPagination()
         paginator.page_size = 20
