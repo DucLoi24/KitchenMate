@@ -140,16 +140,18 @@ function HeroParallax({ imageUrl, title }) {
 
 function AuthorInfo({ user }) {
   if (!user) return null
+  const avatarUrl = user.avatar_url || user.avatar
+
   return (
     <Link
       to={`/profile/${user.id}`}
       className="flex items-center gap-3 group"
     >
-      {user.avatar ? (
+      {avatarUrl ? (
         <img
-          src={user.avatar}
-          alt={user.full_name}
-          className="w-10 h-10 rounded-full object-cover ring-2 ring-white/50"
+          src={avatarUrl}
+          alt={user.full_name || 'Tác giả công thức'}
+          className="w-10 h-10 rounded-full object-cover ring-2 ring-[var(--color-border)]"
         />
       ) : (
         <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-lg font-medium">
@@ -157,8 +159,8 @@ function AuthorInfo({ user }) {
         </div>
       )}
       <div>
-        <p className="font-medium text-white group-hover:underline">{user.full_name}</p>
-        <p className="text-sm text-white/70">Đăng vào {new Date().toLocaleDateString('vi-VN')}</p>
+        <p className="font-medium text-[var(--color-text)] group-hover:underline">{user.full_name}</p>
+        <p className="text-sm text-[var(--color-text-secondary)]">Đăng vào {new Date().toLocaleDateString('vi-VN')}</p>
       </div>
     </Link>
   )
