@@ -11,6 +11,8 @@ import {
   Pencil,
   Trash2,
   X,
+  ArrowUp,
+  ArrowDown,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -349,7 +351,16 @@ function DeleteConfirmDialog({ isOpen, item, onConfirm, onCancel, loading }) {
 
 // ============ Category List Item ============
 
-function CategoryListItem({ category, onEdit, onDelete, loadCategories }) {
+function CategoryListItem({
+  category,
+  onEdit,
+  onDelete,
+  onMove,
+  loadCategories,
+  showReorderControls,
+  canMoveUp,
+  canMoveDown,
+}) {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [actionLoading, setActionLoading] = useState(false)
@@ -406,6 +417,27 @@ function CategoryListItem({ category, onEdit, onDelete, loadCategories }) {
     }
   }
 
+  const handleMove = async (direction) => {
+    setActionLoading(true)
+    try {
+      await onMove(category.slug, direction)
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 401) {
+        toast.error('Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.')
+      } else if (status === 403) {
+        toast.error('Bạn không có quyền thực hiện thao tác này.')
+      } else if (status === 400) {
+        toast.error(err?.response?.data?.message || 'Không thể di chuyển danh mục xa hơn.')
+      } else {
+        toast.error(err?.response?.data?.message || 'Không thể cập nhật thứ tự danh mục.')
+      }
+      throw err
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   return (
     <>
       <motion.div
@@ -450,6 +482,32 @@ function CategoryListItem({ category, onEdit, onDelete, loadCategories }) {
           <div className="flex items-center gap-2">
             {category.is_active ? (
               <>
+                {showReorderControls && (
+                  <div className="flex items-center gap-1 pr-2 mr-1 border-r border-[var(--color-border)]">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleMove('up')}
+                      disabled={actionLoading || !canMoveUp}
+                      className="h-9 w-9"
+                      aria-label={`Đưa ${category.name} lên trên`}
+                      title="Đưa lên"
+                    >
+                      <ArrowUp className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => handleMove('down')}
+                      disabled={actionLoading || !canMoveDown}
+                      className="h-9 w-9"
+                      aria-label={`Đưa ${category.name} xuống dưới`}
+                      title="Đưa xuống"
+                    >
+                      <ArrowDown className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -730,6 +788,12 @@ export function CategoryManagementPage() {
     loadCategories()
   }
 
+  const handleMove = async (slug, direction) => {
+    await categoryApi.moveCategory(slug, direction)
+    toast.success('Đã cập nhật thứ tự danh mục')
+    loadCategories()
+  }
+
   const handleSortChange = (newSort) => {
     setSort(newSort)
     setPage(1)
@@ -808,15 +872,27 @@ export function CategoryManagementPage() {
       ) : (
         <>
           <div className="p-4 space-y-3">
-            {categories.map(category => (
+            {categories.map((category, index) => {
+              const showReorderControls = activeTab === 'active' && sort === 'order,name'
+              const isFirstVisible = index === 0
+              const isLastVisible = index === categories.length - 1
+              const canMoveUp = showReorderControls && (page > 1 || !isFirstVisible)
+              const canMoveDown = showReorderControls && (page < totalPages || !isLastVisible)
+
+              return (
               <CategoryListItem
                 key={category.id || category.slug}
                 category={category}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
+                onMove={handleMove}
                 loadCategories={loadCategories}
+                showReorderControls={showReorderControls}
+                canMoveUp={canMoveUp}
+                canMoveDown={canMoveDown}
               />
-            ))}
+              )
+            })}
           </div>
           <Pagination
             page={page}

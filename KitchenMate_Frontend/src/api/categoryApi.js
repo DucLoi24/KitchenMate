@@ -40,6 +40,13 @@ export const categoryApi = {
     return data
   },
 
+  // Move category priority up/down (admin only - IsAdminUser)
+  moveCategory: async (slug, direction) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post(`/recipes/categories/${slug}/move/`, { direction })
+    return data
+  },
+
   // Delete category (admin only - IsAdminUser, soft delete)
   // Note: Fails with 400 if category has attached recipes
   deleteCategory: async (slug) => {

@@ -1,6 +1,7 @@
 """
 Views cho recipe categories.
 """
+from django.db import transaction
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -63,3 +64,51 @@ class RecipeCategoryViewSet(viewsets.ModelViewSet):
         instance.save(update_fields=['is_active'])
         serializer = self.get_serializer(instance)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='move')
+    def move(self, request, slug=None):
+        """Đổi thứ tự danh mục bằng cách swap với danh mục liền kề."""
+        instance = self.get_object()
+        direction = request.data.get('direction')
+        if direction not in ('up', 'down'):
+            return Response(
+                {'message': 'Hướng di chuyển không hợp lệ.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        with transaction.atomic():
+            categories = list(
+                RecipeCategory.objects.select_for_update()
+                .filter(is_active=True)
+                .order_by('order', 'name', 'id')
+            )
+            current_index = next(
+                (index for index, category in enumerate(categories) if category.id == instance.id),
+                None
+            )
+            if current_index is None:
+                return Response(
+                    {'message': 'Danh mục không tồn tại hoặc đã bị vô hiệu hóa.'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            target_index = current_index - 1 if direction == 'up' else current_index + 1
+            if target_index < 0 or target_index >= len(categories):
+                return Response(
+                    {'message': 'Không thể di chuyển danh mục xa hơn.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            categories[current_index], categories[target_index] = categories[target_index], categories[current_index]
+            for order, category in enumerate(categories, start=1):
+                category.order = order
+            RecipeCategory.objects.bulk_update(categories, ['order'])
+
+        serializer = self.get_serializer(categories, many=True)
+        return Response(
+            {
+                'message': 'Đã cập nhật thứ tự danh mục.',
+                'results': serializer.data,
+            },
+            status=status.HTTP_200_OK
+        )

@@ -3,7 +3,9 @@ Unit Tests — Recipe Categories (Phase 12)
 Kiểm tra RecipeCategory model, serializer, viewset, và filter.
 """
 import pytest
+from types import SimpleNamespace
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from rest_framework.test import APIClient
 
 from apps.recipes.models import RecipeCategory, Recipe
@@ -244,6 +246,15 @@ class TestRecipeCategoryViewSetPermissions:
 class TestRecipeCategoryViewSetCRUD:
     """Tests CRUD operations của RecipeCategoryViewSet."""
 
+    def _activate_only_fixture_categories(self, categories):
+        fixture_ids = [category.id for category in categories.values()]
+        RecipeCategory.objects.exclude(id__in=fixture_ids).update(is_active=False)
+        for order, key in enumerate(('mon_viet', 'mon_a', 'mon_tay'), start=1):
+            category = categories[key]
+            category.is_active = True
+            category.order = order
+            category.save(update_fields=['is_active', 'order'])
+
     def test_create_sets_is_active_true(self, api_client, admin_user):
         """Tạo category mới → is_active=True mặc định."""
         api_client.force_authenticate(user=admin_user)
@@ -267,6 +278,63 @@ class TestRecipeCategoryViewSetCRUD:
         cat = RecipeCategory.objects.get(slug='mon-viet-cat')
         assert cat.name == 'Món Việt Nam Cat'
         assert cat.slug == 'mon-viet-cat'
+
+    def test_move_up_swaps_with_previous_active_category(self, api_client, admin_user, categories):
+        """Move up C: A1 B2 C3 → A1 C2 B3."""
+        self._activate_only_fixture_categories(categories)
+        api_client.force_authenticate(user=admin_user)
+
+        response = api_client.post('/api/recipes/categories/mon-tay-cat/move/', {'direction': 'up'})
+
+        assert response.status_code == 200
+        categories['mon_viet'].refresh_from_db()
+        categories['mon_a'].refresh_from_db()
+        categories['mon_tay'].refresh_from_db()
+        assert categories['mon_viet'].order == 1
+        assert categories['mon_tay'].order == 2
+        assert categories['mon_a'].order == 3
+
+    def test_move_down_swaps_with_next_active_category(self, api_client, admin_user, categories):
+        """Move down A: A1 B2 C3 → B1 A2 C3."""
+        self._activate_only_fixture_categories(categories)
+        api_client.force_authenticate(user=admin_user)
+
+        response = api_client.post('/api/recipes/categories/mon-viet-cat/move/', {'direction': 'down'})
+
+        assert response.status_code == 200
+        categories['mon_viet'].refresh_from_db()
+        categories['mon_a'].refresh_from_db()
+        categories['mon_tay'].refresh_from_db()
+        assert categories['mon_a'].order == 1
+        assert categories['mon_viet'].order == 2
+        assert categories['mon_tay'].order == 3
+
+    def test_move_up_first_category_returns_400(self, api_client, admin_user, categories):
+        """Category đầu danh sách không thể move up."""
+        self._activate_only_fixture_categories(categories)
+        api_client.force_authenticate(user=admin_user)
+
+        response = api_client.post('/api/recipes/categories/mon-viet-cat/move/', {'direction': 'up'})
+
+        assert response.status_code == 400
+
+    def test_move_down_last_category_returns_400(self, api_client, admin_user, categories):
+        """Category cuối danh sách không thể move down."""
+        self._activate_only_fixture_categories(categories)
+        api_client.force_authenticate(user=admin_user)
+
+        response = api_client.post('/api/recipes/categories/mon-tay-cat/move/', {'direction': 'down'})
+
+        assert response.status_code == 400
+
+    def test_move_requires_admin(self, api_client, auth_user, categories):
+        """User thường không được đổi thứ tự category."""
+        self._activate_only_fixture_categories(categories)
+        api_client.force_authenticate(user=auth_user)
+
+        response = api_client.post('/api/recipes/categories/mon-tay-cat/move/', {'direction': 'up'})
+
+        assert response.status_code == 403
 
 
 # ─── Recipe M2M Categories ────────────────────────────────────────────────────
@@ -528,18 +596,23 @@ class TestRecipeFilterByCategory:
 class TestAvgRatingAnnotation:
     """Tests avg_rating annotation trong get_queryset."""
 
+    def _viewset_with_anonymous_request(self, action):
+        from apps.recipes.views import RecipeViewSet
+
+        viewset = RecipeViewSet(action=action)
+        viewset.request = SimpleNamespace(user=AnonymousUser())
+        return viewset
+
     def test_list_action_annotates_avg_rating(self, sample_recipe_with_categories):
         """list action → queryset có annotation avg_rating."""
-        from apps.recipes.views import RecipeViewSet
-        viewset = RecipeViewSet(action='list')
+        viewset = self._viewset_with_anonymous_request('list')
         qs = viewset.get_queryset()
         # QuerySet có annotation
         assert 'avg_rating' in qs.query.annotations
 
     def test_retrieve_action_annotates_avg_rating(self, sample_recipe_with_categories):
         """retrieve action → queryset có annotation avg_rating."""
-        from apps.recipes.views import RecipeViewSet
-        viewset = RecipeViewSet(action='retrieve')
+        viewset = self._viewset_with_anonymous_request('retrieve')
         qs = viewset.get_queryset()
         assert 'avg_rating' in qs.query.annotations
 
