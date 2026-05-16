@@ -89,6 +89,13 @@ class FollowUserSerializer(serializers.ModelSerializer):
         return obj.follower_relations.filter(follower=request.user).exists()
 
 
+class UserSearchSerializer(FollowUserSerializer):
+    """Serializer public-safe cho kết quả tìm kiếm người dùng."""
+
+    class Meta:
+        model = User
+        fields = ('id', 'full_name', 'avatar_url', 'bio', 'followers_count', 'is_following')
+
 class UserProfileUpdateSerializer(serializers.ModelSerializer):
     """Serializer cập nhật profile (chỉ cho phép sửa một số trường)."""
 

@@ -45,7 +45,7 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate(`/explore?q=${encodeURIComponent(searchQuery.trim())}`)
+      navigate(`/explore?q=${encodeURIComponent(searchQuery.trim())}&tab=all`)
       setIsSearchOpen(false)
       setSearchQuery('')
     }
@@ -94,7 +94,7 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
               type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Tìm công thức, nguyên liệu..."
+              placeholder="Tìm công thức, người dùng..."
               className="w-full h-10 pl-10 pr-4 rounded-[var(--radius-full)] border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent transition-all"
             />
           </div>
@@ -239,7 +239,7 @@ export function Header({ onMenuToggle, isSidebarOpen }) {
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Tìm công thức, nguyên liệu..."
+                  placeholder="Tìm công thức, người dùng..."
                   className="w-full h-11 pl-10 pr-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-background)] text-[var(--color-text)] placeholder:text-[var(--color-text-muted)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent"
                 />
               </div>

@@ -4,6 +4,7 @@ Xử lý đăng ký, đăng nhập, logout, profile, đổi mật khẩu và pas
 """
 import logging
 import secrets
+import uuid
 import requests
 from urllib.parse import urlencode
 from django.contrib.auth import get_user_model
@@ -37,6 +38,7 @@ from .serializers import (
     UserSerializer,
     UserProfileUpdateSerializer,
     FollowUserSerializer,
+    UserSearchSerializer,
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
@@ -674,6 +676,52 @@ class UserFollowingView(APIView):
         paginator.page_size = 20
         page = paginator.paginate_queryset(following, request)
         serializer = FollowUserSerializer(page, many=True, context={'request': request})
+
+        return Response({
+            'success': True,
+            'data': {
+                'count': paginator.page.paginator.count,
+                'next': paginator.get_next_link(),
+                'previous': paginator.get_previous_link(),
+                'results': serializer.data,
+            }
+        })
+
+
+class UserSearchView(APIView):
+    """
+    GET /api/accounts/search/
+    Tìm kiếm người dùng active theo full_name hoặc UUID với cú pháp @uuid.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        query = request.query_params.get('q', '').strip()
+        users = User.objects.none()
+
+        if query:
+            normalized_query = query[1:].strip() if query.startswith('@') else query
+            try:
+                user_id = uuid.UUID(normalized_query)
+            except (ValueError, AttributeError):
+                if not query.startswith('@'):
+                    users = User.objects.filter(
+                        is_active=True,
+                        full_name__icontains=query,
+                    )
+            else:
+                users = User.objects.filter(id=user_id, is_active=True)
+
+        users = users.annotate(
+            followers_count=Count('follower_relations', distinct=True)
+        ).order_by('full_name', 'id')
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 20
+        paginator.page_size_query_param = 'page_size'
+        paginator.max_page_size = 50
+        page = paginator.paginate_queryset(users, request)
+        serializer = UserSearchSerializer(page, many=True, context={'request': request})
 
         return Response({
             'success': True,

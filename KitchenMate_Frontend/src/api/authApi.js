@@ -86,6 +86,12 @@ export const authApi = {
     return data
   },
 
+  searchUsers: async (params = {}) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.get('/accounts/search/', { params })
+    return data
+  },
+
   updateProfile: async (profileData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.patch('/accounts/me/', profileData)

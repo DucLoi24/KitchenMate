@@ -119,3 +119,87 @@ def test_followers_and_following_lists_are_public_and_paginated():
     assert following_response.data['data']['count'] == 1
     assert following_response.data['data']['results'][0]['id'] == str(target.id)
     assert following_response.data['data']['results'][0]['is_following'] is False
+
+@pytest.mark.django_db
+def test_user_search_finds_active_users_by_full_name_without_exposing_email():
+    target = make_user('Dau bep nha que')
+    make_user('Nguoi khac')
+    client = APIClient()
+
+    response = client.get('/api/accounts/search/', {'q': 'nha que'})
+
+    assert response.status_code == 200
+    assert response.data['success'] is True
+    assert response.data['data']['count'] == 1
+    result = response.data['data']['results'][0]
+    assert result['id'] == str(target.id)
+    assert result['full_name'] == 'Dau bep nha que'
+    assert 'email' not in result
+
+@pytest.mark.django_db
+def test_user_search_finds_user_by_uuid_with_at_prefix():
+    target = make_user('Dau bep tim bang id')
+    client = APIClient()
+
+    response = client.get('/api/accounts/search/', {'q': f'@{target.id}'})
+
+    assert response.status_code == 200
+    assert response.data['data']['count'] == 1
+    assert response.data['data']['results'][0]['id'] == str(target.id)
+
+@pytest.mark.django_db
+def test_user_search_finds_user_by_bare_uuid():
+    target = make_user('Dau bep uuid')
+    client = APIClient()
+
+    response = client.get('/api/accounts/search/', {'q': str(target.id)})
+
+    assert response.status_code == 200
+    assert response.data['data']['count'] == 1
+    assert response.data['data']['results'][0]['id'] == str(target.id)
+
+@pytest.mark.django_db
+def test_user_search_ignores_inactive_users_even_when_uuid_matches():
+    target = make_user('Nguoi da khoa')
+    target.is_active = False
+    target.save(update_fields=['is_active'])
+    client = APIClient()
+
+    response = client.get('/api/accounts/search/', {'q': f'@{target.id}'})
+
+    assert response.status_code == 200
+    assert response.data['data']['count'] == 0
+    assert response.data['data']['results'] == []
+
+@pytest.mark.django_db
+def test_user_search_marks_following_status_for_authenticated_user():
+    follower = make_user('Nguoi theo doi')
+    target = make_user('Dau bep duoc theo doi')
+    User.objects.create_user(
+        username=f'extra_{uuid.uuid4().hex[:12]}@example.com',
+        email=f'extra_{uuid.uuid4().hex[:12]}@example.com',
+        full_name='Dau bep chua theo doi',
+        password='testpass123',
+    )
+    client = APIClient()
+    client.force_authenticate(user=follower)
+    client.post(f'/api/accounts/{target.id}/follow/')
+
+    response = client.get('/api/accounts/search/', {'q': 'Dau bep duoc theo doi'})
+
+    assert response.status_code == 200
+    assert response.data['data']['count'] == 1
+    result = response.data['data']['results'][0]
+    assert result['id'] == str(target.id)
+    assert result['is_following'] is True
+    assert result['followers_count'] == 1
+
+@pytest.mark.django_db
+def test_user_search_invalid_at_uuid_returns_empty_results():
+    client = APIClient()
+
+    response = client.get('/api/accounts/search/', {'q': '@khong-phai-uuid'})
+
+    assert response.status_code == 200
+    assert response.data['data']['count'] == 0
+    assert response.data['data']['results'] == []
