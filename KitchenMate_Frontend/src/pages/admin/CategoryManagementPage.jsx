@@ -531,8 +531,8 @@ function SortControl({ sort, onSortChange }) {
           'cursor-pointer'
         )}
       >
-        <option value="-order,name">Thứ tự (cao → thấp)</option>
         <option value="order,name">Thứ tự (thấp → cao)</option>
+        <option value="-order,name">Thứ tự (cao → thấp)</option>
         <option value="-name">Tên (Z → A)</option>
         <option value="name">Tên (A → Z)</option>
         <option value="-created_at">Mới nhất</option>
@@ -622,7 +622,7 @@ export function CategoryManagementPage() {
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
   const [totalCount, setTotalCount] = useState(0)
-  const [sort, setSort] = useState('-order,name')
+  const [sort, setSort] = useState('order,name')
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [createLoading, setCreateLoading] = useState(false)
 
