@@ -1,25 +1,189 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Trash2, ChevronUp, ChevronDown, Image as ImageIcon } from 'lucide-react'
+import {
+  Plus,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
+  Image as ImageIcon,
+  Upload,
+  X,
+  Film,
+} from 'lucide-react'
 import { cn } from '@/utils'
 
-export function StepList({ onChange, data, errors = {} }) {
+function getStepKey(step) {
+  return step.id || `step-${step.step_number}`
+}
+
+function SelectedMediaPreviewItem({ file, onRemove }) {
+  const [previewUrl, setPreviewUrl] = useState('')
+  const isVideo = file.type?.startsWith('video/')
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file)
+    let isActive = true
+
+    queueMicrotask(() => {
+      if (isActive) {
+        setPreviewUrl(objectUrl)
+      }
+    })
+
+    return () => {
+      isActive = false
+      URL.revokeObjectURL(objectUrl)
+    }
+  }, [file])
+
+  return (
+    <div className="group relative overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-background-alt)]">
+      {!previewUrl ? (
+        <div className="flex h-28 w-full items-center justify-center bg-[var(--color-background-alt)] text-[var(--color-text-muted)]">
+          {isVideo ? (
+            <Film className="h-5 w-5" />
+          ) : (
+            <ImageIcon className="h-5 w-5" />
+          )}
+        </div>
+      ) : isVideo ? (
+        <video
+          src={previewUrl}
+          className="h-28 w-full object-cover"
+          controls
+        />
+      ) : (
+        <img
+          src={previewUrl}
+          alt={`Preview ${file.name}`}
+          className="h-28 w-full object-cover"
+        />
+      )}
+      <div className="flex items-center gap-1 px-2 py-1 text-xs text-[var(--color-text-secondary)]">
+        {isVideo ? (
+          <Film className="h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]" />
+        ) : (
+          <ImageIcon className="h-3.5 w-3.5 shrink-0 text-[var(--color-primary)]" />
+        )}
+        <span className="min-w-0 flex-1 truncate">{file.name}</span>
+      </div>
+      <button
+        type="button"
+        onClick={() => onRemove(file)}
+        className="absolute right-1 top-1 inline-flex h-7 w-7 items-center justify-center rounded-full bg-black/55 text-white opacity-100 transition-opacity hover:bg-red-600 sm:opacity-0 sm:group-hover:opacity-100"
+        aria-label={`Xóa ${file.name}`}
+      >
+        <X className="h-3.5 w-3.5" />
+      </button>
+    </div>
+  )
+}
+
+function StepMediaPicker({ label, files = [], onFilesChange }) {
+
+  const handleFileChange = (event) => {
+    const selectedFiles = Array.from(event.target.files || [])
+    if (selectedFiles.length > 0) {
+      onFilesChange([...files, ...selectedFiles])
+    }
+    event.target.value = ''
+  }
+
+  const handleRemoveFile = (fileToRemove) => {
+    onFilesChange(files.filter((file) => file !== fileToRemove))
+  }
+
+  return (
+    <div className="mt-3 space-y-2">
+      <label className="inline-flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-[var(--radius-md)] border border-dashed border-[var(--color-border-strong)] bg-[var(--color-background-alt)] px-4 py-2 text-sm font-medium text-[var(--color-text-secondary)] transition-all duration-[var(--transition-fast)] hover:border-[var(--color-primary)] hover:text-[var(--color-primary)]">
+        <Upload className="h-4 w-4" />
+        <span>Thêm ảnh/video</span>
+        <input
+          aria-label={label}
+          type="file"
+          accept="image/jpeg,image/png,image/webp,video/mp4,video/webm,video/quicktime"
+          multiple
+          className="sr-only"
+          onChange={handleFileChange}
+        />
+      </label>
+
+      {files.length > 0 && (
+        <div className="rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] p-2">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {files.map((file) => (
+              <SelectedMediaPreviewItem
+                key={`${file.name}-${file.size}-${file.lastModified}`}
+                file={file}
+                onRemove={handleRemoveFile}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={() => onFilesChange([])}
+            className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text-muted)] transition-colors hover:text-red-500"
+          >
+            <X className="h-3.5 w-3.5" />
+            Xóa file đã chọn
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ExistingMediaList({ mediaItems = [], fallbackUrl }) {
+  const items = mediaItems.length > 0
+    ? mediaItems
+    : fallbackUrl
+      ? [{ id: fallbackUrl, media_url: fallbackUrl, media_type: 'IMAGE', original_name: 'Media hiện có' }]
+      : []
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+      {items.map((item) => (
+        <div key={item.id || item.media_url} className="overflow-hidden rounded-[var(--radius-sm)] border border-[var(--color-border)] bg-[var(--color-background-alt)]">
+          {item.media_type === 'VIDEO' ? (
+            <video src={item.media_url} className="h-24 w-full object-cover" controls />
+          ) : (
+            <img
+              src={item.media_url}
+              alt={item.original_name || 'Media bước nấu'}
+              className="h-24 w-full object-cover"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none'
+              }}
+            />
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function StepList({ onChange, data, errors = {}, pendingMedia = {}, onPendingMediaChange = () => {} }) {
   const steps = data?.steps || []
   const [newInstruction, setNewInstruction] = useState('')
-  const [newMediaUrl, setNewMediaUrl] = useState('')
+  const [newMediaFiles, setNewMediaFiles] = useState([])
 
   const handleAddStep = () => {
     if (!newInstruction.trim()) return
 
+    const stepId = `temp-step-${Date.now()}`
     const newStep = {
-      id: `temp-step-${Date.now()}`,
+      id: stepId,
       step_number: steps.length + 1,
       instruction: newInstruction.trim(),
-      media_url: newMediaUrl.trim() || null,
+      media_url: null,
+      media_items: [],
     }
     onChange({ ...data, steps: [...steps, newStep] })
+    onPendingMediaChange(stepId, newMediaFiles)
     setNewInstruction('')
-    setNewMediaUrl('')
+    setNewMediaFiles([])
   }
 
   const handleUpdateStep = (index, field, value) => {
@@ -29,6 +193,7 @@ export function StepList({ onChange, data, errors = {} }) {
   }
 
   const handleRemoveStep = (index) => {
+    onPendingMediaChange(getStepKey(steps[index]), [])
     const updated = steps.filter((_, i) => i !== index)
       .map((step, i) => ({ ...step, step_number: i + 1 }))
     onChange({ ...data, steps: updated })
@@ -45,6 +210,10 @@ export function StepList({ onChange, data, errors = {} }) {
     ;[newSteps[index], newSteps[targetIndex]] = [newSteps[targetIndex], newSteps[index]]
     const reordered = newSteps.map((step, i) => ({ ...step, step_number: i + 1 }))
     onChange({ ...data, steps: reordered })
+  }
+
+  const handleTextareaWheel = (event) => {
+    event.stopPropagation()
   }
 
   return (
@@ -109,35 +278,16 @@ export function StepList({ onChange, data, errors = {} }) {
                     value={step.instruction}
                     onChange={(e) => handleUpdateStep(index, 'instruction', e.target.value)}
                     placeholder={`Mô tả bước ${step.step_number}...`}
-                    rows={2}
-                    className="w-full px-3 py-2 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-sm resize-none focus:outline-none focus:border-[var(--color-primary)] transition-colors"
+                    rows={5}
+                    onWheel={handleTextareaWheel}
+                    className="w-full min-h-[10rem] max-h-[18rem] overflow-y-auto px-4 py-3 bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-sm leading-6 resize-y focus:outline-none focus:border-[var(--color-primary)] transition-colors"
                   />
-                  <div className="mt-2 flex items-center gap-2">
-                    <ImageIcon className="w-4 h-4 text-[var(--color-text-muted)]" />
-                    <input
-                      type="url"
-                      value={step.media_url || ''}
-                      onChange={(e) => handleUpdateStep(index, 'media_url', e.target.value)}
-                      placeholder="URL hình ảnh minh họa (tùy chọn)"
-                      className="flex-1 h-8 px-2 text-sm bg-[var(--color-background)] border border-[var(--color-border)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
-                    />
-                  </div>
-                  {step.media_url && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="mt-2 rounded-[var(--radius-sm)] overflow-hidden"
-                    >
-                      <img
-                        src={step.media_url}
-                        alt={`Step ${step.step_number}`}
-                        className="w-full h-24 object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none'
-                        }}
-                      />
-                    </motion.div>
-                  )}
+                  <ExistingMediaList mediaItems={step.media_items || []} fallbackUrl={step.media_url} />
+                  <StepMediaPicker
+                    label={`Media cho bước ${step.step_number}`}
+                    files={pendingMedia[getStepKey(step)] || []}
+                    onFilesChange={(files) => onPendingMediaChange(getStepKey(step), files)}
+                  />
                 </div>
 
                 <button
@@ -170,25 +320,21 @@ export function StepList({ onChange, data, errors = {} }) {
           value={newInstruction}
           onChange={(e) => setNewInstruction(e.target.value)}
           placeholder="Nhập mô tả bước mới..."
-          rows={2}
-          className="w-full px-3 py-2 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-sm resize-none focus:outline-none focus:border-[var(--color-primary)] transition-colors mb-2"
+          rows={5}
+          onWheel={handleTextareaWheel}
+          className="mb-3 w-full min-h-[10rem] max-h-[18rem] overflow-y-auto px-4 py-3 bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-md)] text-sm leading-6 resize-y focus:outline-none focus:border-[var(--color-primary)] transition-colors"
         />
-        <div className="flex items-center gap-2 mb-3">
-          <ImageIcon className="w-4 h-4 text-[var(--color-text-muted)]" />
-          <input
-            type="url"
-            value={newMediaUrl}
-            onChange={(e) => setNewMediaUrl(e.target.value)}
-            placeholder="URL hình ảnh minh họa (tùy chọn)"
-            className="flex-1 h-8 px-2 text-sm bg-[var(--color-surface)] border border-[var(--color-border)] rounded-[var(--radius-sm)] focus:outline-none focus:border-[var(--color-primary)] transition-colors"
-          />
-        </div>
+        <StepMediaPicker
+          label="Media cho bước mới"
+          files={newMediaFiles}
+          onFilesChange={setNewMediaFiles}
+        />
         <button
           type="button"
           onClick={handleAddStep}
           disabled={!newInstruction.trim()}
           className={cn(
-            'w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-all',
+            'mt-3 w-full flex items-center justify-center gap-2 px-4 py-2 rounded-[var(--radius-md)] text-sm font-medium transition-all',
             newInstruction.trim()
               ? 'bg-[var(--color-secondary)] text-white hover:bg-[var(--color-secondary-dark)]'
               : 'bg-[var(--color-border)] text-[var(--color-text-muted)] cursor-not-allowed'

@@ -7,7 +7,7 @@ from django.db.models import Avg
 
 from apps.accounts.serializers import UserSerializer
 from apps.ingredients.models import Unit
-from .models import Recipe, RecipeCategory, RecipeIngredient, RecipeStep
+from .models import Recipe, RecipeCategory, RecipeIngredient, RecipeStep, RecipeStepMedia
 
 
 class RecipeCategorySerializer(serializers.ModelSerializer):
@@ -44,12 +44,21 @@ class RecipeIngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'ingredient', 'ingredient_name', 'ingredient_category', 'quantity', 'unit', 'unit_display')
 
 
+class RecipeStepMediaSerializer(serializers.ModelSerializer):
+    """Serializer cho media của từng bước thực hiện."""
+
+    class Meta:
+        model = RecipeStepMedia
+        fields = ('id', 'media_url', 'media_type', 'order', 'original_name', 'created_at')
+
 class RecipeStepSerializer(serializers.ModelSerializer):
     """Serializer cho các bước thực hiện."""
+    id = serializers.IntegerField(required=False)
+    media_items = RecipeStepMediaSerializer(many=True, read_only=True)
 
     class Meta:
         model = RecipeStep
-        fields = ('id', 'step_number', 'instruction', 'media_url')
+        fields = ('id', 'step_number', 'instruction', 'media_url', 'media_items')
 
 
 class RecipeListSerializer(serializers.ModelSerializer):
@@ -209,6 +218,7 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
             for ing in ingredients_data:
                 RecipeIngredient.objects.create(recipe=recipe, **ing)
             for step in steps_data:
+                step.pop('id', None)
                 RecipeStep.objects.create(recipe=recipe, **step)
         return recipe
 
@@ -231,8 +241,21 @@ class RecipeCreateSerializer(serializers.ModelSerializer):
                     RecipeIngredient.objects.create(recipe=instance, **ing)
 
             if steps_data is not None:
+                existing_media_by_step_id = {
+                    step.id: list(step.media_items.all())
+                    for step in instance.steps.prefetch_related('media_items')
+                }
                 instance.steps.all().delete()
                 for step in steps_data:
-                    RecipeStep.objects.create(recipe=instance, **step)
+                    old_step_id = step.pop('id', None)
+                    new_step = RecipeStep.objects.create(recipe=instance, **step)
+                    for media in existing_media_by_step_id.get(old_step_id, []):
+                        RecipeStepMedia.objects.create(
+                            step=new_step,
+                            media_url=media.media_url,
+                            media_type=media.media_type,
+                            order=media.order,
+                            original_name=media.original_name,
+                        )
 
         return instance

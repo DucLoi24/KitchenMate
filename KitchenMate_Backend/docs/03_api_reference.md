@@ -266,6 +266,27 @@ Cập nhật profile. `PUT` = toàn bộ, `PATCH` = một phần.
 }
 ```
 
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Đổi mật khẩu thành công."
+}
+```
+
+**Error Response 400:**
+```json
+{
+  "success": false,
+  "error": {
+    "message": "Dữ liệu không hợp lệ.",
+    "details": {
+      "old_password": ["Mật khẩu hiện tại không đúng."]
+    }
+  }
+}
+```
+
 ---
 
 ### POST `/api/accounts/me/avatar/`
@@ -581,7 +602,22 @@ Chi tiết công thức.
       { "id": 1, "ingredient": 1, "ingredient_name": "Xương bò", "ingredient_category": "PROTEIN", "quantity": 500, "unit": "gram" }
     ],
     "steps": [
-      { "id": 1, "step_number": 1, "instruction": "Ninh xương bò...", "media_url": null }
+      {
+        "id": 1,
+        "step_number": 1,
+        "instruction": "Ninh xương bò...",
+        "media_url": "/media/recipes/steps/first-file.jpg",
+        "media_items": [
+          {
+            "id": 1,
+            "media_url": "/media/recipes/steps/uuid.jpg",
+            "media_type": "IMAGE",
+            "order": 1,
+            "original_name": "step-1.png",
+            "created_at": "2026-05-22T09:00:00Z"
+          }
+        ]
+      }
     ],
     "avg_rating": 4.5,
     "created_at": "...",
@@ -698,7 +734,7 @@ Gửi công thức PRIVATE sang PENDING và trigger AI moderation async.
 | Kết quả AI | HTTP | Recipe visibility |
 |---|---|---|
 | `YES` | 200 | `PUBLIC` (sau khi AI xử lý) |
-| `NO` | 200 | `PRIVATE` + `moderation_reason` |
+| `NO` | 200 | `PRIVATE` + `rejection_reason` |
 | `SUSPECT` | 200 | `PENDING` (Admin duyệt) |
 | AI đang xử lý | 200 | `PENDING` (chờ kết quả) |
 
@@ -723,9 +759,40 @@ Upload ảnh thumbnail cho công thức.
 ---
 
 ### POST `/api/recipes/{id}/steps/{step_id}/media/`
-Upload ảnh minh họa cho bước nấu ăn.
+Upload một hoặc nhiều ảnh/video minh họa cho bước nấu ăn.
 
 **Permission:** IsAuthenticated + IsOwner
+
+**Request:** `multipart/form-data`
+
+| Field | Mô tả |
+|---|---|
+| `files` | Một hoặc nhiều file. Frontend có thể append nhiều field cùng tên `files`. |
+| `file` | File đơn, giữ tương thích với client cũ. |
+
+**Định dạng hỗ trợ:**
+
+- Ảnh: `jpg`, `jpeg`, `png`, `webp`, tối đa 5MB, được resize/compress về JPEG.
+- Video: `mp4`, `webm`, `mov`, tối đa 50MB, kiểm tra header file.
+
+**Response 200:**
+```json
+{
+  "url": "/media/recipes/steps/first-file.jpg",
+  "media": [
+    {
+      "id": 1,
+      "media_url": "/media/recipes/steps/uuid.jpg",
+      "media_type": "IMAGE",
+      "order": 1,
+      "original_name": "step-1.png"
+    }
+  ],
+  "message": "Cập nhật media bước thực hiện thành công"
+}
+```
+
+`url` là media đầu tiên và được lưu vào `recipe_steps.media_url` để tương thích với client cũ. Danh sách đầy đủ nằm trong `steps[].media_items` khi lấy chi tiết công thức.
 
 ---
 
@@ -747,6 +814,139 @@ Thống kê chi tiết của công thức.
   }
 }
 ```
+
+---
+
+## 4.1 Recipe Categories (`/api/recipes/categories/`)
+
+Danh mục công thức dùng để phân loại recipe và làm bộ lọc ở frontend. Danh sách public mặc định chỉ trả về danh mục `is_active=true`, sắp xếp theo `order,name` để số thứ tự thấp hơn hiển thị trước.
+
+### GET `/api/recipes/categories/`
+Danh sách danh mục công thức active.
+
+**Permission:** AllowAny
+
+**Query Params:**
+| Param | Mô tả |
+|---|---|
+| `page` | Số trang |
+| `page_size` | Số item mỗi trang |
+| `ordering` | Trường sắp xếp, ví dụ `order,name`, `-order,name`, `name` |
+| `is_active` | Lọc theo trạng thái active/inactive |
+| `include_inactive` | Admin truyền `true` để xem cả danh mục inactive |
+
+**Response 200:**
+```json
+{
+  "count": 3,
+  "next": null,
+  "previous": null,
+  "results": [
+    {
+      "id": "uuid",
+      "name": "Món Việt",
+      "slug": "mon-viet",
+      "description": "Các món ăn truyền thống Việt Nam",
+      "order": 1,
+      "is_active": true
+    }
+  ]
+}
+```
+
+---
+
+### POST `/api/recipes/categories/`
+Tạo danh mục công thức mới.
+
+**Permission:** Admin
+
+**Request Body:**
+```json
+{
+  "name": "Món khai vị",
+  "description": "Các món ăn nhẹ trước bữa chính",
+  "order": 7
+}
+```
+
+**Ghi chú:** Nếu không gửi `slug`, backend tự tạo slug từ `name`.
+
+---
+
+### PATCH `/api/recipes/categories/{slug}/`
+Cập nhật tên, mô tả hoặc `order` của danh mục.
+
+**Permission:** Admin
+
+**Request Body:**
+```json
+{
+  "name": "Món khai vị",
+  "description": "Món ăn nhẹ",
+  "order": 4
+}
+```
+
+---
+
+### DELETE `/api/recipes/categories/{slug}/`
+Vô hiệu hóa danh mục bằng soft delete (`is_active=false`).
+
+**Permission:** Admin
+
+**Response 204:** Không có body.
+
+---
+
+### POST `/api/recipes/categories/{slug}/restore/`
+Khôi phục danh mục đã bị vô hiệu hóa.
+
+**Permission:** Admin
+
+**Response 200:** Category sau khi khôi phục.
+
+---
+
+### POST `/api/recipes/categories/{slug}/move/`
+Đổi thứ tự ưu tiên bằng cách swap danh mục hiện tại với danh mục active liền kề.
+
+**Permission:** Admin
+
+**Request Body:**
+```json
+{ "direction": "up" }
+```
+
+`direction` nhận một trong hai giá trị:
+
+| Giá trị | Hành vi |
+|---|---|
+| `up` | Đưa danh mục lên một vị trí |
+| `down` | Đưa danh mục xuống một vị trí |
+
+**Hành vi thứ tự:**
+- Backend chạy trong `transaction.atomic()`.
+- Chỉ reorder danh mục `is_active=true`.
+- Sau khi swap, backend normalize `order` của danh mục active thành `1..n`.
+- Nếu danh mục đã ở đầu mà move `up`, hoặc ở cuối mà move `down`, trả `400`.
+
+**Response 200:**
+```json
+{
+  "message": "Đã cập nhật thứ tự danh mục.",
+  "results": [
+    { "id": "uuid-a", "name": "A", "slug": "a", "description": "", "order": 1, "is_active": true },
+    { "id": "uuid-c", "name": "C", "slug": "c", "description": "", "order": 2, "is_active": true },
+    { "id": "uuid-b", "name": "B", "slug": "b", "description": "", "order": 3, "is_active": true }
+  ]
+}
+```
+
+**Lỗi:**
+- `400` — `direction` không hợp lệ hoặc không thể di chuyển xa hơn.
+- `403` — User không có quyền admin.
+- `404` — Danh mục không tồn tại hoặc không active.
 
 ---
 

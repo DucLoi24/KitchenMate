@@ -98,6 +98,16 @@ export const authApi = {
     return data
   },
 
+  changePassword: async ({ old_password, new_password, new_password_confirm }) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const { data } = await axiosInstance.post('/accounts/me/change-password/', {
+      old_password,
+      new_password,
+      new_password_confirm,
+    })
+    return data
+  },
+
   uploadAvatar: async (formData) => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.post('/accounts/me/avatar/', formData, {

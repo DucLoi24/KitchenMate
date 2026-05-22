@@ -123,7 +123,7 @@ OLLAMA_TIMEOUT=30
 ```
 
 **Lưu ý:** Nếu Ollama không chạy, hệ thống vẫn hoạt động bình thường nhờ graceful degradation:
-- Recipe publish → trả về 503 (user biết để thử lại sau)
+- Recipe publish → giữ `PENDING`, lưu `rejection_reason`, admin có thể xử lý thủ công
 - Ingredient create → lưu PENDING (không block user)
 
 ---

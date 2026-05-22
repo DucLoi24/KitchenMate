@@ -219,3 +219,33 @@ class RecipeStep(models.Model):
 
     def __str__(self):
         return f"Bước {self.step_number}: {self.recipe.title}"
+
+class RecipeStepMedia(models.Model):
+    """
+    Media minh họa cho từng bước nấu ăn.
+    Một step có thể có nhiều ảnh hoặc video, sắp xếp theo order.
+    """
+    MEDIA_TYPE_CHOICES = [
+        ('IMAGE', 'Ảnh'),
+        ('VIDEO', 'Video'),
+    ]
+
+    step = models.ForeignKey(
+        RecipeStep,
+        on_delete=models.CASCADE,
+        related_name='media_items'
+    )
+    media_url = models.TextField(help_text='URL ảnh hoặc video minh họa')
+    media_type = models.CharField(max_length=10, choices=MEDIA_TYPE_CHOICES)
+    order = models.PositiveIntegerField(default=1)
+    original_name = models.CharField(max_length=255, blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'recipe_step_media'
+        verbose_name = 'Media bước thực hiện'
+        verbose_name_plural = 'Media bước thực hiện'
+        ordering = ['step', 'order', 'created_at']
+
+    def __str__(self):
+        return f"{self.get_media_type_display()} bước {self.step.step_number}: {self.step.recipe.title}"

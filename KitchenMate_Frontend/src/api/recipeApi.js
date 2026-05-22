@@ -38,6 +38,16 @@ export const recipeApi = {
     return data
   },
 
+  uploadStepMedia: async (recipeId, stepId, files = []) => {
+    const { default: axiosInstance } = await import('@/lib/axiosInstance')
+    const formData = new FormData()
+    files.forEach((file) => formData.append('files', file))
+    const { data } = await axiosInstance.post(`/recipes/${recipeId}/steps/${stepId}/media/`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return data
+  },
+
   getMyRecipes: async () => {
     const { default: axiosInstance } = await import('@/lib/axiosInstance')
     const { data } = await axiosInstance.get('/recipes/my-recipes/')

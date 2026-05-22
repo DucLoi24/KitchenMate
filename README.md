@@ -7,13 +7,13 @@ Project gồm backend Django REST API và frontend React/Vite. Backend dùng Pos
 ## Tính năng chính
 
 - Quản lý tài khoản: đăng ký, đăng nhập JWT, refresh token, logout, đặt lại mật khẩu, Google OAuth.
-- Quản lý công thức: tạo, chỉnh sửa, đăng công thức, upload ảnh, duyệt công thức trước khi public.
+- Quản lý công thức: tạo, chỉnh sửa, đăng công thức, upload ảnh/video cho từng bước, duyệt công thức trước khi public.
 - Quản lý nguyên liệu: danh mục nguyên liệu, đơn vị đo, tìm kiếm, kiểm duyệt nguyên liệu do người dùng đề xuất (với thông báo từ chối và khôi phục).
 - Tủ lạnh số: lưu nguyên liệu hiện có, số lượng, đơn vị, hạn sử dụng.
 - Danh sách đi chợ: đánh dấu đã mua và đồng bộ vào tủ lạnh bằng transaction atomic.
 - Gợi ý món ăn: thuật toán Tier-3 Scoring dựa trên nguyên liệu trong tủ lạnh, độ rủi ro khi thiếu nguyên liệu, và món đã thích.
 - Tính năng xã hội: theo dõi người dùng, danh sách followers/following công khai, đánh giá, bộ sưu tập, ảnh nấu thử, báo cáo nội dung, thông báo.
-- Admin panel: duyệt nội dung, quản lý người dùng, nguyên liệu, đơn vị, công thức, và báo cáo.
+- Admin panel: duyệt nội dung, quản lý người dùng, nguyên liệu, đơn vị, công thức, danh mục công thức theo thứ tự ưu tiên, và báo cáo.
 
 ## Tech Stack
 
@@ -38,7 +38,7 @@ KitchenMate/
 │   ├── apps/
 │   │   ├── accounts/          # Người dùng, JWT, profile, OAuth
 │   │   ├── ingredients/       # Nguyên liệu, đơn vị đo, AI moderation
-│   │   ├── recipes/           # Công thức, bước nấu, upload ảnh
+│   │   ├── recipes/           # Công thức, bước nấu, upload ảnh/video
 │   │   ├── kitchen/           # Tủ lạnh, danh sách đi chợ, gợi ý món
 │   │   ├── social/            # Review, collection, cooksnap
 │   │   ├── reports/           # Báo cáo nội dung, thông báo
@@ -153,7 +153,7 @@ ollama serve
 ollama pull gemma4:e2b
 ```
 
-Nếu Ollama không chạy, các endpoint dùng AI moderation có thể trả lỗi.
+Nếu Ollama không chạy, công thức public sẽ giữ trạng thái chờ duyệt để admin xử lý; một số luồng AI đồng bộ vẫn có thể trả lỗi tùy endpoint.
 
 ### 3. Chạy frontend
 

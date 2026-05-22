@@ -245,6 +245,9 @@ OLLAMA_TIMEOUT  = int(os.getenv('OLLAMA_TIMEOUT', 30))
 # Kích thước tối đa cho file upload (5MB)
 IMAGE_UPLOAD_MAX_SIZE = 5 * 1024 * 1024
 
+# Kích thước tối đa cho video upload trong từng bước nấu ăn (50MB)
+VIDEO_UPLOAD_MAX_SIZE = 50 * 1024 * 1024
+
 # Các định dạng ảnh được phép upload
 ALLOWED_IMAGE_EXTENSIONS = {'jpg', 'jpeg', 'png', 'webp'}
 

@@ -373,6 +373,42 @@ function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients 
   )
 }
 
+function getStepMediaItems(step) {
+  if (!step) return []
+  if (step.media_items?.length > 0) return step.media_items
+  if (step.media_url) {
+    return [{ id: step.media_url, media_url: step.media_url, media_type: 'IMAGE' }]
+  }
+  return []
+}
+
+function StepMediaGrid({ step, compact = false }) {
+  const mediaItems = getStepMediaItems(step)
+  if (mediaItems.length === 0) return null
+
+  return (
+    <div className={cn('mt-3 grid gap-2', compact ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3')}>
+      {mediaItems.map((item) => (
+        item.media_type === 'VIDEO' ? (
+          <video
+            key={item.id || item.media_url}
+            src={item.media_url}
+            className="h-32 w-full rounded-[var(--radius-md)] object-cover"
+            controls
+          />
+        ) : (
+          <img
+            key={item.id || item.media_url}
+            src={item.media_url}
+            alt={`Bước ${step.step_number}`}
+            className="h-32 w-full rounded-[var(--radius-md)] object-cover"
+          />
+        )
+      ))}
+    </div>
+  )
+}
+
 function StepsList({ steps }) {
   if (!steps?.length) return null
 
@@ -389,14 +425,8 @@ function StepsList({ steps }) {
               {step.step_number}
             </div>
             <div className="flex-1 pt-1">
-              <p className="text-[var(--color-text)] leading-relaxed">{step.instruction}</p>
-              {step.media_url && (
-                <img
-                  src={step.media_url}
-                  alt={`Bước ${step.step_number}`}
-                  className="mt-3 rounded-[var(--radius-md)] w-full max-w-md"
-                />
-              )}
+              <p className="text-[var(--color-text)] leading-relaxed whitespace-pre-line">{step.instruction}</p>
+              <StepMediaGrid step={step} />
             </div>
           </li>
         ))}
@@ -595,16 +625,10 @@ function CookModeOverlay({ recipe, isOpen, onClose }) {
             <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-2xl font-bold mx-auto mb-6">
               {steps[currentStep]?.step_number}
             </div>
-            <p className="text-2xl md:text-3xl text-[var(--color-dark-text)] leading-relaxed font-body">
+            <p className="text-2xl md:text-3xl text-[var(--color-dark-text)] leading-relaxed font-body whitespace-pre-line">
               {steps[currentStep]?.instruction}
             </p>
-            {steps[currentStep]?.media_url && (
-              <img
-                src={steps[currentStep].media_url}
-                alt={`Bước ${steps[currentStep].step_number}`}
-                className="mt-6 rounded-[var(--radius-lg)] max-w-md mx-auto"
-              />
-            )}
+            <StepMediaGrid step={steps[currentStep]} compact />
           </motion.div>
 
           <div className="flex gap-4 mt-8">

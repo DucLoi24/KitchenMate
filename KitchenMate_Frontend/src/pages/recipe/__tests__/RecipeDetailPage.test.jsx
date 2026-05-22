@@ -109,4 +109,54 @@ describe('RecipeDetailPage author info', () => {
     expect(screen.getByRole('img', { name: 'Nguyễn Đức Lợi' })).toHaveAttribute('src', '/media/avatars/duc-loi.jpg')
     expect(screen.getByText('Nguyễn Đức Lợi')).toHaveClass('text-[var(--color-text)]')
   })
+
+  it('preserves line breaks when rendering recipe step instructions', async () => {
+    const instruction = 'Sơ chế nguyên liệu.\n\nƯớp thịt trong 15 phút.\nCho vào chảo và đảo đều.'
+    mockUseRecipe.mockReturnValue({
+      data: {
+        data: {
+          id: 'recipe-1',
+          title: 'Thịt kho',
+          description: 'Món ăn gia đình',
+          difficulty: 'EASY',
+          prep_time: 30,
+          thumbnail_url: null,
+          user: {
+            id: 'user-1',
+            full_name: 'Nguyễn Đức Lợi',
+            avatar_url: '/media/avatars/duc-loi.jpg',
+          },
+          categories: [],
+          recipe_ingredients: [],
+          steps: [
+            {
+              id: 1,
+              step_number: 1,
+              instruction,
+              media_url: null,
+              media_items: [],
+            },
+          ],
+          avg_rating: null,
+          like_count: 0,
+          is_favorited: false,
+        },
+      },
+      isLoading: false,
+      error: null,
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/recipe/recipe-1']}>
+        <Routes>
+          <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    const instructionNode = screen.getByText((_, node) => (
+      node?.tagName === 'P' && node.textContent === instruction
+    ))
+    expect(instructionNode).toHaveClass('whitespace-pre-line')
+  })
 })

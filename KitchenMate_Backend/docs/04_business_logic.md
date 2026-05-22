@@ -44,7 +44,7 @@ PRIVATE ──── publish() ──── LẬP TỨC PENDING
 | Kết quả AI | Hành vi |
 |---|---|
 | `YES` | Recipe tự động `PUBLIC` (AI duyệt trước) |
-| `NO` | Recipe về `PRIVATE` + lưu `moderation_reason` |
+| `NO` | Recipe về `PRIVATE` + lưu `rejection_reason` |
 | `SUSPECT` | Giữ `PENDING` để Admin duyệt thủ công |
 
 **Trạng thái AI Moderation:**
@@ -59,10 +59,12 @@ PRIVATE ──── publish() ──── LẬP TỨC PENDING
 **Cơ chế async:**
 1. User gọi `publish()` → Recipe **lập tức** chuyển `PENDING`
 2. Background thread gọi Ollama AI (sequential - có lock đảm bảo 1 công thức tại một thời điểm)
-3. Khi AI bắt đầu đọc → `ai_moderation_status = 'PROCESSING'`
+3. Khi AI bắt đầu đọc → `ai_moderation_status = 'PROCESSING'`, `ai_moderation_attempted=True`
 4. AI xử lý xong → cập nhật `visibility` và `ai_moderation_status` theo kết quả
-5. Sau khi xong → tự động lấy công thức PENDING tiếp theo trong hàng đợi
+5. Sau khi xong → tự động lấy công thức PENDING tiếp theo có `ai_moderation_attempted=False`
 6. User không blocked trong lúc chờ AI
+
+Nếu Ollama timeout hoặc lỗi kết nối, recipe giữ `visibility=PENDING`, `ai_moderation_status=PENDING`, lưu lý do vào `rejection_reason`, và không tự retry cho đến khi user gửi duyệt lại. Điều này tránh vòng lặp background task khi Ollama đang tắt.
 
 ---
 
@@ -125,12 +127,12 @@ Văn bản cần kiểm duyệt:
 | Tình huống | Hành vi Recipe publish | Hành vi Ingredient create |
 |---|---|---|
 | AI trả `YES` | `visibility=PUBLIC` | `status=PENDING` (chờ Admin) |
-| AI trả `NO` | Trả lỗi 400 | Trả lỗi 400 |
+| AI trả `NO` | `visibility=PRIVATE`, `ai_moderation_status=REJECTED`, lưu `rejection_reason` | Trả lỗi 400 |
 | AI trả `SUSPECT` | `visibility=PENDING` | `status=PENDING` |
-| AI timeout | Trả lỗi 503 | Lưu `PENDING`, không block user |
-| AI lỗi kết nối | Trả lỗi 503 | Lưu `PENDING`, không block user |
+| AI timeout | Giữ `PENDING`, lưu `rejection_reason`, không block user | Lưu `PENDING`, không block user |
+| AI lỗi kết nối | Giữ `PENDING`, lưu `rejection_reason`, không block user | Lưu `PENDING`, không block user |
 
-**Lý do khác biệt:** Recipe publish là hành động chủ động của user → cần thông báo lỗi rõ ràng. Ingredient create là đóng góp cộng đồng → ưu tiên không block user, để Admin xử lý sau.
+**Lý do khác biệt:** Recipe publish chạy moderation bất đồng bộ để không block người dùng. Ingredient create vẫn ưu tiên graceful degradation để Admin xử lý sau khi AI không sẵn sàng.
 
 ---
 
@@ -280,8 +282,15 @@ MediaUploadService._delete_old_file(old_url)
     └── Xóa file cũ trên disk (nếu tồn tại)
     │
     ▼
-Cập nhật DB (user.avatar_url / recipe.thumbnail_url / ...)
+Cập nhật DB (user.avatar_url / recipe.thumbnail_url / recipe_steps.media_url / recipe_step_media / ...)
 ```
+
+Step media hỗ trợ upload nhiều file cho cùng một bước:
+
+- Ảnh dùng luồng validate/resize/compress chung với `FileValidator` và `ImageProcessor`.
+- Video chấp nhận `mp4`, `webm`, `mov`, tối đa `VIDEO_UPLOAD_MAX_SIZE` (50MB), kiểm tra header file trước khi lưu.
+- Mỗi file tạo một bản ghi `RecipeStepMedia` với `order` tăng dần theo số media hiện có.
+- `recipe_steps.media_url` được set bằng media đầu tiên trong lần upload để giữ tương thích với client cũ; client mới đọc danh sách đầy đủ ở `steps[].media_items`.
 
 ### Cấu hình kích thước ảnh
 
@@ -299,15 +308,16 @@ media/
 ├── avatars/           → Ảnh đại diện user
 ├── recipes/
 │   ├── thumbnails/    → Ảnh đại diện công thức
-│   └── steps/         → Ảnh minh họa bước nấu ăn
+│   └── steps/         → Ảnh/video minh họa bước nấu ăn
 └── cooksnaps/         → Ảnh món ăn đã nấu (từ Review)
 ```
 
 ### Tên file
 
-Mỗi file được đặt tên theo UUID4 để tránh trùng lặp và không lộ thông tin:
+Mỗi file được đặt tên theo UUID4 để tránh trùng lặp và không lộ thông tin. Ảnh sau xử lý lưu dạng `.jpg`; video giữ extension hợp lệ ban đầu:
 ```
 {uuid4}.jpg
+{uuid4}.mp4
 ```
 
 ---

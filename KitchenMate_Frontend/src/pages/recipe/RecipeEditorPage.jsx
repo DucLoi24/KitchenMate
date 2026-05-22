@@ -51,6 +51,7 @@ export function RecipeEditorPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [pendingStepMedia, setPendingStepMedia] = useState({})
 
   // Use ONLY the hook's formData - don't create a separate local state
   // This prevents the infinite loop bug where local formData was empty (not updated)
@@ -183,6 +184,7 @@ export function RecipeEditorPage() {
           unit: ing.unit,
         })),
         steps: (formData.steps || []).map((step, index) => ({
+          ...(typeof step.id === 'number' ? { id: step.id } : {}),
           step_number: index + 1,
           instruction: step.instruction,
           media_url: step.media_url || null,
@@ -209,7 +211,27 @@ export function RecipeEditorPage() {
         }
       }
 
+      const savedSteps = result.data?.steps || []
+      const pendingEntries = (formData.steps || [])
+        .map((step, index) => ({
+          stepId: savedSteps[index]?.id,
+          files: pendingStepMedia[step.id] || [],
+        }))
+        .filter((entry) => entry.stepId && entry.files.length > 0)
+
+      if (pendingEntries.length > 0 && recipeId) {
+        try {
+          for (const entry of pendingEntries) {
+            await recipeApi.uploadStepMedia(recipeId, entry.stepId, entry.files)
+          }
+        } catch (uploadError) {
+          console.error('Step media upload failed:', uploadError)
+          toast.error('Upload ảnh/video cho bước nấu thất bại, nhưng công thức đã được lưu.')
+        }
+      }
+
       clearAllDraft()
+      setPendingStepMedia({})
       toast.success(isEditMode ? 'Công thức đã được cập nhật!' : 'Công thức đã được tạo!')
 
       navigate(`/recipe/${recipeId}`)
@@ -231,6 +253,22 @@ export function RecipeEditorPage() {
     updateFormData({ visibility })
   }
 
+  const handlePendingMediaChange = (stepKey, files) => {
+    setPendingStepMedia((prev) => {
+      if (!files?.length) {
+        const next = { ...prev }
+        delete next[stepKey]
+        return next
+      }
+      return { ...prev, [stepKey]: files }
+    })
+  }
+
+  const handleClearDraft = () => {
+    clearAllDraft()
+    setPendingStepMedia({})
+  }
+
   const renderStep = () => {
     const stepProps = {
       data: formData,
@@ -244,7 +282,13 @@ export function RecipeEditorPage() {
       case 2:
         return <IngredientList {...stepProps} />
       case 3:
-        return <StepList {...stepProps} />
+        return (
+          <StepList
+            {...stepProps}
+            pendingMedia={pendingStepMedia}
+            onPendingMediaChange={handlePendingMediaChange}
+          />
+        )
       case 4:
         return <RecipePreview recipeData={formData} onVisibilityChange={handleVisibilityChange} />
       default:
@@ -287,7 +331,7 @@ export function RecipeEditorPage() {
 
           <button
             type="button"
-            onClick={() => clearAllDraft()}
+            onClick={handleClearDraft}
             className="text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text)] transition-colors"
           >
             Xóa bản nháp

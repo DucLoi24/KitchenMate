@@ -99,7 +99,7 @@ Ollama Local LLM (AI Moderation)
 3. **Tủ lạnh số (Pantry)** — Quản lý nguyên liệu hiện có, đồng bộ từ danh sách đi chợ qua atomic transaction.
 4. **Gợi ý món ăn** — Thuật toán Tier-3 Scoring với 2 chế độ: COOK_NOW và ADD_MORE.
 5. **AI Moderation** — Kiểm duyệt nội dung tự động qua Ollama Local LLM, graceful degradation khi AI lỗi.
-6. **File Upload** — Validate magic bytes, resize/compress ảnh, hỗ trợ 4 loại: avatar, thumbnail, step media, cooksnap.
+6. **File Upload** — Validate magic bytes, resize/compress ảnh cho avatar/thumbnail/cooksnap/step image; step media hỗ trợ thêm video `mp4`, `webm`, `mov` với giới hạn 50MB.
 7. **Tìm kiếm & Lọc** — Filter công thức theo nhiều tiêu chí, autocomplete nguyên liệu.
 8. **Thống kê** — User stats (recipe_count, total_likes, average_rating) và Recipe stats (view_count, save_count).
 9. **Admin Panel** — Duyệt/từ chối công thức và nguyên liệu, quản lý tài khoản người dùng.

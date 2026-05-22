@@ -194,6 +194,22 @@ Kiểm tra các workflow phức tạp end-to-end:
 6. **Social Review + Stats:** Tạo review → gọi stats → average_rating được tính đúng.
 7. **AI unavailable graceful degradation:** Ollama down → ingredient create vẫn thành công (PENDING).
 
+### test_upload_integration.py
+
+Kiểm tra luồng upload media:
+
+- Upload avatar, thumbnail, step media, cooksnap.
+- Step media hỗ trợ cộng dồn nhiều ảnh/video cho cùng một step, giữ `media_url` đầu tiên để tương thích client cũ.
+- Validate sai định dạng, sai quyền owner, và giới hạn kích thước.
+
+### test_recipe_moderation_task.py
+
+Kiểm tra background AI moderation cho recipe:
+
+- AI trả `NO` → recipe về `PRIVATE`, status `REJECTED`, lưu `rejection_reason`.
+- Ollama lỗi/timeout → recipe giữ `PENDING`, đánh dấu `ai_moderation_attempted=True`, không tự retry vòng lặp.
+- Gửi duyệt lại reset marker và lý do từ chối cũ.
+
 ---
 
 ## Performance Tests

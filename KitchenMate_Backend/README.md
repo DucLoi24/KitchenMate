@@ -223,7 +223,14 @@ Sau khi chạy server, truy cập:
 | GET | `/api/recipes/my-recipes/` | Công thức của tôi | Yes |
 | POST | `/api/recipes/{id}/publish/` | Gửi duyệt qua AI moderation | Owner |
 | GET | `/api/recipes/{id}/stats/` | Thống kê công thức | No / Owner |
-| POST | `/api/recipes/{id}/upload/thumbnail/` | Upload ảnh đại diện công thức | Owner |
+| POST | `/api/recipes/{id}/thumbnail/` | Upload ảnh đại diện công thức | Owner |
+| POST | `/api/recipes/{id}/steps/{step_id}/media/` | Upload nhiều ảnh/video cho một bước nấu | Owner |
+| GET | `/api/recipes/categories/` | Danh sách danh mục công thức active | No |
+| POST | `/api/recipes/categories/` | Tạo danh mục công thức | Admin |
+| PATCH | `/api/recipes/categories/{slug}/` | Cập nhật danh mục công thức | Admin |
+| DELETE | `/api/recipes/categories/{slug}/` | Vô hiệu hóa danh mục công thức | Admin |
+| POST | `/api/recipes/categories/{slug}/restore/` | Khôi phục danh mục công thức | Admin |
+| POST | `/api/recipes/categories/{slug}/move/` | Đổi thứ tự ưu tiên lên/xuống | Admin |
 
 ### Kitchen (Pantry & Shopping List)
 
@@ -323,6 +330,6 @@ KitchenMate_Backend/
 - Luôn sử dụng `.select_related()` và `.prefetch_related()` để tối ưu query, tránh N+1 problem
 - Sử dụng `transaction.atomic()` cho các thao tác cần đảm bảo tính toàn vẹn dữ liệu (ví dụ: `mark-purchased`)
 - Không bao giờ commit file `.env` lên git
-- Media files chỉ serve qua Django trong development; production nên dùng CDN hoặc S3
-- AI moderation yêu cầu Ollama đang chạy local; nếu không có Ollama, các endpoint tạo nguyên liệu/công thức sẽ trả về lỗi
+- Media files gồm avatar, thumbnail, ảnh/video bước nấu, cooksnap; development serve qua Django, production nên dùng CDN hoặc S3
+- AI moderation dùng Ollama local; nếu Ollama không chạy, công thức public sẽ giữ trạng thái chờ duyệt để admin xử lý, còn các luồng AI đồng bộ có thể trả lỗi tùy endpoint
 - Để tạo `SECRET_KEY` ngẫu nhiên: `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"`

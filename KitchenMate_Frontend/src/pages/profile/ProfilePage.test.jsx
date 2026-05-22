@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { ProfilePage } from './ProfilePage'
 
 vi.mock('framer-motion', () => ({
+  AnimatePresence: ({ children }) => <>{children}</>,
   motion: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,
     button: ({ children, ...props }) => <button {...props}>{children}</button>,
@@ -12,6 +13,7 @@ vi.mock('framer-motion', () => ({
 
 const mockAuthApi = vi.hoisted(() => ({
   getUserStats: vi.fn(),
+  changePassword: vi.fn(),
 }))
 
 vi.mock('@/api/authApi', () => ({
@@ -44,6 +46,10 @@ describe('ProfilePage', () => {
         following_count: 3,
       },
     })
+    mockAuthApi.changePassword.mockResolvedValue({
+      success: true,
+      message: 'Đổi mật khẩu thành công.',
+    })
   })
 
   it('renders own follow stats with links to public follow lists', async () => {
@@ -61,5 +67,33 @@ describe('ProfilePage', () => {
       'href',
       '/profile/user-1/following'
     )
+  })
+
+  it('lets an editing user submit a password change request', async () => {
+    render(
+      <MemoryRouter>
+        <ProfilePage />
+      </MemoryRouter>
+    )
+
+    fireEvent.click(screen.getByRole('button', { name: /Chỉnh sửa/i }))
+    fireEvent.change(screen.getByLabelText(/Mật khẩu hiện tại/i), {
+      target: { value: 'OldPass123!' },
+    })
+    fireEvent.change(screen.getByLabelText(/^Mật khẩu mới/i), {
+      target: { value: 'NewPass123!' },
+    })
+    fireEvent.change(screen.getByLabelText(/Xác nhận mật khẩu/i), {
+      target: { value: 'NewPass123!' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: /Đổi mật khẩu/i }))
+
+    await waitFor(() => {
+      expect(mockAuthApi.changePassword).toHaveBeenCalledWith({
+        old_password: 'OldPass123!',
+        new_password: 'NewPass123!',
+        new_password_confirm: 'NewPass123!',
+      })
+    })
   })
 })

@@ -60,4 +60,23 @@ describe('authApi - user search contract', () => {
     })
     expect(result).toEqual(response)
   })
+
+  it('calls POST /api/accounts/me/change-password/ with current and new password fields', async () => {
+    const { authApi } = await import('../authApi')
+    const response = {
+      success: true,
+      message: 'Đổi mật khẩu thành công.',
+    }
+    const payload = {
+      old_password: 'OldPass123!',
+      new_password: 'NewPass123!',
+      new_password_confirm: 'NewPass123!',
+    }
+    mockAxiosInstance.post.mockResolvedValueOnce({ data: response })
+
+    const result = await authApi.changePassword(payload)
+
+    expect(mockAxiosInstance.post).toHaveBeenCalledWith('/accounts/me/change-password/', payload)
+    expect(result).toEqual(response)
+  })
 })

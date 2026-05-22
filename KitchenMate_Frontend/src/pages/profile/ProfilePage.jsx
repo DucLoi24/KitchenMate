@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { Camera, User, Mail, BookOpen, FolderOpen, Save, X, Users, UserCheck, Star, Calendar } from 'lucide-react'
+import { Camera, User, Mail, BookOpen, FolderOpen, Save, X, Users, UserCheck, Star, Calendar, KeyRound, ShieldCheck } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Input } from '@/components/ui/Input'
 import { authApi } from '@/api/authApi'
 import toast from 'react-hot-toast'
 
@@ -27,6 +28,7 @@ export function ProfilePage() {
   const { user, updateUser } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false)
   const [stats, setStats] = useState({
     recipe_count: 0,
     total_likes: 0,
@@ -39,6 +41,12 @@ export function ProfilePage() {
     bio: user?.bio || '',
     avatar: null
   })
+  const [passwordForm, setPasswordForm] = useState({
+    old_password: '',
+    new_password: '',
+    new_password_confirm: '',
+  })
+  const [passwordErrors, setPasswordErrors] = useState({})
   const [avatarPreview, setAvatarPreview] = useState(user?.avatar_url || null)
   const fileInputRef = useRef(null)
 
@@ -77,6 +85,62 @@ export function ProfilePage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+  }
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target
+    setPasswordForm(prev => ({ ...prev, [name]: value }))
+    setPasswordErrors(prev => ({ ...prev, [name]: undefined, form: undefined }))
+  }
+
+  const validatePasswordForm = () => {
+    const errors = {}
+
+    if (!passwordForm.old_password) {
+      errors.old_password = 'Vui lòng nhập mật khẩu hiện tại'
+    }
+    if (!passwordForm.new_password) {
+      errors.new_password = 'Vui lòng nhập mật khẩu mới'
+    } else if (passwordForm.new_password.length < 8) {
+      errors.new_password = 'Mật khẩu mới phải có ít nhất 8 ký tự'
+    }
+    if (!passwordForm.new_password_confirm) {
+      errors.new_password_confirm = 'Vui lòng xác nhận mật khẩu mới'
+    } else if (passwordForm.new_password !== passwordForm.new_password_confirm) {
+      errors.new_password_confirm = 'Mật khẩu xác nhận không khớp'
+    }
+
+    setPasswordErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const getPasswordErrorMessage = (err) => {
+    const details = err?.response?.data?.error?.details
+    const firstDetail = details && Object.values(details).flat().find(Boolean)
+    return firstDetail || err?.response?.data?.error?.message || err?.response?.data?.message || 'Không thể đổi mật khẩu. Vui lòng thử lại.'
+  }
+
+  const handleChangePassword = async (e) => {
+    e.preventDefault()
+    if (!validatePasswordForm()) return
+
+    setIsPasswordLoading(true)
+    try {
+      await authApi.changePassword(passwordForm)
+      setPasswordForm({
+        old_password: '',
+        new_password: '',
+        new_password_confirm: '',
+      })
+      setPasswordErrors({})
+      toast.success('Đổi mật khẩu thành công')
+    } catch (err) {
+      const message = getPasswordErrorMessage(err)
+      setPasswordErrors({ form: message })
+      toast.error(message)
+    } finally {
+      setIsPasswordLoading(false)
+    }
   }
 
   const handleSave = async () => {
@@ -122,6 +186,12 @@ export function ProfilePage() {
       bio: user?.bio || '',
       avatar: null
     })
+    setPasswordForm({
+      old_password: '',
+      new_password: '',
+      new_password_confirm: '',
+    })
+    setPasswordErrors({})
     setAvatarPreview(user?.avatar_url || null)
     setIsEditing(false)
   }
@@ -333,6 +403,85 @@ export function ProfilePage() {
               </CardContent>
             </Card>
           </motion.div>
+
+          {isEditing && (
+            <motion.div variants={itemVariants}>
+              <Card shadow="md" border="default">
+                <CardContent className="p-6">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-6">
+                    <div>
+                      <h3 className="font-display text-lg font-semibold text-[var(--color-text)] flex items-center gap-2">
+                        <KeyRound className="w-5 h-5 text-[var(--color-primary)]" />
+                        Bảo mật tài khoản
+                      </h3>
+                      <p className="text-sm text-[var(--color-text-secondary)] mt-1">
+                        Cập nhật mật khẩu định kỳ để bảo vệ tài khoản của bạn.
+                      </p>
+                    </div>
+                    <div className="inline-flex items-center gap-2 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-background-alt)] px-3 py-2 text-sm text-[var(--color-text-secondary)]">
+                      <ShieldCheck className="w-4 h-4 text-[var(--color-secondary)]" />
+                      Yêu cầu mật khẩu hiện tại
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleChangePassword} className="space-y-5">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        id="old-password"
+                        name="old_password"
+                        type="password"
+                        label="Mật khẩu hiện tại"
+                        value={passwordForm.old_password}
+                        onChange={handlePasswordInputChange}
+                        error={passwordErrors.old_password}
+                        autoComplete="current-password"
+                        required
+                      />
+                      <Input
+                        id="new-password"
+                        name="new_password"
+                        type="password"
+                        label="Mật khẩu mới"
+                        value={passwordForm.new_password}
+                        onChange={handlePasswordInputChange}
+                        error={passwordErrors.new_password}
+                        helperText="Tối thiểu 8 ký tự"
+                        autoComplete="new-password"
+                        required
+                      />
+                      <Input
+                        id="new-password-confirm"
+                        name="new_password_confirm"
+                        type="password"
+                        label="Xác nhận mật khẩu"
+                        value={passwordForm.new_password_confirm}
+                        onChange={handlePasswordInputChange}
+                        error={passwordErrors.new_password_confirm}
+                        autoComplete="new-password"
+                        required
+                      />
+                    </div>
+
+                    {passwordErrors.form && (
+                      <p className="text-sm text-red-500">{passwordErrors.form}</p>
+                    )}
+
+                    <div className="flex justify-end">
+                      <Button
+                        type="submit"
+                        variant="secondary"
+                        isLoading={isPasswordLoading}
+                        disabled={isLoading}
+                      >
+                        <KeyRound className="w-4 h-4 mr-1" />
+                        Đổi mật khẩu
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
 
           {/* Account Stats */}
           <motion.div variants={itemVariants}>

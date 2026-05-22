@@ -143,17 +143,18 @@ def run_ai_moderation(recipe_id: int)
     4. Call moderate_text()
     5. Update visibility:
        - YES  → PUBLIC
-       - NO   → PRIVATE + moderation_reason
+       - NO   → PRIVATE + rejection_reason
        - SUSPECT → keep PENDING
     """
 
 def trigger_async_moderation(recipe_id: int)
-    """Spawn daemon thread chạy run_ai_moderation()."""
+    """Reset queue markers và spawn daemon thread chạy run_ai_moderation()."""
 ```
 
 **Moderation flow mới:**
 - `publish()` → set PENDING → `trigger_async_moderation()` → return 200 ngay
-- AI chạy nền → cập nhật visibility theo kết quả
+- AI chạy nền → set `ai_moderation_attempted=True`, cập nhật visibility theo kết quả
+- AI lỗi kết nối/timeout → giữ `PENDING`, lưu `rejection_reason`, không tự retry vòng lặp
 - Admin và AI cùng share một "rổ PENDING"
 
 ---
@@ -241,7 +242,7 @@ class MediaUploadService:
         """Upload thumbnail. Returns: '/media/recipes/thumbnails/{uuid}.jpg'"""
 
     def upload_step_media(self, step, file) -> str
-        """Upload step media. Returns: '/media/recipes/steps/{uuid}.jpg'"""
+        """Legacy image-only upload for step.media_url. Returns: '/media/recipes/steps/{uuid}.jpg'"""
 
     def upload_cooksnap(self, review, file) -> str
         """Upload cooksnap. Returns: '/media/cooksnaps/{uuid}.jpg'"""
@@ -338,13 +339,15 @@ Filter theo `category` qua `DjangoFilterBackend`.
 | `Recipe` | Công thức nấu ăn. UUID PK. Visibility: PRIVATE/PENDING/PUBLIC |
 | `RecipeIngredient` | M2M through table: recipe ↔ ingredient với quantity + unit |
 | `RecipeStep` | Các bước thực hiện. Ordering: step_number |
+| `RecipeStepMedia` | Nhiều ảnh/video cho từng bước nấu, ordering: step, order, created_at |
 
 ### `serializers.py`
 
 | Serializer | Dùng cho | Mô tả |
 |---|---|---|
 | `RecipeIngredientSerializer` | Nested trong Recipe | ingredient_name, ingredient_category, quantity, unit |
-| `RecipeStepSerializer` | Nested trong Recipe | step_number, instruction, media_url |
+| `RecipeStepMediaSerializer` | Nested trong step | media_url, media_type, order, original_name |
+| `RecipeStepSerializer` | Nested trong Recipe | step_number, instruction, media_url, media_items |
 | `RecipeListSerializer` | List endpoint | Ít trường, tối ưu performance |
 | `RecipeDetailSerializer` | Detail endpoint | Đầy đủ: user, ingredients, steps, avg_rating |
 | `RecipeCreateSerializer` | Create/Update | Nested write: ingredients + steps trong transaction.atomic() |
@@ -379,7 +382,9 @@ Filter theo `category` qua `DjangoFilterBackend`.
 | View | Endpoint | Mô tả |
 |---|---|---|
 | `RecipeThumbnailUploadView` | POST `/api/recipes/{recipe_id}/thumbnail/` | Upload thumbnail |
-| `RecipeStepMediaUploadView` | POST `/api/recipes/{recipe_id}/steps/{step_id}/media/` | Upload step media |
+| `RecipeStepMediaUploadView` | POST `/api/recipes/{recipe_id}/steps/{step_id}/media/` | Upload nhiều ảnh/video cho một step |
+
+`RecipeStepMediaUploadView` không dùng `MediaUploadService.upload_step_media`; view tự xử lý multi-file để tạo nhiều bản ghi `RecipeStepMedia`, hỗ trợ ảnh đã resize/compress và video giữ định dạng hợp lệ.
 
 ---
 

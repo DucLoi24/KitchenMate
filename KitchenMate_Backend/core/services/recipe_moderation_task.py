@@ -22,14 +22,15 @@ def run_ai_moderation(recipe_id: int):
 
     Logic:
         1. Acquire moderation_lock (blocking with timeout) - wait for lock
-        2. Skip if ai_moderation_status not 'PENDING' (already processed or not started)
-        3. Build text: title + description + steps
-        4. Call moderate_text()
-        5. Update ai_moderation_status based on result:
+        2. Skip if ai_moderation_status not 'PENDING' or AI already attempted
+        3. Mark AI attempt as started
+        4. Build text: title + description + steps
+        5. Call moderate_text()
+        6. Update ai_moderation_status based on result:
             - YES  → 'APPROVED', visibility = 'PUBLIC'
-            - NO   → 'REJECTED', visibility = 'PRIVATE', moderation_reason = reason
+            - NO   → 'REJECTED', visibility = 'PRIVATE', rejection_reason = reason
             - SUSPECT → 'PENDING' (admin will handle manually)
-        6. Release lock and pick up next PENDING recipe
+        7. Release lock and pick up next unattempted PENDING recipe
 
     This runs in a separate thread to avoid blocking the publish() request.
     """
@@ -51,9 +52,14 @@ def run_ai_moderation(recipe_id: int):
             logger.info("Recipe %s not in PENDING state (status=%s), skipping", recipe_id, recipe.ai_moderation_status)
             return
 
+        if recipe.ai_moderation_attempted:
+            logger.info("Recipe %s already attempted AI moderation, skipping", recipe_id)
+            return
+
         # AI starts reading this recipe - set PROCESSING so admin knows which one
         recipe.ai_moderation_status = 'PROCESSING'
-        recipe.save(update_fields=['ai_moderation_status'])
+        recipe.ai_moderation_attempted = True
+        recipe.save(update_fields=['ai_moderation_status', 'ai_moderation_attempted'])
 
         steps_text = '\n'.join(
             step.instruction
@@ -65,9 +71,9 @@ def run_ai_moderation(recipe_id: int):
             result = moderate_text(text_to_moderate)
         except (ModerationTimeoutError, ModerationServiceError) as e:
             logger.error("AI moderation error for recipe %s: %s", recipe_id, e)
-            recipe.moderation_reason = MODERATION_ERROR_REASON
+            recipe.rejection_reason = MODERATION_ERROR_REASON
             recipe.ai_moderation_status = 'PENDING'
-            recipe.save(update_fields=['moderation_reason', 'ai_moderation_status'])
+            recipe.save(update_fields=['rejection_reason', 'ai_moderation_status'])
             return
 
         if result == 'YES':
@@ -77,9 +83,9 @@ def run_ai_moderation(recipe_id: int):
             logger.info("Recipe %s approved by AI, set to PUBLIC", recipe_id)
         elif result == 'NO':
             recipe.visibility = 'PRIVATE'
-            recipe.moderation_reason = NO_CONTENT_REASON
+            recipe.rejection_reason = NO_CONTENT_REASON
             recipe.ai_moderation_status = 'REJECTED'
-            recipe.save(update_fields=['visibility', 'moderation_reason', 'ai_moderation_status'])
+            recipe.save(update_fields=['visibility', 'rejection_reason', 'ai_moderation_status'])
             logger.info("Recipe %s rejected by AI, set to PRIVATE", recipe_id)
         else:
             recipe.ai_moderation_status = 'PENDING'
@@ -92,7 +98,8 @@ def run_ai_moderation(recipe_id: int):
             return
         # Pick up next PENDING recipe in a new thread (don't process inline)
         next_recipe = Recipe.objects.filter(
-            ai_moderation_status='PENDING'
+            ai_moderation_status='PENDING',
+            ai_moderation_attempted=False,
         ).order_by('created_at').first()
         if next_recipe:
             logger.info("Queue: picking up next PENDING recipe: %s", next_recipe.id)
@@ -108,7 +115,7 @@ def trigger_async_moderation(recipe_id: int):
     """
     Spawn a background thread to run AI moderation.
     Non-blocking - returns immediately after thread starts.
-    Sets PENDING status (recipe is in queue waiting for AI to read it).
+    Sets PENDING status and resets the AI attempt marker for a fresh moderation run.
     """
     from apps.recipes.models import Recipe
 
@@ -120,7 +127,14 @@ def trigger_async_moderation(recipe_id: int):
 
     recipe.visibility = 'PENDING'
     recipe.ai_moderation_status = 'PENDING'
-    recipe.save(update_fields=['visibility', 'ai_moderation_status'])
+    recipe.ai_moderation_attempted = False
+    recipe.rejection_reason = None
+    recipe.save(update_fields=[
+        'visibility',
+        'ai_moderation_status',
+        'ai_moderation_attempted',
+        'rejection_reason',
+    ])
 
     thread = threading.Thread(
         target=run_ai_moderation,

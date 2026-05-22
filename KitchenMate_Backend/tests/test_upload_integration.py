@@ -13,7 +13,8 @@ from rest_framework.test import APIClient
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.accounts.models import User
-from apps.recipes.models import Recipe, RecipeStep
+from apps.recipes.models import Recipe, RecipeStep, RecipeStepMedia
+from apps.recipes.serializers import RecipeCreateSerializer
 from apps.social.models import Review
 
 
@@ -28,6 +29,11 @@ def create_test_image_file(name='test.jpg', width=100, height=100, fmt='JPEG') -
     img.save(buf, format=fmt)
     content_type = 'image/jpeg' if fmt == 'JPEG' else 'image/png'
     return SimpleUploadedFile(name, buf.getvalue(), content_type=content_type)
+
+def create_test_video_file(name='step.mp4') -> SimpleUploadedFile:
+    """Tạo file MP4 tối thiểu đủ để test upload video."""
+    content = b'\x00\x00\x00\x18ftypmp42\x00\x00\x00\x00mp42isom' + b'\x00' * 128
+    return SimpleUploadedFile(name, content, content_type='video/mp4')
 
 
 def get_auth_client(user) -> APIClient:
@@ -159,6 +165,76 @@ def test_step_media_upload_success(user_a, recipe_a, step_a, tmp_path):
 
         step_a.refresh_from_db()
         assert step_a.media_url == response.data['url']
+
+@pytest.mark.django_db
+def test_step_media_upload_accepts_multiple_image_and_video_files(user_a, recipe_a, step_a, tmp_path):
+    """POST nhiều file cho một step → tạo nhiều media item theo thứ tự upload."""
+    with override_settings(MEDIA_ROOT=str(tmp_path)):
+        client = get_auth_client(user_a)
+
+        response = client.post(
+            f'/api/recipes/{recipe_a.id}/steps/{step_a.id}/media/',
+            {
+                'files': [
+                    create_test_image_file('step-image.jpg'),
+                    create_test_video_file('step-video.mp4'),
+                ]
+            },
+            format='multipart'
+        )
+
+        assert response.status_code == 200
+        assert response.data['message'] == 'Cập nhật media bước thực hiện thành công'
+        assert len(response.data['media']) == 2
+        assert response.data['media'][0]['media_type'] == 'IMAGE'
+        assert response.data['media'][1]['media_type'] == 'VIDEO'
+
+        media_items = list(RecipeStepMedia.objects.filter(step=step_a).order_by('order'))
+        assert len(media_items) == 2
+        assert media_items[0].media_url.startswith('/media/recipes/steps/')
+        assert media_items[0].media_type == 'IMAGE'
+        assert media_items[1].media_url.startswith('/media/recipes/steps/')
+        assert media_items[1].media_type == 'VIDEO'
+
+@pytest.mark.django_db
+def test_recipe_update_preserves_step_media_items_when_step_id_is_sent(user_a, recipe_a, step_a):
+    """Update recipe text/step order không làm mất media đã upload của step đó."""
+    RecipeStepMedia.objects.create(
+        step=step_a,
+        media_url='/media/recipes/steps/existing.jpg',
+        media_type='IMAGE',
+        order=1,
+        original_name='existing.jpg',
+    )
+
+    serializer = RecipeCreateSerializer(
+        recipe_a,
+        data={
+            'title': 'Phở bò cập nhật',
+            'description': recipe_a.description,
+            'difficulty': recipe_a.difficulty,
+            'prep_time': recipe_a.prep_time,
+            'thumbnail_url': recipe_a.thumbnail_url,
+            'visibility': recipe_a.visibility,
+            'steps': [
+                {
+                    'id': step_a.id,
+                    'step_number': 1,
+                    'instruction': 'Đun nước dùng trong 60 phút',
+                    'media_url': step_a.media_url,
+                }
+            ],
+        },
+        partial=True,
+    )
+
+    assert serializer.is_valid(), serializer.errors
+    serializer.save()
+
+    new_step = recipe_a.steps.get(step_number=1)
+    media_items = list(new_step.media_items.all())
+    assert len(media_items) == 1
+    assert media_items[0].media_url == '/media/recipes/steps/existing.jpg'
 
 
 @pytest.mark.django_db
