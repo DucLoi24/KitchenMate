@@ -435,9 +435,10 @@ function StepsList({ steps }) {
   )
 }
 
-function RelatedRecipesCarousel({ categoryIds }) {
+function RelatedRecipesCarousel({ categoryIds, currentRecipeId }) {
   const [recipes, setRecipes] = useState([])
   const scrollRef = useRef(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     if (!categoryIds?.length) return
@@ -446,13 +447,13 @@ function RelatedRecipesCarousel({ categoryIds }) {
         const categoryId = categoryIds[0]
         const response = await recipeApi.getRecipes({ category: categoryId, page_size: 6 })
         const results = response.data?.results || []
-        setRecipes(results.slice(0, 5))
+        setRecipes(results.filter((recipe) => recipe.id !== currentRecipeId).slice(0, 5))
       } catch (err) {
         console.warn('Failed to fetch related recipes:', err)
       }
     }
     fetchRelated()
-  }, [categoryIds])
+  }, [categoryIds, currentRecipeId])
 
   const scroll = (direction) => {
     if (!scrollRef.current) return
@@ -508,7 +509,7 @@ function RelatedRecipesCarousel({ categoryIds }) {
                 save_count: recipe.save_count,
                 is_favorited: false,
               }}
-              onClick={() => {}}
+              onClick={() => navigate(`/recipe/${recipe.id}`)}
             />
           </div>
         ))}
@@ -864,7 +865,7 @@ export function RecipeDetailPage() {
           </div>
         </motion.div>
 
-        <RelatedRecipesCarousel categoryIds={categoryIds} />
+        <RelatedRecipesCarousel categoryIds={categoryIds} currentRecipeId={recipe.id} />
       </article>
 
       <CookModeOverlay

@@ -1,13 +1,16 @@
 // @vitest-environment jsdom
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { RecipeDetailPage } from '../RecipeDetailPage'
+import { recipeApi } from '@/api/recipeApi'
 
 vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }) => <>{children}</>,
   motion: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,
+    article: ({ children, ...props }) => <article {...props}>{children}</article>,
+    button: ({ children, ...props }) => <button {...props}>{children}</button>,
   },
   useScroll: () => ({ scrollYProgress: {} }),
   useTransform: () => 0,
@@ -46,6 +49,11 @@ vi.mock('@/components/report/ReportModal', () => ({
 
 const mockUseRecipe = vi.hoisted(() => vi.fn())
 
+function LocationProbe() {
+  const location = useLocation()
+  return <div data-testid="location">{location.pathname}</div>
+}
+
 vi.mock('@/hooks/useRecipes', () => ({
   useRecipe: mockUseRecipe,
 }))
@@ -69,6 +77,7 @@ vi.mock('@/api/recipeApi', () => ({
 describe('RecipeDetailPage author info', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    recipeApi.getRecipes.mockResolvedValue({ data: { results: [] } })
     mockUseRecipe.mockReturnValue({
       data: {
         data: {
@@ -158,5 +167,79 @@ describe('RecipeDetailPage author info', () => {
       node?.tagName === 'P' && node.textContent === instruction
     ))
     expect(instructionNode).toHaveClass('whitespace-pre-line')
+  })
+
+  it('navigates when clicking a related recipe card', async () => {
+    mockUseRecipe.mockReturnValue({
+      data: {
+        data: {
+          id: 'recipe-1',
+          title: 'Trứng rán',
+          description: 'Trứng rán đơn giản',
+          difficulty: 'EASY',
+          prep_time: 15,
+          thumbnail_url: '/media/recipes/trung-ran.jpg',
+          user: {
+            id: 'user-1',
+            full_name: 'Nguyễn Đức Lợi',
+            avatar_url: '/media/avatars/duc-loi.jpg',
+          },
+          categories: [{ id: 'category-1', name: 'Món Việt', slug: 'mon-viet' }],
+          recipe_ingredients: [],
+          steps: [],
+          avg_rating: null,
+          like_count: 0,
+          is_favorited: false,
+        },
+      },
+      isLoading: false,
+      error: null,
+    })
+    recipeApi.getRecipes.mockResolvedValue({
+      data: {
+        results: [
+          {
+            id: 'recipe-1',
+            title: 'Trứng rán',
+            thumbnail_url: '/media/recipes/trung-ran.jpg',
+            user_name: 'Nguyễn Đức Lợi',
+            user_avatar: null,
+            prep_time: 15,
+            difficulty: 'EASY',
+            avg_rating: null,
+            save_count: 0,
+          },
+          {
+            id: 'recipe-2',
+            title: 'Canh chua cá',
+            thumbnail_url: '/media/recipes/canh-chua.jpg',
+            user_name: 'Bếp Nhà',
+            user_avatar: null,
+            prep_time: 35,
+            difficulty: 'MEDIUM',
+            avg_rating: 4.5,
+            save_count: 3,
+          },
+        ],
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/recipe/recipe-1']}>
+        <LocationProbe />
+        <Routes>
+          <Route path="/recipe/:id" element={<RecipeDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Canh chua cá')).toBeInTheDocument()
+    expect(screen.queryAllByText('Trứng rán')).toHaveLength(1)
+
+    fireEvent.click(screen.getByText('Canh chua cá'))
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location')).toHaveTextContent('/recipe/recipe-2')
+    })
   })
 })
