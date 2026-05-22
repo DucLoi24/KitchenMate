@@ -402,14 +402,14 @@ Filter theo `category` qua `DjangoFilterBackend`.
 | Serializer | Mô tả |
 |---|---|
 | `PantrySerializer` | ingredient_name, ingredient_category, quantity, unit |
-| `ShoppingListSerializer` | ingredient_name, quantity, unit, is_purchased |
+| `ShoppingListSerializer` | ingredient_name, quantity, unit, unit_display, is_purchased; validate unit theo allowed units khi cập nhật |
 
 ### `views.py`
 
 | ViewSet/View | Mô tả |
 |---|---|
 | `PantryViewSet` | CRUD tủ lạnh số. Ownership isolation |
-| `ShoppingListViewSet` | CRUD danh sách đi chợ + mark_purchased (atomic transaction) |
+| `ShoppingListViewSet` | CRUD danh sách đi chợ, update item chưa mua, mark_purchased/mark_unpurchased atomic |
 | `RecommendationView` | POST suggest — Tier-3 Scoring Algorithm |
 
 ### `services/recommendation_engine.py`

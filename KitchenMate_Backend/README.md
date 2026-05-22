@@ -244,10 +244,13 @@ Sau khi chạy server, truy cập:
 | DELETE | `/api/kitchen/pantry/{id}/` | Xóa khỏi tủ lạnh | Owner |
 | GET | `/api/kitchen/shopping-list/` | Danh sách đi chợ | Yes |
 | POST | `/api/kitchen/shopping-list/` | Thêm vào danh sách đi chợ | Yes |
+| PUT | `/api/kitchen/shopping-list/{id}/` | Cập nhật số lượng và đơn vị của item chưa mua | Owner |
+| PATCH | `/api/kitchen/shopping-list/{id}/` | Cập nhật một phần item chưa mua | Owner |
 | DELETE | `/api/kitchen/shopping-list/{id}/` | Xóa khỏi danh sách | Owner |
 | POST | `/api/kitchen/shopping-list/{id}/mark-purchased/` | Đánh dấu đã mua + đồng bộ tủ lạnh (atomic) | Owner |
+| POST | `/api/kitchen/shopping-list/{id}/mark-unpurchased/` | Bỏ đánh dấu đã mua + trừ khỏi tủ lạnh (atomic) | Owner |
 
-> **Ghi chú:** `mark-purchased` thực hiện atomic transaction — đồng thời đánh dấu đã mua và cập nhật tủ lạnh. Nếu bất kỳ bước nào thất bại, toàn bộ thao tác sẽ được rollback.
+> **Ghi chú:** Shopping item chỉ được sửa khi chưa mua. `unit` phải thuộc danh sách đơn vị hợp lệ của nguyên liệu nếu nguyên liệu đã cấu hình allowed units. `mark-purchased` và `mark-unpurchased` thực hiện atomic transaction; nếu bất kỳ bước nào thất bại, toàn bộ thao tác sẽ rollback.
 
 ### Recommendations
 

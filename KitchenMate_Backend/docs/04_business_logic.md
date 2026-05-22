@@ -221,6 +221,12 @@ recipes = Recipe.objects.filter(visibility='PUBLIC').select_related('user').pref
 
 ## 4. Check-to-Pantry Atomic Transaction
 
+### Quy tắc chỉnh sửa ShoppingList
+
+Người dùng có thể chỉnh sửa `quantity` và `unit` của item trong danh sách đi chợ khi item chưa mua (`is_purchased=false`). Sau khi item đã được đánh dấu mua, backend chặn update trực tiếp để tránh lệch dữ liệu đã đồng bộ sang Pantry; người dùng phải bỏ đánh dấu đã mua trước rồi mới chỉnh sửa.
+
+Khi cập nhật `unit`, backend kiểm tra theo đơn vị hợp lệ của nguyên liệu. Nếu nguyên liệu có `allowed_units`, giá trị gửi lên phải là `slug` của một đơn vị active trong danh sách đó. Không cho đổi `ingredient` của một shopping item đã tạo.
+
 ### Mục đích
 
 Đảm bảo tính toàn vẹn dữ liệu khi user đánh dấu đã mua một item trong danh sách đi chợ. Cả hai thao tác (cập nhật ShoppingList + cập nhật Pantry) phải thành công hoặc thất bại cùng nhau.

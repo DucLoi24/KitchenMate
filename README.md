@@ -10,7 +10,7 @@ Project gồm backend Django REST API và frontend React/Vite. Backend dùng Pos
 - Quản lý công thức: tạo, chỉnh sửa, đăng công thức, upload ảnh/video cho từng bước, duyệt công thức trước khi public.
 - Quản lý nguyên liệu: danh mục nguyên liệu, đơn vị đo, tìm kiếm, kiểm duyệt nguyên liệu do người dùng đề xuất (với thông báo từ chối và khôi phục).
 - Tủ lạnh số: lưu nguyên liệu hiện có, số lượng, đơn vị, hạn sử dụng.
-- Danh sách đi chợ: đánh dấu đã mua và đồng bộ vào tủ lạnh bằng transaction atomic.
+- Danh sách đi chợ: thêm, sửa số lượng/đơn vị, xóa, đánh dấu đã mua và đồng bộ vào tủ lạnh bằng transaction atomic.
 - Gợi ý món ăn: thuật toán Tier-3 Scoring dựa trên nguyên liệu trong tủ lạnh, độ rủi ro khi thiếu nguyên liệu, và món đã thích.
 - Tính năng xã hội: theo dõi người dùng, danh sách followers/following công khai, đánh giá, bộ sưu tập, ảnh nấu thử, báo cáo nội dung, thông báo.
 - Admin panel: duyệt nội dung, quản lý người dùng, nguyên liệu, đơn vị, công thức, danh mục công thức theo thứ tự ưu tiên, và báo cáo.

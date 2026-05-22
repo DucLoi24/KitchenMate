@@ -1017,6 +1017,20 @@ Xem danh sách đi chợ.
 
 **Permission:** IsAuthenticated
 
+**Response item fields:**
+```json
+{
+  "id": 1,
+  "ingredient": 1,
+  "ingredient_name": "Thịt bò",
+  "quantity": 300.0,
+  "unit": "gram",
+  "unit_display": "Gram",
+  "is_purchased": false,
+  "created_at": "2026-05-22T09:00:00Z"
+}
+```
+
 ---
 
 ### POST `/api/kitchen/shopping-list/`
@@ -1032,6 +1046,49 @@ Thêm nguyên liệu vào danh sách đi chợ.
   "unit": "gram"
 }
 ```
+
+---
+
+### PUT/PATCH `/api/kitchen/shopping-list/{id}/`
+Cập nhật số lượng hoặc đơn vị của một mục trong danh sách đi chợ.
+
+**Permission:** IsOwner
+
+**Điều kiện:**
+- Chỉ cập nhật item chưa mua (`is_purchased=false`).
+- Không cho đổi `ingredient` của item đã tạo.
+- Nếu nguyên liệu có `allowed_units`, `unit` phải là slug của một đơn vị active trong danh sách đó.
+
+**Request Body (PATCH):**
+```json
+{
+  "quantity": 500.0,
+  "unit": "kilogram"
+}
+```
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Cap nhat thanh cong.",
+  "data": {
+    "id": 1,
+    "ingredient": 1,
+    "ingredient_name": "Thịt bò",
+    "quantity": 500.0,
+    "unit": "kilogram",
+    "unit_display": "Kilogram",
+    "is_purchased": false,
+    "created_at": "2026-05-22T09:00:00Z"
+  }
+}
+```
+
+**Lỗi:**
+- `400` — Item đã mua, quantity không hợp lệ, unit không thuộc allowed units, hoặc cố đổi ingredient.
+- `403` — Không phải owner.
+- `404` — Item không tồn tại trong danh sách của user.
 
 ---
 
@@ -1063,6 +1120,31 @@ Nếu bất kỳ bước nào thất bại → **rollback toàn bộ**.
   }
 }
 ```
+
+---
+
+### POST `/api/kitchen/shopping-list/{id}/mark-unpurchased/`
+Bỏ đánh dấu đã mua và trừ số lượng đã cộng khỏi tủ lạnh.
+
+**Permission:** IsOwner
+
+**Atomic Transaction (3 bước):**
+1. Đặt `is_purchased=false` cho ShoppingList item.
+2. Tìm Pantry item tương ứng (cùng user + ingredient).
+3. Trừ `quantity` của ShoppingList khỏi Pantry. Nếu số lượng còn lại `<= 0`, xóa Pantry item.
+
+Nếu bất kỳ bước nào thất bại → **rollback toàn bộ**.
+
+**Response 200:**
+```json
+{
+  "success": true,
+  "message": "Da bo danh dau da mua.",
+  "data": null
+}
+```
+
+`data` là pantry item còn lại nếu vẫn còn số lượng, hoặc `null` nếu pantry item đã bị xóa.
 
 ---
 

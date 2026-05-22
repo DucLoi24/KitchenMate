@@ -149,6 +149,13 @@ Sử dụng **Hypothesis** để kiểm tra các tính chất bất biến của
 - **Rollback on exception:** Nếu có lỗi trong transaction → cả ShoppingList và Pantry đều không thay đổi.
 - **PBT accumulation invariant:** Sau N lần mark_purchased, tổng quantity trong Pantry = tổng quantity từ ShoppingList.
 
+### apps/kitchen/tests.py — ShoppingListUpdateTest
+
+- **PATCH quantity/unit:** Item chưa mua cập nhật được số lượng và đơn vị, response trả `unit_display`.
+- **Purchased item guard:** Item đã mua không được cập nhật trực tiếp để tránh lệch dữ liệu Pantry.
+- **Unit validation:** `unit` phải thuộc allowed units active của nguyên liệu nếu nguyên liệu có cấu hình allowed units.
+- **Ingredient immutable:** Không cho đổi `ingredient` của shopping item đã tạo.
+
 ---
 
 ## Integration Tests

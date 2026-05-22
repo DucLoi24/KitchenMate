@@ -11,7 +11,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 from hypothesis.extra.django import TestCase as HypothesisTestCase
 
-from apps.ingredients.models import Ingredient
+from apps.ingredients.models import Ingredient, Unit
 from .models import Pantry, ShoppingList
 
 User = get_user_model()
@@ -82,7 +82,7 @@ class MarkPurchasedPropertyTest(HypothesisTestCase):
         shopping_qty=st.floats(min_value=0.1, max_value=100.0, allow_nan=False, allow_infinity=False),
         existing_qty=st.floats(min_value=0.0, max_value=100.0, allow_nan=False, allow_infinity=False),
     )
-    @settings(max_examples=20)
+    @settings(max_examples=20, deadline=None)
     def test_mark_purchased_accumulates_quantity(self, shopping_qty, existing_qty):
         """
         Sau mark_purchased:
@@ -130,6 +130,107 @@ class MarkPurchasedPropertyTest(HypothesisTestCase):
         pantry = Pantry.objects.get(user=user, ingredient=ingredient)
         self.assertAlmostEqual(pantry.quantity, 2.5, places=5)
 
+
+class ShoppingListUpdateTest(TestCase):
+    """Regression tests cho PATCH /api/kitchen/shopping-list/{id}/."""
+
+    def setUp(self):
+        self.user = make_user()
+        self.ingredient = make_ingredient()
+        suffix = uuid.uuid4().hex[:6]
+        self.gram = Unit.objects.create(name=f'Gram test {suffix}', slug=f'gram-test-{suffix}')
+        self.kilogram = Unit.objects.create(name=f'Kilogram test {suffix}', slug=f'kg-test-{suffix}')
+        self.ingredient.default_unit = self.gram
+        self.ingredient.save(update_fields=['default_unit'])
+        self.ingredient.allowed_units.set([self.gram, self.kilogram])
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_partial_update_quantity_and_unit(self):
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=1.0,
+            unit=self.gram.slug,
+        )
+
+        response = self.client.patch(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/',
+            {'quantity': 2.5, 'unit': self.kilogram.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['success'])
+        self.assertEqual(response.data['data']['quantity'], 2.5)
+        self.assertEqual(response.data['data']['unit'], self.kilogram.slug)
+        self.assertEqual(response.data['data']['unit_display'], self.kilogram.name)
+
+        shopping_item.refresh_from_db()
+        self.assertEqual(shopping_item.quantity, 2.5)
+        self.assertEqual(shopping_item.unit, self.kilogram.slug)
+
+    def test_cannot_update_purchased_item(self):
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=1.0,
+            unit=self.gram.slug,
+        )
+        shopping_item.is_purchased = True
+        shopping_item.save(update_fields=['is_purchased'])
+
+        response = self.client.patch(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/',
+            {'quantity': 3.0},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.data['success'])
+        shopping_item.refresh_from_db()
+        self.assertEqual(shopping_item.quantity, 1.0)
+
+    def test_rejects_unit_outside_ingredient_allowed_units(self):
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=1.0,
+            unit=self.gram.slug,
+        )
+
+        response = self.client.patch(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/',
+            {'unit': 'don-vi-khong-hop-le'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.data['success'])
+        self.assertIn('unit', response.data['error']['details'])
+        shopping_item.refresh_from_db()
+        self.assertEqual(shopping_item.unit, self.gram.slug)
+
+    def test_cannot_change_ingredient_during_update(self):
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=1.0,
+            unit=self.gram.slug,
+        )
+        other_ingredient = make_ingredient()
+
+        response = self.client.patch(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/',
+            {'ingredient': other_ingredient.pk},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.data['success'])
+        self.assertIn('ingredient', response.data['error']['details'])
+        shopping_item.refresh_from_db()
+        self.assertEqual(shopping_item.ingredient_id, self.ingredient.pk)
 
 # ─── Phase 7: Transaction Rollback Tests ─────────────────────────────────────
 

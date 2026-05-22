@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, ShoppingBasket, RefreshCw, Check, Trash2, X, Loader2, ChefHat, Search } from 'lucide-react'
+import { Plus, ShoppingBasket, RefreshCw, Check, Trash2, X, Loader2, ChefHat, Search, Pencil } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { cn, buildIngredientUnitOptions } from '@/utils'
 import { Button } from '@/components/ui/Button'
@@ -132,17 +132,77 @@ function ShoppingItem({
   const unitLabel = item.unit_display || item.unit
   const [isEditing, setIsEditing] = useState(false)
   const [editQuantity, setEditQuantity] = useState(item.quantity)
+  const [editUnit, setEditUnit] = useState(item.unit)
+  const [availableUnits, setAvailableUnits] = useState([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
+  const [unitError, setUnitError] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
+  const loadUnitOptions = async () => {
+    if (!item.ingredient) {
+      setAvailableUnits([])
+      setUnitError('Không thể tải đơn vị vì nguyên liệu không còn tồn tại')
+      return
+    }
+
+    setIsLoadingUnits(true)
+    setUnitError('')
+
+    try {
+      const response = await adminApi.getIngredientUnits(item.ingredient)
+      const { options, defaultValue } = buildIngredientUnitOptions(response?.data)
+      setAvailableUnits(options)
+
+      const hasCurrentUnit = options.some((option) => option.value === item.unit)
+      setEditUnit(hasCurrentUnit ? item.unit : (defaultValue || options[0]?.value || ''))
+
+      if (options.length === 0) {
+        setUnitError('Nguyên liệu này chưa có đơn vị hợp lệ')
+      }
+    } catch {
+      setAvailableUnits([])
+      setUnitError('Không thể tải đơn vị. Vui lòng thử lại')
+    } finally {
+      setIsLoadingUnits(false)
+    }
+  }
+
+  const handleStartEdit = () => {
+    setEditQuantity(item.quantity)
+    setEditUnit(item.unit)
+    setIsEditing(true)
+    loadUnitOptions()
+  }
+
   const handleSaveEdit = () => {
-    if (editQuantity > 0 && editQuantity !== item.quantity) {
-      onUpdate(item.id, { quantity: editQuantity })
+    const quantity = Number(editQuantity)
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      toast.error('Số lượng phải lớn hơn 0')
+      return
+    }
+    if (!editUnit) {
+      toast.error('Vui lòng chọn đơn vị hợp lệ')
+      return
+    }
+
+    const payload = {}
+    if (quantity !== Number(item.quantity)) {
+      payload.quantity = quantity
+    }
+    if (editUnit !== item.unit) {
+      payload.unit = editUnit
+    }
+
+    if (Object.keys(payload).length > 0) {
+      onUpdate(item.id, payload)
     }
     setIsEditing(false)
   }
 
   const handleCancelEdit = () => {
     setEditQuantity(item.quantity)
+    setEditUnit(item.unit)
+    setUnitError('')
     setIsEditing(false)
   }
 
@@ -195,32 +255,73 @@ function ShoppingItem({
 
           {/* Quantity */}
           {isEditing ? (
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="number"
-                value={editQuantity}
-                onChange={(e) => setEditQuantity(parseFloat(e.target.value) || 0)}
-                min="0.1"
-                step="0.1"
-                className={cn(
-                  'w-24 h-10 px-3 rounded-[var(--radius-md)]',
-                  'border border-[var(--color-border)]',
-                  'text-[var(--color-text)] font-medium text-center',
-                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
-                )}
-                autoFocus
-              />
-              <span className="text-sm text-[var(--color-text-secondary)] font-medium">
-                {unitLabel}
-              </span>
-              <div className="flex items-center gap-1 ml-auto">
-                <Button size="sm" variant="primary" onClick={handleSaveEdit} className="h-8 w-8 p-0">
-                  <Check className="w-4 h-4" />
-                </Button>
-                <Button size="sm" variant="ghost" onClick={handleCancelEdit} className="h-8 w-8 p-0">
-                  <X className="w-4 h-4" />
-                </Button>
+            <div className="mt-3 space-y-2">
+              <div className="grid grid-cols-2 sm:grid-cols-[minmax(6rem,1fr)_minmax(7rem,1fr)_auto] items-center gap-2">
+                <input
+                  type="number"
+                  value={editQuantity}
+                  onChange={(e) => setEditQuantity(e.target.value)}
+                  min="0.1"
+                  step="0.1"
+                  className={cn(
+                    'h-10 min-w-0 px-3 rounded-[var(--radius-md)]',
+                    'border border-[var(--color-border)] bg-[var(--color-surface)]',
+                    'text-[var(--color-text)] font-medium text-center',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
+                  )}
+                  autoFocus
+                />
+                <select
+                  value={editUnit}
+                  onChange={(e) => setEditUnit(e.target.value)}
+                  disabled={isLoadingUnits || availableUnits.length === 0}
+                  className={cn(
+                    'h-10 min-w-0 px-2 rounded-[var(--radius-md)]',
+                    'border border-[var(--color-border)] bg-[var(--color-surface)]',
+                    'text-[var(--color-text)] font-medium',
+                    'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+                    (isLoadingUnits || availableUnits.length === 0) && 'opacity-50 cursor-not-allowed'
+                  )}
+                >
+                  {isLoadingUnits ? (
+                    <option value="">Đang tải...</option>
+                  ) : availableUnits.length === 0 ? (
+                    <option value="">Chưa có đơn vị</option>
+                  ) : (
+                    availableUnits.map((unit) => (
+                      <option key={unit.value} value={unit.value}>{unit.label}</option>
+                    ))
+                  )}
+                </select>
+                <div className="col-span-2 sm:col-span-1 flex items-center justify-end gap-1">
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    onClick={handleSaveEdit}
+                    disabled={isLoadingUnits || availableUnits.length === 0}
+                    className="h-10 w-10 p-0"
+                    aria-label="Lưu thay đổi"
+                    title="Lưu thay đổi"
+                  >
+                    <Check className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelEdit}
+                    className="h-10 w-10 p-0"
+                    aria-label="Hủy chỉnh sửa"
+                    title="Hủy chỉnh sửa"
+                  >
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
+              {unitError && (
+                <p className="text-xs text-red-500">
+                  {unitError}
+                </p>
+              )}
             </div>
           ) : (
             <div className="flex items-center gap-1 mt-1">
@@ -235,10 +336,16 @@ function ShoppingItem({
               </span>
               {!item.is_purchased && (
                 <button
-                  onClick={() => setIsEditing(true)}
-                  className="ml-auto text-xs text-[var(--color-text-muted)] hover:text-[var(--color-primary)] transition-colors"
+                  onClick={handleStartEdit}
+                  className={cn(
+                    'ml-auto w-9 h-9 rounded-full flex items-center justify-center',
+                    'text-[var(--color-text-muted)] hover:text-[var(--color-primary)]',
+                    'hover:bg-[var(--color-background-alt)] transition-colors'
+                  )}
+                  aria-label="Sửa số lượng và đơn vị"
+                  title="Sửa số lượng và đơn vị"
                 >
-                  Sửa
+                  <Pencil className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -277,7 +384,7 @@ function ShoppingItem({
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className={cn(
                 'bg-[var(--color-surface)] rounded-[var(--radius-xl)] p-6',
-                'w-full max-w-md shadow-[var(--shadow-xl)]',
+                'w-full max-w-[28rem] shadow-[var(--shadow-xl)]',
                 'border border-[var(--color-border)]'
               )}
               onClick={(e) => e.stopPropagation()}
@@ -491,7 +598,7 @@ function DeleteAllConfirmDialog({ count, onConfirm, onCancel, isDeleting }) {
         transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         className={cn(
           'bg-[var(--color-surface)] rounded-[var(--radius-xl)] p-6',
-          'w-full max-w-md shadow-[var(--shadow-xl)]',
+          'w-full max-w-[28rem] shadow-[var(--shadow-xl)]',
           'border border-[var(--color-border)]'
         )}
         onClick={(e) => e.stopPropagation()}
@@ -558,7 +665,7 @@ export function ShoppingPage() {
         await markAsPurchased.mutateAsync(item.id)
         toast.success(
           <div className="flex items-center gap-2">
-            <span className="text-lg">🫑</span>
+            <Check className="w-4 h-4 text-[var(--color-secondary)]" />
             <span>Đã thêm vào tủ lạnh</span>
           </div>
         )
@@ -598,7 +705,7 @@ export function ShoppingPage() {
   const handleUpdate = async (id, data) => {
     try {
       await updateShoppingItem.mutateAsync({ id, data })
-      toast.success('Đã cập nhật số lượng')
+      toast.success('Đã cập nhật nguyên liệu')
     } catch {
       toast.error('Không thể cập nhật. Vui lòng thử lại')
     }

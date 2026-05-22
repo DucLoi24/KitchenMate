@@ -62,6 +62,25 @@ class ShoppingListSerializer(UnitDisplayMixin, serializers.ModelSerializer):
     def get_unit_display(self, obj):
         return self.resolve_unit_display(obj.unit)
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        if self.instance is not None and 'ingredient' in attrs:
+            raise serializers.ValidationError({
+                'ingredient': 'Không thể thay đổi nguyên liệu của mục đi chợ.'
+            })
+
+        ingredient = attrs.get('ingredient') or getattr(self.instance, 'ingredient', None)
+        unit = attrs.get('unit')
+        if unit is None:
+            return attrs
+
+        allowed_units = ingredient.allowed_units.filter(is_active=True) if ingredient else Unit.objects.none()
+        if allowed_units.exists() and not allowed_units.filter(slug=unit).exists():
+            raise serializers.ValidationError({
+                'unit': 'Đơn vị không hợp lệ cho nguyên liệu này.'
+            })
+        return attrs
+
     class Meta:
         model = ShoppingList
         fields = ('id', 'ingredient', 'ingredient_name', 'quantity', 'unit', 'unit_display', 'is_purchased', 'created_at')

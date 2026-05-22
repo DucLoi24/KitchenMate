@@ -103,6 +103,7 @@ class PantryViewSet(viewsets.GenericViewSet,
 class ShoppingListViewSet(viewsets.GenericViewSet,
                           mixins.ListModelMixin,
                           mixins.CreateModelMixin,
+                          mixins.UpdateModelMixin,
                           mixins.DestroyModelMixin):
     """
     ViewSet quản lý danh sách đi chợ (shopping list) của user.
@@ -113,6 +114,8 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
     Actions:
         list            — IsAuthenticated. Trả về toàn bộ items trong danh sách đi chợ.
         create          — IsAuthenticated. Thêm nguyên liệu cần mua vào danh sách.
+        update          — IsOwner. Cap nhat so luong/don vi cua item chua mua.
+        partial_update  — IsOwner. Cap nhat mot phan item chua mua.
         destroy         — IsOwner. Xóa một item khỏi danh sách.
         mark_purchased  — IsOwner. Đánh dấu đã mua và đồng bộ vào Pantry.
                           Thực hiện trong một atomic transaction 3 bước để đảm bảo
@@ -125,7 +128,7 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
         return ShoppingList.objects.filter(user=self.request.user).select_related('ingredient')
 
     def get_permissions(self):
-        if self.action in ('destroy', 'mark_purchased', 'mark_unpurchased'):
+        if self.action in ('update', 'partial_update', 'destroy', 'mark_purchased', 'mark_unpurchased'):
             return [IsOwner()]
         return [IsAuthenticated()]
 
@@ -154,6 +157,28 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
             return Response({'success': True, 'data': paginated.data})
         serializer = self.get_serializer(queryset, many=True)
         return Response({'success': True, 'data': serializer.data})
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        if instance.is_purchased:
+            return Response(
+                {'success': False, 'error': {'message': 'Khong the cap nhat item da mua. Hay bo danh dau da mua truoc.'}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        if not serializer.is_valid():
+            return Response(
+                {'success': False, 'error': {'message': 'Du lieu khong hop le.', 'details': serializer.errors}},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        serializer.save()
+        return Response({'success': True, 'message': 'Cap nhat thanh cong.', 'data': serializer.data})
+
+    def partial_update(self, request, *args, **kwargs):
+        kwargs['partial'] = True
+        return self.update(request, *args, **kwargs)
 
     def destroy(self, request, *args, **kwargs):
         instance = self.get_object()
