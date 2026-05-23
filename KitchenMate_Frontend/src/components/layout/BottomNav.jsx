@@ -10,7 +10,8 @@ import {
   Bookmark,
   User,
   Settings,
-  CircleDot,
+  Refrigerator,
+  ChartColumn,
   X,
   Bell,
 } from 'lucide-react'
@@ -24,7 +25,7 @@ const navItems = [
   { to: '/explore', icon: Compass, label: 'Khám phá' },
   { to: '/recipe/new', icon: PlusCircle, label: 'Tạo công thức' },
   { to: '/my-recipes', icon: UtensilsCrossed, label: 'Công thức của tôi' },
-  { to: '/pantry', icon: CircleDot, label: 'Tủ lạnh' },
+  { to: '/pantry', icon: Refrigerator, label: 'Tủ lạnh' },
   { to: '/shopping-list', icon: ShoppingCart, label: 'Danh sách đi chợ' },
   { to: '/suggest', icon: Lightbulb, label: 'Gợi ý món ăn' },
   { to: '/collections', icon: Bookmark, label: 'Bộ sưu tập' },
@@ -42,7 +43,7 @@ export function MobileSidebar({ isOpen, onClose }) {
   const [unreadCount, setUnreadCount] = useState(0)
 
   const allNavItems = isAdmin
-    ? [...navItems, { to: '/admin', icon: Settings, label: 'Quản trị' }]
+    ? [...navItems, { to: '/admin', icon: ChartColumn, label: 'Quản trị' }]
     : navItems
 
   useEffect(() => {
