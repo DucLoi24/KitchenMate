@@ -315,6 +315,11 @@ describe('UserManagementPage - User List Item', () => {
     expect(user.is_staff).toBe(false)
   })
 
+  it('should build public profile link from user id', () => {
+    const user = mockUsers[0]
+    expect(`/profile/${user.id}`).toBe('/profile/1')
+  })
+
   it('should correctly identify self for self-block prevention', () => {
     const currentUserId = 1
     const user = mockUsers[0]

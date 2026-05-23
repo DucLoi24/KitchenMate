@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   List,
@@ -16,6 +17,7 @@ import {
   Shield,
   ShieldOff,
   X,
+  Eye,
 } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { cn } from '@/utils'
@@ -241,9 +243,25 @@ function UserListItem({ user, onBlock, onUnblock, onAssignAdmin, onRemoveAdmin, 
                 </div>
               )}
 
-              {/* Action buttons - disabled for self */}
-              {!isSelf && (
-                <div className="flex gap-3 pt-4 border-t border-[var(--color-border)]">
+              {/* Action buttons */}
+              <div className="flex flex-wrap gap-3 pt-4 border-t border-[var(--color-border)]">
+                <Link
+                  to={`/profile/${user.id}`}
+                  onClick={(e) => e.stopPropagation()}
+                  className={cn(
+                    'inline-flex h-8 items-center justify-center gap-2 px-3 rounded-[var(--radius-md)]',
+                    'border-2 border-[var(--color-secondary)] text-[var(--color-secondary)]',
+                    'text-sm font-medium transition-all duration-[var(--transition-base)]',
+                    'hover:bg-[var(--color-secondary)] hover:text-white hover:-translate-y-0.5',
+                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] focus-visible:ring-offset-2'
+                  )}
+                >
+                  <Eye className="w-4 h-4" />
+                  Xem trang cá nhân
+                </Link>
+
+                {!isSelf && (
+                  <>
                   {user.is_active ? (
                     <Button
                       variant="danger"
@@ -294,12 +312,13 @@ function UserListItem({ user, onBlock, onUnblock, onAssignAdmin, onRemoveAdmin, 
                       Phân quyền admin
                     </Button>
                   )}
-                </div>
-              )}
+                  </>
+                )}
+              </div>
 
               {/* Self indicator */}
               {isSelf && (
-                <div className="pt-4 border-t border-[var(--color-border)]">
+                <div className="pt-3">
                   <p className="text-sm text-[var(--color-text-muted)] italic">
                     Đây là tài khoản của bạn
                   </p>
