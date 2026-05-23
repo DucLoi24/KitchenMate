@@ -40,9 +40,13 @@ export function useUpdateRecipe() {
 
   return useMutation({
     mutationFn: ({ id, data }) => recipeApi.updateRecipe(id, data),
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
+      const recipeId = data?.data?.id || variables?.id
+      if (recipeId) {
+        queryClient.setQueryData(['recipe', recipeId], data)
+        queryClient.invalidateQueries({ queryKey: ['recipe', recipeId] })
+      }
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      queryClient.invalidateQueries({ queryKey: ['recipe', data.id] })
       queryClient.invalidateQueries({ queryKey: ['my-recipes'] })
     },
   })
