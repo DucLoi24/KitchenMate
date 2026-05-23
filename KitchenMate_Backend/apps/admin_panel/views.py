@@ -4,7 +4,7 @@ Cac ViewSet quan tri: Recipe, Ingredient, User.
 Tat ca deu yeu cau is_staff=True.
 """
 from django.contrib.auth import get_user_model
-from django.db import models
+from django.db import models, transaction
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
@@ -96,10 +96,34 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
     @action(detail=True, methods=['post'])
     def reject(self, request, pk=None):
         recipe = get_object_or_404(Recipe, pk=pk)
-        recipe.visibility = 'PRIVATE'
-        recipe.ai_moderation_status = 'REJECTED'
-        recipe.save(update_fields=['visibility', 'ai_moderation_status'])
-        return Response({'success': True, 'message': 'Cong thuc da bi tu choi, chuyen ve PRIVATE.'})
+        reason = (request.data.get('reason') or '').strip()
+
+        with transaction.atomic():
+            recipe.visibility = 'PRIVATE'
+            recipe.ai_moderation_status = 'REJECTED'
+            recipe.rejection_reason = reason or None
+            recipe.save(update_fields=['visibility', 'ai_moderation_status', 'rejection_reason'])
+
+            from apps.reports.models import Notification, NotificationType
+            Notification.objects.create(
+                user=recipe.user,
+                type=NotificationType.WARNING,
+                title='Công thức không được duyệt',
+                message=(
+                    f'Công thức "{recipe.title}" không được duyệt và đã được chuyển về riêng tư.'
+                    f'{f" Lý do: {reason}" if reason else ""}'
+                ),
+                data={
+                    'recipe_id': str(recipe.id),
+                    'reason': reason or None,
+                    'action': 'recipe_reject',
+                }
+            )
+
+        message = 'Cong thuc da bi tu choi, chuyen ve PRIVATE.'
+        if reason:
+            message += f' Ly do: {reason}'
+        return Response({'success': True, 'message': message})
 
     @action(detail=True, methods=['post'], url_path='unpublish')
     def unpublish(self, request, pk=None):
@@ -109,10 +133,30 @@ class AdminRecipeViewSet(viewsets.GenericViewSet,
                 status=status.HTTP_403_FORBIDDEN
             )
         recipe = get_object_or_404(Recipe, pk=pk)
-        reason = request.data.get('reason', '')
-        recipe.visibility = 'PRIVATE'
-        recipe.ai_moderation_status = 'REJECTED'
-        recipe.save(update_fields=['visibility', 'ai_moderation_status'])
+        reason = (request.data.get('reason') or '').strip()
+
+        with transaction.atomic():
+            recipe.visibility = 'PRIVATE'
+            recipe.ai_moderation_status = 'REJECTED'
+            recipe.rejection_reason = reason or None
+            recipe.save(update_fields=['visibility', 'ai_moderation_status', 'rejection_reason'])
+
+            from apps.reports.models import Notification, NotificationType
+            Notification.objects.create(
+                user=recipe.user,
+                type=NotificationType.WARNING,
+                title='Công thức đã được chuyển về riêng tư',
+                message=(
+                    f'Công thức "{recipe.title}" đã được quản trị viên chuyển về riêng tư.'
+                    f'{f" Lý do: {reason}" if reason else ""}'
+                ),
+                data={
+                    'recipe_id': str(recipe.id),
+                    'reason': reason or None,
+                    'action': 'recipe_unpublish',
+                }
+            )
+
         message = 'Cong thuc da duoc chuyen ve che do rieng tu.'
         if reason:
             message += f' Ly do: {reason}'
