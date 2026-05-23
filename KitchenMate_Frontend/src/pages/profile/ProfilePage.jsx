@@ -202,10 +202,8 @@ export function ProfilePage() {
       <header className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-[var(--color-primary)] flex items-center justify-center">
-              <span className="text-white font-semibold text-lg">
-                {user?.full_name?.[0]?.toUpperCase() || 'U'}
-              </span>
+            <div className="w-10 h-10 rounded-[var(--radius-md)] bg-[var(--color-background-alt)] border border-[var(--color-border)] flex items-center justify-center shadow-[var(--shadow-sm)]">
+              <User className="w-5 h-5 text-[var(--color-primary)]" />
             </div>
             <div>
               <h1 className="font-display text-xl font-semibold text-[var(--color-text)]">
