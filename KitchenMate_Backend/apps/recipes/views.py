@@ -5,6 +5,7 @@ from django.db.models import F, Avg, Count, Exists, OuterRef
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -23,8 +24,10 @@ class RecipeViewSet(viewsets.GenericViewSet):
     """
     ViewSet quản lý công thức nấu ăn (Recipe).
     """
-    filter_backends = [DjangoFilterBackend]
+    filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = RecipeFilter
+    ordering_fields = ['created_at', 'save_count', 'avg_rating']
+    ordering = ['-created_at']
 
     def retrieve(self, request, pk=None, slug=None):
         """
