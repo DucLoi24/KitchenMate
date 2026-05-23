@@ -81,12 +81,15 @@ class RecipeListSerializer(serializers.ModelSerializer):
         return obj.ai_moderation_status == 'PROCESSING'
 
     def get_user_avatar(self, obj):
-        avatar = getattr(obj.user, 'avatar', None)
-        if avatar:
-            request = self.context.get('request')
-            if request and avatar.url:
-                return request.build_absolute_uri(avatar.url)
-        return None
+        avatar_url = getattr(obj.user, 'avatar_url', None)
+        if not avatar_url:
+            return None
+        if avatar_url.startswith('http'):
+            return avatar_url
+        request = self.context.get('request')
+        if request:
+            return request.build_absolute_uri(avatar_url)
+        return avatar_url
 
     def get_thumbnail_url(self, obj):
         url = getattr(obj, 'thumbnail_url', None)
