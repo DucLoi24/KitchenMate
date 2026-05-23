@@ -118,6 +118,7 @@ def test_followers_and_following_lists_are_public_and_paginated():
     assert following_response.data['success'] is True
     assert following_response.data['data']['count'] == 1
     assert following_response.data['data']['results'][0]['id'] == str(target.id)
+    assert following_response.data['data']['results'][0]['followers_count'] == 2
     assert following_response.data['data']['results'][0]['is_following'] is False
 
 @pytest.mark.django_db

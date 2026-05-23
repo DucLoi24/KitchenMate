@@ -96,8 +96,7 @@ function App() {
                 <Route path="/profile" element={
                   <AuthGuard><ProfilePage /></AuthGuard>
                 } />
-                <Route path="/profile/:userId/followers" element={<FollowListPage />} />
-                <Route path="/profile/:userId/following" element={<FollowListPage />} />
+                <Route path="/profile/:userId/:followType" element={<FollowListPage />} />
                 <Route path="/profile/:userId" element={<PublicProfilePage />} />
 
                 {/* Admin routes */}

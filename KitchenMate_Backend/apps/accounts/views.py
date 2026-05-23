@@ -13,7 +13,7 @@ from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.core.mail import send_mail
 from django.conf import settings
-from django.db.models import Count
+from django.db.models import Count, Subquery
 from django.http import JsonResponse, HttpResponse
 from django.views import View
 from django.utils.decorators import method_decorator
@@ -665,8 +665,9 @@ class UserFollowingView(APIView):
 
     def get(self, request, pk):
         user = get_object_or_404(User, pk=pk, is_active=True)
+        following_ids = UserFollow.objects.filter(follower=user).values('following_id')
         following = User.objects.filter(
-            follower_relations__follower=user,
+            id__in=Subquery(following_ids),
             is_active=True,
         ).annotate(
             followers_count=Count('follower_relations', distinct=True)

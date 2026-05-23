@@ -73,5 +73,40 @@ describe('FollowListPage', () => {
     expect(screen.getByText('Nguoi yeu bep')).toBeInTheDocument()
     expect(screen.getByText('Thich nau an moi ngay')).toBeInTheDocument()
     expect(mockAuthApi.getFollowers).toHaveBeenCalledWith('chef-1', 1)
+    expect(mockAuthApi.getFollowing).not.toHaveBeenCalled()
+  })
+
+  it('renders the following list for a profile from the production route', async () => {
+    mockAuthApi.getFollowing.mockResolvedValue({
+      data: {
+        count: 1,
+        next: null,
+        previous: null,
+        results: [
+          {
+            id: 'following-1',
+            full_name: 'Dau bep dang theo doi',
+            avatar_url: null,
+            bio: 'Chia se mon chay',
+            followers_count: 4,
+            is_following: false,
+          },
+        ],
+      },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/profile/chef-1/following']}>
+        <Routes>
+          <Route path="/profile/:userId/:followType" element={<FollowListPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Đang theo dõi')).toBeInTheDocument()
+    expect(screen.getByText('Dau bep dang theo doi')).toBeInTheDocument()
+    expect(screen.getByText('Chia se mon chay')).toBeInTheDocument()
+    expect(mockAuthApi.getFollowing).toHaveBeenCalledWith('chef-1', 1)
+    expect(mockAuthApi.getFollowers).not.toHaveBeenCalled()
   })
 })
