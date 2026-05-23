@@ -227,6 +227,33 @@ def test_ingredient_filter_no_duplicate(keyword, db):
     Ingredient.objects.filter(name__contains=f'{keyword}_ing_').delete()
 
 
+@pytest.mark.django_db
+def test_q_search_matches_ingredient_name_without_duplicate():
+    """
+    q search phải tìm được recipe theo tên nguyên liệu, không chỉ title/description.
+    Recipe có nhiều nguyên liệu khớp keyword chỉ xuất hiện một lần.
+    """
+    user = make_user('q-ingredient@example.com', 'qingredientuser')
+    client = APIClient()
+    recipe = make_recipe(
+        user,
+        title='Mon an khong chua tu khoa',
+        visibility='PUBLIC',
+    )
+    first_ingredient = make_ingredient('Nam huong tuoi')
+    second_ingredient = make_ingredient('Nam dong co')
+    attach_ingredient(recipe, first_ingredient)
+    attach_ingredient(recipe, second_ingredient)
+
+    response = client.get('/api/recipes/', {'q': 'Nam'})
+
+    assert response.status_code == 200
+    ids = get_recipe_ids(response)
+    recipe_id = str(recipe.id)
+    assert recipe_id in ids
+    assert ids.count(recipe_id) == 1
+
+
 @pytest.mark.django_db(transaction=True)
 @given(
     difficulty=st.sampled_from(['EASY', 'MEDIUM', 'HARD']),

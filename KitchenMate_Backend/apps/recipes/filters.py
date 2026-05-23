@@ -23,13 +23,14 @@ class RecipeFilter(django_filters.FilterSet):
 
     def filter_by_search(self, queryset, name, value):
         """
-        Tìm kiếm theo title và description (case-insensitive).
+        Tìm kiếm theo title, description và tên nguyên liệu (case-insensitive).
         """
         if not value:
             return queryset
         return queryset.filter(
             models.Q(title__icontains=value) |
-            models.Q(description__icontains=value)
+            models.Q(description__icontains=value) |
+            models.Q(recipe_ingredients__ingredient__name__icontains=value)
         ).distinct()
 
     def filter_by_difficulty(self, queryset, name, value):
