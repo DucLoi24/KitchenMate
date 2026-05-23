@@ -5,6 +5,7 @@ import { Mail, Lock, User, ArrowRight, Check, X } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { formatRegisterError } from './registerError'
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -73,18 +74,7 @@ export function RegisterPage() {
     try {
       await register({ full_name: fullName, email, password, password_confirm: confirmPassword })
     } catch (err) {
-      // Extract error message - ensure it's always a string
-      const responseMsg = err.response?.data?.message
-      const responseErr = err.response?.data?.error
-      const responseEmail = err.response?.data?.email?.[0]
-      const responsePassword = err.response?.data?.password?.[0]
-      const serverMsg = typeof responseMsg === 'string' ? responseMsg
-        : typeof responseErr === 'string' ? responseErr
-        : typeof responseEmail === 'string' ? responseEmail
-        : typeof responsePassword === 'string' ? responsePassword
-        : null
-      const errorMsg = serverMsg || err.message || 'Đăng ký thất bại. Vui lòng thử lại.'
-      setError(errorMsg)
+      setError(formatRegisterError(err))
     } finally {
       setIsLoading(false)
     }
@@ -162,7 +152,7 @@ export function RegisterPage() {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="w-full max-w-md"
+          className="w-full max-w-[28rem]"
         >
           {/* Mobile logo */}
           <motion.div variants={itemVariants} className="lg:hidden text-center mb-8">
@@ -315,7 +305,7 @@ export function RegisterPage() {
                 <motion.div
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="p-4 rounded-[var(--radius-md)] bg-red-50 border border-red-200 text-red-700 text-sm"
+                  className="p-4 rounded-[var(--radius-md)] bg-red-50 border border-red-200 text-red-700 text-sm whitespace-pre-line"
                 >
                   {error}
                 </motion.div>
