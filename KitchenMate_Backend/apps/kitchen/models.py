@@ -27,8 +27,8 @@ class Pantry(models.Model):
         db_table = 'pantries'
         verbose_name = 'Tủ lạnh số'
         verbose_name_plural = 'Tủ lạnh số'
-        unique_together = ('user', 'ingredient')
-        ordering = ['ingredient__name']
+        unique_together = ('user', 'ingredient', 'unit')
+        ordering = ['ingredient__name', 'unit']
 
     def __str__(self):
         return f"{self.user.email} - {self.ingredient.name}: {self.quantity} {self.unit}"

@@ -48,6 +48,28 @@ class PantrySerializer(UnitDisplayMixin, serializers.ModelSerializer):
     def get_unit_display(self, obj):
         return self.resolve_unit_display(obj.unit)
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        request = self.context.get('request')
+        user = getattr(request, 'user', None) or getattr(self.instance, 'user', None)
+        ingredient = attrs.get('ingredient') or getattr(self.instance, 'ingredient', None)
+        unit = attrs.get('unit') or getattr(self.instance, 'unit', None)
+
+        if user and ingredient and unit:
+            duplicate_queryset = Pantry.objects.filter(
+                user=user,
+                ingredient=ingredient,
+                unit=unit,
+            )
+            if self.instance is not None:
+                duplicate_queryset = duplicate_queryset.exclude(pk=self.instance.pk)
+            if duplicate_queryset.exists():
+                raise serializers.ValidationError({
+                    'unit': 'Nguyên liệu này đã tồn tại trong tủ lạnh với đơn vị này.'
+                })
+
+        return attrs
+
     class Meta:
         model = Pantry
         fields = ('id', 'ingredient', 'ingredient_name', 'ingredient_category', 'quantity', 'unit', 'unit_display', 'updated_at')

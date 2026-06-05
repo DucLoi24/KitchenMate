@@ -86,14 +86,26 @@ class TestReviewConstraints:
 class TestPantryConstraints:
     """Tests cho Pantry model — unique constraint."""
 
-    def test_pantry_unique_constraint_raises_integrity_error(self):
-        """Tạo 2 Pantry items với cùng (user, ingredient) → IntegrityError."""
+    def test_pantry_unique_constraint_raises_integrity_error_for_same_unit(self):
+        """Tạo 2 Pantry items với cùng (user, ingredient, unit) → IntegrityError."""
         from apps.kitchen.models import Pantry
         user = make_user()
         ingredient = make_ingredient()
         Pantry.objects.create(user=user, ingredient=ingredient, quantity=100, unit='gram')
         with pytest.raises(IntegrityError):
             Pantry.objects.create(user=user, ingredient=ingredient, quantity=200, unit='gram')
+
+    def test_pantry_allows_same_ingredient_with_different_unit(self):
+        """Cùng ingredient nhưng khác unit được lưu thành 2 dòng Pantry riêng."""
+        from apps.kitchen.models import Pantry
+        user = make_user()
+        ingredient = make_ingredient()
+        Pantry.objects.create(user=user, ingredient=ingredient, quantity=100, unit='gram')
+        Pantry.objects.create(user=user, ingredient=ingredient, quantity=1, unit='kg')
+
+        rows = Pantry.objects.filter(user=user, ingredient=ingredient)
+        assert rows.count() == 2
+        assert set(rows.values_list('unit', flat=True)) == {'gram', 'kg'}
 
 
 @pytest.mark.unit

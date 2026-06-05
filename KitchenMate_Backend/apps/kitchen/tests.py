@@ -131,6 +131,197 @@ class MarkPurchasedPropertyTest(HypothesisTestCase):
         self.assertAlmostEqual(pantry.quantity, 2.5, places=5)
 
 
+class PantryUnitAggregationTest(TestCase):
+    """Regression tests cho Pantry accumulation theo tung don vi."""
+
+    def setUp(self):
+        self.user = make_user()
+        self.ingredient = make_ingredient()
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_mark_purchased_creates_separate_pantry_row_for_different_unit(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=1,
+            unit='kg',
+        )
+
+        response = self.client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        rows = Pantry.objects.filter(
+            user=self.user,
+            ingredient=self.ingredient,
+        ).order_by('unit')
+        self.assertEqual(rows.count(), 2)
+        self.assertEqual(
+            {row.unit: row.quantity for row in rows},
+            {'gram': 100, 'kg': 1},
+        )
+
+    def test_mark_purchased_accumulates_same_unit_only(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=50,
+            unit='gram',
+        )
+
+        response = self.client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            Pantry.objects.filter(user=self.user, ingredient=self.ingredient).count(),
+            1,
+        )
+        pantry = Pantry.objects.get(
+            user=self.user,
+            ingredient=self.ingredient,
+            unit='gram',
+        )
+        self.assertAlmostEqual(pantry.quantity, 150, places=5)
+
+    def test_mark_unpurchased_subtracts_matching_unit_only(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+        make_pantry(self.user, self.ingredient, quantity=1, unit='kg')
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=1,
+            unit='kg',
+        )
+        shopping_item.is_purchased = True
+        shopping_item.save(update_fields=['is_purchased'])
+
+        response = self.client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-unpurchased/'
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(
+            Pantry.objects.filter(
+                user=self.user,
+                ingredient=self.ingredient,
+                quantity=100,
+                unit='gram',
+            ).exists()
+        )
+        self.assertFalse(
+            Pantry.objects.filter(
+                user=self.user,
+                ingredient=self.ingredient,
+                unit='kg',
+            ).exists()
+        )
+
+    def test_mark_purchased_rejects_already_purchased_item(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=50,
+            unit='gram',
+        )
+        self.client.post(f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/')
+
+        response = self.client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/'
+        )
+
+        self.assertEqual(response.status_code, 400)
+        pantry = Pantry.objects.get(
+            user=self.user,
+            ingredient=self.ingredient,
+            unit='gram',
+        )
+        self.assertAlmostEqual(pantry.quantity, 150, places=5)
+
+    def test_mark_unpurchased_rejects_item_that_was_not_purchased(self):
+        shopping_item = make_shopping_item(
+            self.user,
+            self.ingredient,
+            quantity=50,
+            unit='gram',
+        )
+
+        response = self.client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-unpurchased/'
+        )
+
+        self.assertEqual(response.status_code, 400)
+        shopping_item.refresh_from_db()
+        self.assertFalse(shopping_item.is_purchased)
+
+
+class PantryCreateValidationTest(TestCase):
+    """Regression tests cho duplicate Pantry theo ingredient + unit."""
+
+    def setUp(self):
+        self.user = make_user()
+        self.ingredient = make_ingredient()
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_pantry_list_returns_same_ingredient_with_different_units(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+        make_pantry(self.user, self.ingredient, quantity=1, unit='kg')
+
+        response = self.client.get('/api/kitchen/pantry/')
+
+        self.assertEqual(response.status_code, 200)
+        results = response.data['data']['results']
+        matching = [
+            item for item in results
+            if item['ingredient'] == self.ingredient.pk
+        ]
+        self.assertEqual(len(matching), 2)
+        self.assertEqual({item['unit'] for item in matching}, {'gram', 'kg'})
+
+    def test_create_rejects_duplicate_ingredient_unit(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+
+        response = self.client.post(
+            '/api/kitchen/pantry/',
+            {
+                'ingredient': self.ingredient.pk,
+                'quantity': 50,
+                'unit': 'gram',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(response.data['success'])
+        self.assertIn('unit', response.data['error']['details'])
+
+    def test_create_allows_same_ingredient_with_different_unit(self):
+        make_pantry(self.user, self.ingredient, quantity=100, unit='gram')
+
+        response = self.client.post(
+            '/api/kitchen/pantry/',
+            {
+                'ingredient': self.ingredient.pk,
+                'quantity': 1,
+                'unit': 'kg',
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            Pantry.objects.filter(user=self.user, ingredient=self.ingredient).count(),
+            2,
+        )
+
+
 class ShoppingListUpdateTest(TestCase):
     """Regression tests cho PATCH /api/kitchen/shopping-list/{id}/."""
 

@@ -4,7 +4,7 @@ Views cho kitchen app — PantryViewSet, ShoppingListViewSet, RecommendationView
 import uuid
 from math import ceil
 
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.core.paginator import EmptyPage, Paginator
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
@@ -15,6 +15,30 @@ from rest_framework.views import APIView
 from core.permissions import IsOwner
 from .models import Pantry, ShoppingList
 from .serializers import PantrySerializer, ShoppingListSerializer
+
+
+def get_or_create_pantry_item_for_update(user, ingredient, unit):
+    try:
+        return Pantry.objects.select_for_update().get(
+            user=user,
+            ingredient=ingredient,
+            unit=unit,
+        )
+    except Pantry.DoesNotExist:
+        try:
+            with transaction.atomic():
+                return Pantry.objects.create(
+                    user=user,
+                    ingredient=ingredient,
+                    quantity=0,
+                    unit=unit,
+                )
+        except IntegrityError:
+            return Pantry.objects.select_for_update().get(
+                user=user,
+                ingredient=ingredient,
+                unit=unit,
+            )
 
 
 class PantryViewSet(viewsets.GenericViewSet,
@@ -195,7 +219,7 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
 
         Atomic Transaction (3 bước — rollback toàn bộ nếu bất kỳ bước nào thất bại):
             Bước 1: Đặt is_purchased=True cho ShoppingList item.
-            Bước 2: get_or_create Pantry item tương ứng (cùng user + ingredient).
+            Bước 2: get_or_create Pantry item tương ứng (cùng user + ingredient + unit).
                     Nếu chưa có → tạo mới với quantity=0.
             Bước 3: Cộng dồn quantity từ ShoppingList vào Pantry item.
 
@@ -208,13 +232,20 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
         item = self.get_object()
         try:
             with transaction.atomic():
+                item = ShoppingList.objects.select_for_update().select_related('ingredient').get(pk=item.pk)
+                if item.is_purchased:
+                    return Response(
+                        {'success': False, 'error': {'message': 'Mục này đã được đánh dấu đã mua.'}},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
                 item.is_purchased = True
                 item.save(update_fields=['is_purchased'])
 
-                pantry_item, created = Pantry.objects.get_or_create(
-                    user=request.user,
-                    ingredient=item.ingredient,
-                    defaults={'quantity': 0, 'unit': item.unit}
+                pantry_item = get_or_create_pantry_item_for_update(
+                    request.user,
+                    item.ingredient,
+                    item.unit,
                 )
                 pantry_item.quantity += item.quantity
                 pantry_item.save(update_fields=['quantity', 'updated_at'])
@@ -241,7 +272,7 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
 
         Atomic Transaction (3 bước):
             Bước 1: Đặt is_purchased=False cho ShoppingList item.
-            Bước 2: Tìm Pantry item tương ứng (user + ingredient).
+            Bước 2: Tìm Pantry item tương ứng (user + ingredient + unit).
             Bước 3: Trừ quantity đã mua từ Pantry item.
                     Nếu Pantry quantity ≤ 0 sau khi trừ → xóa Pantry item.
 
@@ -255,12 +286,21 @@ class ShoppingListViewSet(viewsets.GenericViewSet,
         pantry_data = None
         try:
             with transaction.atomic():
+                item = ShoppingList.objects.select_for_update().select_related('ingredient').get(pk=item.pk)
+                if not item.is_purchased:
+                    return Response(
+                        {'success': False, 'error': {'message': 'Mục này chưa được đánh dấu đã mua.'}},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
                 item.is_purchased = False
                 item.save(update_fields=['is_purchased'])
 
                 pantry_item = Pantry.objects.filter(
-                    user=request.user, ingredient=item.ingredient
-                ).first()
+                    user=request.user,
+                    ingredient=item.ingredient,
+                    unit=item.unit,
+                ).select_for_update().first()
 
                 if pantry_item:
                     pantry_item.quantity -= item.quantity

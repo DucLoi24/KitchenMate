@@ -11,6 +11,7 @@ import {
   useUpdatePantryItem,
   useRemoveFromPantry,
 } from '@/hooks/useKitchen'
+import { groupPantryItemsByIngredient } from './pantryGrouping'
 
 const CATEGORY_FILTERS = [
   { key: 'ALL', label: 'Tất cả' },
@@ -74,7 +75,7 @@ export function PantryPage() {
   // Flatten and filter items
   const filteredItems = useMemo(() => {
     // Backend returns { success, data: { count, next, previous, results: [...] } }
-    const items = data?.data?.results || []
+    const items = groupPantryItemsByIngredient(data?.data?.results || [])
 
     // Filter by category
     let filtered = items

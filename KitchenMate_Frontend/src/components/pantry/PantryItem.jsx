@@ -37,34 +37,44 @@ export function PantryItem({
   isDeleting = false,
 }) {
   const [isEditing, setIsEditing] = useState(false)
-  const [editQuantity, setEditQuantity] = useState(item.quantity)
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [editingVariantId, setEditingVariantId] = useState(null)
+  const [editQuantity, setEditQuantity] = useState('')
+  const [deleteVariant, setDeleteVariant] = useState(null)
 
   const category = CATEGORY_CONFIG[item.ingredient_category] || CATEGORY_CONFIG.OTHER
+  const variants = item.variants || [item]
 
-  const handleSaveEdit = () => {
-    if (editQuantity > 0 && editQuantity !== item.quantity) {
-      onUpdate(item.id, { quantity: editQuantity })
+  const handleStartEdit = (variant) => {
+    setEditingVariantId(variant.id)
+    setEditQuantity(variant.quantity)
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = (variant) => {
+    if (editQuantity > 0 && editQuantity !== variant.quantity) {
+      onUpdate(variant.id, { quantity: editQuantity })
     }
     setIsEditing(false)
+    setEditingVariantId(null)
   }
 
   const handleCancelEdit = () => {
-    setEditQuantity(item.quantity)
     setIsEditing(false)
+    setEditingVariantId(null)
+    setEditQuantity('')
   }
 
-  const handleDeleteClick = () => {
-    setShowDeleteConfirm(true)
+  const handleDeleteClick = (variant) => {
+    setDeleteVariant(variant)
   }
 
   const handleConfirmDelete = () => {
-    onDelete(item.id)
-    setShowDeleteConfirm(false)
+    onDelete(deleteVariant.id)
+    setDeleteVariant(null)
   }
 
   const handleCancelDelete = () => {
-    setShowDeleteConfirm(false)
+    setDeleteVariant(null)
   }
 
   return (
@@ -98,73 +108,102 @@ export function PantryItem({
               {item.ingredient_name}
             </h4>
 
-            {/* Actions - visible on hover for desktop, always on mobile */}
-            <div className={cn(
-              'flex items-center gap-0.5',
-              'lg:opacity-0 lg:group-hover:opacity-100',
-              'transition-opacity duration-[var(--transition-fast)]'
-            )}>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="p-1.5 rounded-md hover:bg-[var(--color-background-alt)] transition-colors"
-                disabled={isUpdating || isDeleting}
-              >
-                <Pencil className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="p-1.5 rounded-md hover:bg-red-50 transition-colors"
-                disabled={isUpdating || isDeleting}
-              >
-                <Trash2 className="w-3.5 h-3.5 text-red-500" />
-              </button>
-            </div>
+            {variants.length > 1 && (
+              <span className="shrink-0 rounded-[var(--radius-sm)] bg-[var(--color-secondary)]/10 px-2 py-0.5 text-[10px] font-medium text-[var(--color-secondary)]">
+                {variants.length} đơn vị
+              </span>
+            )}
           </div>
 
-          {/* Quantity */}
-          {isEditing ? (
-            <div className="flex items-center gap-2 mt-2">
-              <input
-                type="number"
-                value={editQuantity}
-                onChange={(e) => setEditQuantity(parseFloat(e.target.value) || 0)}
-                min="0.1"
-                step="0.1"
-                className={cn(
-                  'w-20 h-8 px-2.5 rounded-[var(--radius-sm)]',
-                  'border border-[var(--color-border)]',
-                  'text-sm text-[var(--color-text)] font-medium tabular-nums',
-                  'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
-                )}
-                autoFocus
-              />
-              <span className="text-xs text-[var(--color-text-secondary)]">
-                {getUnitLabel(item)}
-              </span>
-              <div className="flex items-center gap-0.5 ml-auto">
-                <Button size="sm" variant="primary" onClick={handleSaveEdit} isLoading={isUpdating} className="h-7 w-7 p-0">
-                  <Check className="w-3.5 h-3.5" />
-                </Button>
-                <Button size="sm" variant="ghost" onClick={handleCancelEdit} disabled={isUpdating} className="h-7 w-7 p-0">
-                  <X className="w-3.5 h-3.5" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-baseline gap-1">
-              <span className="text-xs font-medium tabular-nums text-[var(--color-text-secondary)]">
-                {item.quantity}
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)]">
-                {getUnitLabel(item)}
-              </span>
-            </div>
-          )}
+          <div className="space-y-1.5">
+            {variants.map((variant) => {
+              const isVariantEditing = isEditing && editingVariantId === variant.id
+
+              return (
+                <div
+                  key={variant.id}
+                  className={cn(
+                    'flex items-center gap-2 rounded-[var(--radius-sm)]',
+                    'bg-[var(--color-background-alt)] px-2 py-1.5'
+                  )}
+                >
+                  {isVariantEditing ? (
+                    <>
+                      <input
+                        type="number"
+                        value={editQuantity}
+                        onChange={(e) => setEditQuantity(parseFloat(e.target.value) || 0)}
+                        min="0.1"
+                        step="0.1"
+                        className={cn(
+                          'h-8 w-20 rounded-[var(--radius-sm)] px-2.5',
+                          'border border-[var(--color-border)]',
+                          'text-sm text-[var(--color-text)] font-medium tabular-nums',
+                          'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
+                        )}
+                        autoFocus
+                      />
+                      <span className="min-w-0 flex-1 text-xs text-[var(--color-text-secondary)]">
+                        {getUnitLabel(variant)}
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="primary"
+                        onClick={() => handleSaveEdit(variant)}
+                        isLoading={isUpdating}
+                        className="h-7 w-7 p-0"
+                        aria-label={`Lưu ${getUnitLabel(variant)}`}
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCancelEdit}
+                        disabled={isUpdating}
+                        className="h-7 w-7 p-0"
+                        aria-label={`Hủy ${getUnitLabel(variant)}`}
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs font-medium tabular-nums text-[var(--color-text-secondary)]">
+                          {variant.quantity}
+                        </span>
+                        <span className="ml-1 text-xs text-[var(--color-text-muted)]">
+                          {getUnitLabel(variant)}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => handleStartEdit(variant)}
+                        className="rounded-md p-1.5 transition-colors hover:bg-[var(--color-surface)]"
+                        disabled={isUpdating || isDeleting}
+                        aria-label={`Sửa ${getUnitLabel(variant)}`}
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-[var(--color-text-secondary)]" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(variant)}
+                        className="rounded-md p-1.5 transition-colors hover:bg-red-50"
+                        disabled={isUpdating || isDeleting}
+                        aria-label={`Xóa ${getUnitLabel(variant)}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )
+            })}
+          </div>
         </div>
       </motion.div>
 
       {/* Delete confirmation overlay */}
-      {showDeleteConfirm && (
+      {deleteVariant && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -179,7 +218,7 @@ export function PantryItem({
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
             className={cn(
               'bg-[var(--color-surface)] rounded-[var(--radius-xl)] p-6',
-              'w-full max-w-md shadow-[var(--shadow-xl)]',
+              'w-full max-w-[28rem] shadow-[var(--shadow-xl)]',
               'border border-[var(--color-border)]'
             )}
             onClick={(e) => e.stopPropagation()}
@@ -191,7 +230,7 @@ export function PantryItem({
               Xóa nguyên liệu?
             </h3>
             <p className="text-[var(--color-text-secondary)] text-sm text-center mb-6">
-              Bạn có chắc muốn xóa <span className="font-medium text-[var(--color-text)]">{item.ingredient_name}</span> khỏi tủ lạnh?
+              Bạn có chắc muốn xóa <span className="font-medium text-[var(--color-text)]">{item.ingredient_name}</span> ({deleteVariant.quantity} {getUnitLabel(deleteVariant)}) khỏi tủ lạnh?
             </p>
             <div className="flex gap-3">
               <Button
