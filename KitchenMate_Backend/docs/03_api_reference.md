@@ -1390,6 +1390,21 @@ Toggle công thức trong danh sách "Yêu thích" của user.
 
 > Tất cả endpoint Admin đều yêu cầu `is_staff=True`.
 
+### GET `/api/admin/recipes/`
+Danh sách tất cả công thức cho quản trị viên.
+
+**Permission:** IsAdminUser
+
+**Query Params:**
+| Param | Mô tả |
+|---|---|
+| `visibility` | Lọc theo `PUBLIC`, `PRIVATE`, hoặc `PENDING` |
+| `search` | Tìm theo `title` hoặc `description` |
+| `ordering` | Trường sắp xếp, mặc định `-created_at` |
+| `page_size` | Số item mỗi trang, tối đa 500 |
+
+---
+
 ### GET `/api/admin/recipes/pending/`
 Danh sách công thức đang chờ duyệt (visibility=PENDING).
 
@@ -1405,9 +1420,44 @@ Duyệt công thức → `visibility=PUBLIC`.
 ---
 
 ### POST `/api/admin/recipes/{id}/reject/`
-Từ chối công thức → `visibility=PRIVATE`.
+Từ chối công thức đang chờ duyệt → `visibility=PRIVATE`, `ai_moderation_status=REJECTED`.
 
 **Permission:** IsAdminUser
+
+**Request Body:**
+```json
+{
+  "reason": "Cần bổ sung định lượng nguyên liệu chính."
+}
+```
+
+`reason` là tùy chọn. Nếu có, backend trim whitespace, lưu vào `Recipe.rejection_reason`, trả kèm trong message, và đưa lý do vào thông báo gửi cho chủ công thức.
+
+**Side effects:**
+- Tạo `Notification` cho chủ công thức với `type=WARNING`.
+- `Notification.data.action = "recipe_reject"`.
+- `Notification.data.reason` là lý do đã trim hoặc `null`.
+
+---
+
+### POST `/api/admin/recipes/{id}/unpublish/`
+Chuyển công thức đang công khai về riêng tư → `visibility=PRIVATE`, `ai_moderation_status=REJECTED`.
+
+**Permission:** IsAdminUser + superuser check trong action
+
+**Request Body:**
+```json
+{
+  "reason": "Thiếu nguồn ảnh và mô tả có nội dung cần chỉnh sửa."
+}
+```
+
+`reason` là tùy chọn. Nếu có, backend trim whitespace, lưu vào `Recipe.rejection_reason`, trả kèm trong message, và đưa lý do vào thông báo gửi cho chủ công thức.
+
+**Side effects:**
+- Tạo `Notification` cho chủ công thức với `type=WARNING`.
+- `Notification.data.action = "recipe_unpublish"`.
+- `Notification.data.reason` là lý do đã trim hoặc `null`.
 
 ---
 

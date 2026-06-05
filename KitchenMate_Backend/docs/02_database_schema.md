@@ -26,40 +26,44 @@ Database dùng PostgreSQL. Project không dùng SQLite cho môi trường phát 
 
 ```mermaid
 erDiagram
-    users ||--o{ user_follows : follower
-    users ||--o{ user_follows : following
+    users ||--o{ user_follows : là_người_theo_dõi
+    users ||--o{ user_follows : là_người_được_theo_dõi
 
-    users ||--o{ ingredients : contributes
-    units ||--o{ ingredients : default_unit
-    ingredients }o--o{ units : allowed_units
+    users ||--o{ ingredients : đóng_góp
+    units ||--o{ ingredients : làm_đơn_vị_mặc_định
+    ingredients ||--o{ ingredients_allowed_units : cho_phép_đơn_vị
+    units ||--o{ ingredients_allowed_units : được_phép_dùng
 
-    users ||--o{ recipes : authors
-    recipe_categories }o--o{ recipes : categorizes
-    recipes ||--o{ recipe_ingredients : has
-    ingredients ||--o{ recipe_ingredients : used_by
-    recipes ||--o{ recipe_steps : has
-    recipe_steps ||--o{ recipe_step_media : has
-    recipes ||--o{ recipe_views : viewed
-    users ||--o{ recipe_views : viewer
+    users ||--o{ recipes : tạo
+    recipes ||--o{ recipes_categories : thuộc_danh_mục
+    recipe_categories ||--o{ recipes_categories : phân_loại
+    recipes ||--o{ recipe_ingredients : gồm_nguyên_liệu
+    ingredients ||--o{ recipe_ingredients : được_dùng_trong
+    recipes ||--o{ recipe_steps : gồm_bước
+    recipe_steps ||--o{ recipe_step_media : có_media
+    recipes ||--o{ recipe_views : được_xem
+    users ||--o{ recipe_views : xem
 
-    users ||--o{ pantries : owns
-    ingredients ||--o{ pantries : stocked_as
-    users ||--o{ shopping_lists : owns
-    ingredients ||--o{ shopping_lists : planned_as
+    users ||--o{ pantries : sở_hữu
+    ingredients ||--o{ pantries : được_lưu_trong
+    users ||--o{ shopping_lists : lập_danh_sách
+    ingredients ||--o{ shopping_lists : cần_mua
 
-    users ||--o{ reviews : writes
-    recipes ||--o{ reviews : receives
+    users ||--o{ reviews : viết
+    recipes ||--o{ reviews : được_đánh_giá
 
-    users ||--o{ collections : owns
-    collections ||--o{ collection_recipes : contains
-    recipes ||--o{ collection_recipes : saved_as
+    users ||--o{ collections : sở_hữu
+    collections ||--o{ collection_recipes : chứa_công_thức
+    recipes ||--o{ collection_recipes : được_lưu_trong
 
-    users ||--o{ reports : files
-    users ||--o{ reports : reviews
-    users ||--o{ notifications : receives
+    users ||--o{ reports : gửi_báo_cáo
+    users ||--o{ reports : xử_lý_báo_cáo
+    users ||--o{ notifications : nhận
 ```
 
 ERD này chỉ gồm bảng nghiệp vụ. Django và third-party apps còn tạo các bảng hệ thống như `auth_group`, `auth_permission`, `django_session`, `django_migrations`, và bảng token blacklist của Simple JWT.
+
+Nhãn quan hệ dùng tiếng Việt và đọc theo chiều trái sang phải. Dấu gạch dưới giúp Mermaid render ổn định nhưng vẫn giữ nghĩa như cụm từ tiếng Việt.
 
 ---
 

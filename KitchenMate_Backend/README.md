@@ -283,16 +283,19 @@ Sau khi chạy server, truy cập:
 | POST | `/api/admin/ingredients/{id}/approve/` | Duyệt nguyên liệu | Admin |
 | POST | `/api/admin/ingredients/{id}/reject/` | Từ chối nguyên liệu + tạo thông báo | Admin |
 | POST | `/api/admin/ingredients/{id}/restore/` | Khôi phục nguyên liệu bị từ chối | Admin |
-| GET | `/api/admin/recipes/` | Danh sách công thức chờ duyệt | Admin |
+| GET | `/api/admin/recipes/` | Danh sách tất cả công thức, hỗ trợ lọc `visibility`, `search`, `ordering` | Admin |
+| GET | `/api/admin/recipes/pending/` | Danh sách công thức chờ duyệt | Admin |
 | POST | `/api/admin/recipes/{id}/approve/` | Duyệt công thức | Admin |
-| POST | `/api/admin/recipes/{id}/reject/` | Từ chối công thức | Admin |
+| POST | `/api/admin/recipes/{id}/reject/` | Từ chối công thức + lưu lý do + tạo thông báo | Admin |
+| POST | `/api/admin/recipes/{id}/unpublish/` | Chuyển công thức công khai về riêng tư + tạo thông báo | Superuser |
 | GET | `/api/admin/users/list/` | Danh sách tất cả người dùng | Admin |
 | POST | `/api/admin/users/{id}/block/` | Khoá tài khoản (superuser only, bao gồm session invalidation) | Superuser |
 | POST | `/api/admin/users/{id}/unblock/` | Mở khoá tài khoản | Admin |
 | POST | `/api/admin/users/{id}/set-admin/` | Phân quyền / xoá quyền admin (superuser only) | Superuser |
 
 > **Ghi chú:** 
-> - `reject` action chấp nhận tham số `reason` và tạo thông báo `INGREDIENT_REJECTED` cho contributor.
+> - Ingredient `reject` chấp nhận `reason` và tạo thông báo `INGREDIENT_REJECTED` cho contributor.
+> - Recipe `reject` và `unpublish` chấp nhận `reason`, lưu vào `rejection_reason`, và tạo thông báo `WARNING` cho chủ công thức.
 > - `block` action yêu cầu superuser và sẽ xoá tất cả session của user bị khoá ngay lập tức. 
 > - `set-admin` action chỉ superuser mới có quyền thực hiện.
 > - Google OAuth không bao giờ link với email đã tồn tại để tránh privilege escalation.

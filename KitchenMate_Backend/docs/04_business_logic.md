@@ -22,7 +22,9 @@ PRIVATE ──── publish() ──── LẬP TỨC PENDING
    │      (auto)     (keep)    +reason
    │                    │
    │         Admin approve ──► PUBLIC
-   │         Admin reject ──► PRIVATE
+   │         Admin reject ──► PRIVATE +reason +notification
+   │
+PUBLIC ── Admin unpublish ──► PRIVATE +reason +notification
 ```
 
 ### Quy tắc truy cập theo trạng thái
@@ -46,6 +48,10 @@ PRIVATE ──── publish() ──── LẬP TỨC PENDING
 | `YES` | Recipe tự động `PUBLIC` (AI duyệt trước) |
 | `NO` | Recipe về `PRIVATE` + lưu `rejection_reason` |
 | `SUSPECT` | Giữ `PENDING` để Admin duyệt thủ công |
+
+**Admin moderation side effects:**
+- `reject` công thức PENDING lưu `rejection_reason` nếu admin nhập lý do, chuyển `ai_moderation_status=REJECTED`, và tạo `Notification` `WARNING` cho chủ công thức với `data.action="recipe_reject"`.
+- `unpublish` công thức PUBLIC chỉ dành cho superuser, lưu `rejection_reason` nếu có, chuyển `ai_moderation_status=REJECTED`, và tạo `Notification` `WARNING` cho chủ công thức với `data.action="recipe_unpublish"`.
 
 **Trạng thái AI Moderation:**
 

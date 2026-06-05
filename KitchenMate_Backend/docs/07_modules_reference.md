@@ -469,10 +469,10 @@ def get_recommendations(
 
 ### `views.py`
 
-Tất cả ViewSet đều yêu cầu `IsAdminUser` (is_staff=True).
+Tất cả ViewSet đều yêu cầu `IsAdminUser` (is_staff=True). Một số action nhạy cảm như `AdminRecipeViewSet.unpublish` và phân quyền admin có thêm kiểm tra `is_superuser`.
 
 | ViewSet | Actions |
 |---|---|
-| `AdminRecipeViewSet` | pending, approve, reject |
-| `AdminIngredientViewSet` | pending, approve, reject |
+| `AdminRecipeViewSet` | pending, approve, reject, unpublish |
+| `AdminIngredientViewSet` | pending, approve, reject, restore |
 | `AdminUserViewSet` | list_users, block, unblock |
