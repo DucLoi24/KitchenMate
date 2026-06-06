@@ -700,6 +700,50 @@ class MarkUnpurchasedPropertyTest(HypothesisTestCase):
         self.assertFalse(shopping_item.is_purchased)
         self.assertFalse(Pantry.objects.filter(user=user, ingredient=ingredient).exists())
 
+    def test_mark_unpurchased_succeeds_after_pantry_item_was_deleted(self):
+        """Bo danh dau van thanh cong neu Pantry item da bi user xoa truoc do."""
+        user = make_user()
+        ingredient = make_ingredient()
+        client = APIClient()
+        client.force_authenticate(user=user)
+        shopping_item = make_shopping_item(
+            user,
+            ingredient,
+            quantity=2.0,
+            unit='kg',
+        )
+
+        mark_response = client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-purchased/'
+        )
+        self.assertEqual(mark_response.status_code, 200)
+
+        pantry_item = Pantry.objects.get(
+            user=user,
+            ingredient=ingredient,
+            unit='kg',
+        )
+        delete_response = client.delete(f'/api/kitchen/pantry/{pantry_item.pk}/')
+        self.assertEqual(delete_response.status_code, 204)
+
+        unmark_response = client.post(
+            f'/api/kitchen/shopping-list/{shopping_item.pk}/mark-unpurchased/'
+        )
+
+        self.assertEqual(unmark_response.status_code, 200)
+        self.assertTrue(unmark_response.data['success'])
+        self.assertIsNone(unmark_response.data['data'])
+        shopping_item.refresh_from_db()
+        self.assertFalse(shopping_item.is_purchased)
+        self.assertTrue(ShoppingList.objects.filter(pk=shopping_item.pk).exists())
+        self.assertFalse(
+            Pantry.objects.filter(
+                user=user,
+                ingredient=ingredient,
+                unit='kg',
+            ).exists()
+        )
+
 
 class MarkUnpurchasedRollbackTest(TestCase):
     """Kiem tra rollback khi mark_unpurchased that bai."""
