@@ -54,6 +54,33 @@ class PantrySerializer(UnitDisplayMixin, serializers.ModelSerializer):
         user = getattr(request, 'user', None) or getattr(self.instance, 'user', None)
         ingredient = attrs.get('ingredient') or getattr(self.instance, 'ingredient', None)
         unit = attrs.get('unit') or getattr(self.instance, 'unit', None)
+        current_unit = getattr(self.instance, 'unit', None)
+        unit_is_changing = (
+            self.instance is not None
+            and 'unit' in attrs
+            and unit != current_unit
+        )
+
+        if unit_is_changing:
+            is_allowed_unit = ingredient.allowed_units.filter(
+                slug=unit,
+                is_active=True,
+            ).exists()
+            if not is_allowed_unit:
+                raise serializers.ValidationError({
+                    'unit': 'Đơn vị không hợp lệ cho nguyên liệu này.'
+                })
+
+            has_purchased_source = ShoppingList.objects.filter(
+                user=user,
+                ingredient=getattr(self.instance, 'ingredient', ingredient),
+                unit=current_unit,
+                is_purchased=True,
+            ).exists()
+            if has_purchased_source:
+                raise serializers.ValidationError({
+                    'unit': 'Hãy bỏ đánh dấu đã mua trước khi đổi đơn vị.'
+                })
 
         if user and ingredient and unit:
             duplicate_queryset = Pantry.objects.filter(

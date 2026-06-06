@@ -111,7 +111,22 @@ class PantryViewSet(viewsets.GenericViewSet,
                 {'success': False, 'error': {'message': 'Du lieu khong hop le.', 'details': serializer.errors}},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        serializer.save()
+        try:
+            with transaction.atomic():
+                serializer.save()
+        except IntegrityError:
+            return Response(
+                {
+                    'success': False,
+                    'error': {
+                        'message': 'Dữ liệu không hợp lệ.',
+                        'details': {
+                            'unit': ['Nguyên liệu này đã tồn tại trong tủ lạnh với đơn vị này.']
+                        },
+                    },
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
         return Response({'success': True, 'message': 'Cap nhat thanh cong.', 'data': serializer.data})
 
     def partial_update(self, request, *args, **kwargs):

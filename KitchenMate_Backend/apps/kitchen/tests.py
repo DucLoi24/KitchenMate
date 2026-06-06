@@ -5,6 +5,7 @@ Feature: phase-4-api-endpoints, phase-7-transaction
 import uuid
 from unittest.mock import patch
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from django.test import TestCase
 from rest_framework.test import APIClient
 from hypothesis import given, settings
@@ -320,6 +321,144 @@ class PantryCreateValidationTest(TestCase):
             Pantry.objects.filter(user=self.user, ingredient=self.ingredient).count(),
             2,
         )
+
+
+class PantryUpdateValidationTest(TestCase):
+    """Regression tests cho PATCH /api/kitchen/pantry/{id}/."""
+
+    def setUp(self):
+        self.user = make_user()
+        self.ingredient = make_ingredient()
+        suffix = uuid.uuid4().hex[:6]
+        self.gram = Unit.objects.create(name=f'Gram pantry {suffix}', slug=f'gram-pantry-{suffix}')
+        self.kilogram = Unit.objects.create(name=f'Kilogram pantry {suffix}', slug=f'kg-pantry-{suffix}')
+        self.pound = Unit.objects.create(name=f'Pound pantry {suffix}', slug=f'lb-pantry-{suffix}')
+        self.ingredient.default_unit = self.gram
+        self.ingredient.save(update_fields=['default_unit'])
+        self.ingredient.allowed_units.set([self.gram, self.kilogram])
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_partial_update_quantity_and_unit(self):
+        pantry_item = make_pantry(
+            self.user,
+            self.ingredient,
+            quantity=500,
+            unit=self.gram.slug,
+        )
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'quantity': 0.5, 'unit': self.kilogram.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data['data']['quantity'], 0.5)
+        self.assertEqual(response.data['data']['unit'], self.kilogram.slug)
+        self.assertEqual(response.data['data']['unit_display'], self.kilogram.name)
+
+    def test_rejects_unit_outside_ingredient_allowed_units(self):
+        pantry_item = make_pantry(self.user, self.ingredient, unit=self.gram.slug)
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'unit': self.pound.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('unit', response.data['error']['details'])
+        pantry_item.refresh_from_db()
+        self.assertEqual(pantry_item.unit, self.gram.slug)
+
+    def test_allows_quantity_update_when_current_unit_is_inactive(self):
+        pantry_item = make_pantry(self.user, self.ingredient, quantity=100, unit=self.gram.slug)
+        self.gram.is_active = False
+        self.gram.save(update_fields=['is_active'])
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'quantity': 125},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pantry_item.refresh_from_db()
+        self.assertEqual(pantry_item.quantity, 125)
+        self.assertEqual(pantry_item.unit, self.gram.slug)
+
+    def test_rejects_unit_used_by_another_pantry_variant(self):
+        pantry_item = make_pantry(self.user, self.ingredient, unit=self.gram.slug)
+        make_pantry(self.user, self.ingredient, unit=self.kilogram.slug)
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'unit': self.kilogram.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('unit', response.data['error']['details'])
+
+    def test_rejects_unit_change_when_purchased_shopping_item_uses_current_unit(self):
+        pantry_item = make_pantry(self.user, self.ingredient, unit=self.gram.slug)
+        shopping_item = make_shopping_item(self.user, self.ingredient, unit=self.gram.slug)
+        shopping_item.is_purchased = True
+        shopping_item.save(update_fields=['is_purchased'])
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'unit': self.kilogram.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('unit', response.data['error']['details'])
+        self.assertIn('bỏ đánh dấu đã mua', str(response.data['error']['details']['unit'][0]).lower())
+
+    def test_allows_unit_change_when_matching_shopping_item_is_not_purchased(self):
+        pantry_item = make_pantry(self.user, self.ingredient, unit=self.gram.slug)
+        make_shopping_item(self.user, self.ingredient, unit=self.gram.slug)
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'unit': self.kilogram.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pantry_item.refresh_from_db()
+        self.assertEqual(pantry_item.unit, self.kilogram.slug)
+
+    def test_allows_unit_change_when_purchased_item_uses_another_unit(self):
+        pantry_item = make_pantry(self.user, self.ingredient, unit=self.gram.slug)
+        shopping_item = make_shopping_item(self.user, self.ingredient, unit=self.kilogram.slug)
+        shopping_item.is_purchased = True
+        shopping_item.save(update_fields=['is_purchased'])
+
+        response = self.client.patch(
+            f'/api/kitchen/pantry/{pantry_item.pk}/',
+            {'unit': self.kilogram.slug},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, 200)
+        pantry_item.refresh_from_db()
+        self.assertEqual(pantry_item.unit, self.kilogram.slug)
+
+    def test_integrity_error_during_update_returns_validation_error(self):
+        pantry_item = make_pantry(self.user, self.ingredient, unit=self.gram.slug)
+
+        with patch('apps.kitchen.views.PantrySerializer.save', side_effect=IntegrityError):
+            response = self.client.patch(
+                f'/api/kitchen/pantry/{pantry_item.pk}/',
+                {'unit': self.kilogram.slug},
+                format='json',
+            )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn('unit', response.data['error']['details'])
 
 
 class ShoppingListUpdateTest(TestCase):

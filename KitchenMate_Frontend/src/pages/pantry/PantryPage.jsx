@@ -97,10 +97,16 @@ export function PantryPage() {
   const handleUpdate = async (id, data) => {
     setUpdatingId(id)
     try {
-      await updatePantryItem.mutateAsync({ id, data })
-      toast.success('Đã cập nhật số lượng')
-    } catch {
-      toast.error('Không thể cập nhật. Vui lòng thử lại')
+      const response = await updatePantryItem.mutateAsync({ id, data })
+      toast.success('Đã cập nhật nguyên liệu')
+      return response
+    } catch (error) {
+      const unitError = error?.response?.data?.error?.details?.unit
+      const message = Array.isArray(unitError)
+        ? unitError[0]
+        : unitError || error?.response?.data?.error?.message || 'Không thể cập nhật. Vui lòng thử lại'
+      toast.error(message)
+      throw error
     } finally {
       setUpdatingId(null)
     }

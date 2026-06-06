@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Pencil, Trash2, Check, X } from 'lucide-react'
-import { cn } from '@/utils'
+import { adminApi } from '@/api/adminApi'
+import { buildIngredientUnitOptions, cn } from '@/utils'
 import { Button } from '@/components/ui/Button'
 
 const CATEGORY_CONFIG = {
@@ -29,6 +30,13 @@ const CATEGORY_CONFIG = {
 
 const getUnitLabel = (item) => item.unit_display || item.unit
 
+const getUpdateErrorMessage = (error) => {
+  const unitError = error?.response?.data?.error?.details?.unit
+  if (Array.isArray(unitError) && unitError.length > 0) return unitError[0]
+  if (typeof unitError === 'string') return unitError
+  return error?.response?.data?.error?.message || 'Không thể cập nhật. Vui lòng thử lại.'
+}
+
 export function PantryItem({
   item,
   onUpdate,
@@ -39,6 +47,10 @@ export function PantryItem({
   const [isEditing, setIsEditing] = useState(false)
   const [editingVariantId, setEditingVariantId] = useState(null)
   const [editQuantity, setEditQuantity] = useState('')
+  const [editUnit, setEditUnit] = useState('')
+  const [availableUnits, setAvailableUnits] = useState([])
+  const [isLoadingUnits, setIsLoadingUnits] = useState(false)
+  const [editError, setEditError] = useState('')
   const [deleteVariant, setDeleteVariant] = useState(null)
 
   const category = CATEGORY_CONFIG[item.ingredient_category] || CATEGORY_CONFIG.OTHER
@@ -46,22 +58,77 @@ export function PantryItem({
 
   const handleStartEdit = (variant) => {
     setEditingVariantId(variant.id)
-    setEditQuantity(variant.quantity)
+    setEditQuantity(String(variant.quantity))
+    setEditUnit(variant.unit)
+    setAvailableUnits([{ value: variant.unit, label: getUnitLabel(variant) }])
+    setEditError('')
     setIsEditing(true)
+
+    setIsLoadingUnits(true)
+    adminApi.getIngredientUnits(variant.ingredient)
+      .then((response) => {
+        const { options } = buildIngredientUnitOptions(response?.data)
+        const usedUnits = new Set(
+          variants
+            .filter((candidate) => candidate.id !== variant.id)
+            .map((candidate) => candidate.unit)
+        )
+        const selectableOptions = options.filter(
+          (option) => option.value === variant.unit || !usedUnits.has(option.value)
+        )
+        const hasCurrentUnit = selectableOptions.some(
+          (option) => option.value === variant.unit
+        )
+
+        setAvailableUnits(hasCurrentUnit
+          ? selectableOptions
+          : [{ value: variant.unit, label: getUnitLabel(variant) }, ...selectableOptions])
+      })
+      .catch(() => {
+        setEditError('Không thể tải danh sách đơn vị. Bạn vẫn có thể sửa số lượng.')
+      })
+      .finally(() => setIsLoadingUnits(false))
   }
 
-  const handleSaveEdit = (variant) => {
-    if (editQuantity > 0 && editQuantity !== variant.quantity) {
-      onUpdate(variant.id, { quantity: editQuantity })
+  const handleSaveEdit = async (variant) => {
+    const quantity = Number(editQuantity)
+    setEditError('')
+
+    if (!Number.isFinite(quantity) || quantity <= 0) {
+      setEditError('Số lượng phải lớn hơn 0.')
+      return
     }
-    setIsEditing(false)
-    setEditingVariantId(null)
+    if (!editUnit) {
+      setEditError('Vui lòng chọn đơn vị hợp lệ.')
+      return
+    }
+
+    const payload = {}
+    if (quantity !== Number(variant.quantity)) payload.quantity = quantity
+    if (editUnit !== variant.unit) payload.unit = editUnit
+
+    if (Object.keys(payload).length === 0) {
+      setIsEditing(false)
+      setEditingVariantId(null)
+      return
+    }
+
+    try {
+      await onUpdate(variant.id, payload)
+      setIsEditing(false)
+      setEditingVariantId(null)
+    } catch (error) {
+      setEditError(getUpdateErrorMessage(error))
+    }
   }
 
   const handleCancelEdit = () => {
     setIsEditing(false)
     setEditingVariantId(null)
     setEditQuantity('')
+    setEditUnit('')
+    setAvailableUnits([])
+    setEditError('')
   }
 
   const handleDeleteClick = (variant) => {
@@ -128,45 +195,73 @@ export function PantryItem({
                   )}
                 >
                   {isVariantEditing ? (
-                    <>
-                      <input
-                        type="number"
-                        value={editQuantity}
-                        onChange={(e) => setEditQuantity(parseFloat(e.target.value) || 0)}
-                        min="0.1"
-                        step="0.1"
-                        className={cn(
-                          'h-8 w-20 rounded-[var(--radius-sm)] px-2.5',
-                          'border border-[var(--color-border)]',
-                          'text-sm text-[var(--color-text)] font-medium tabular-nums',
-                          'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
-                        )}
-                        autoFocus
-                      />
-                      <span className="min-w-0 flex-1 text-xs text-[var(--color-text-secondary)]">
-                        {getUnitLabel(variant)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="primary"
-                        onClick={() => handleSaveEdit(variant)}
-                        isLoading={isUpdating}
-                        className="h-7 w-7 p-0"
-                        aria-label={`Lưu ${getUnitLabel(variant)}`}
-                      >
-                        <Check className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleCancelEdit}
-                        disabled={isUpdating}
-                        className="h-7 w-7 p-0"
-                        aria-label={`Hủy ${getUnitLabel(variant)}`}
-                      >
-                        <X className="w-3.5 h-3.5" />
-                      </Button>
-                    </>
+                    <div className="w-full space-y-2">
+                      <div className="grid grid-cols-[minmax(0,1fr)_minmax(0,1.25fr)] gap-2">
+                        <input
+                          type="number"
+                          value={editQuantity}
+                          onChange={(e) => setEditQuantity(e.target.value)}
+                          min="0.1"
+                          step="0.1"
+                          aria-label={`Số lượng ${getUnitLabel(variant)}`}
+                          className={cn(
+                            'h-10 min-w-0 rounded-[var(--radius-md)] px-2.5',
+                            'border border-[var(--color-border)] bg-[var(--color-surface)]',
+                            'text-sm text-[var(--color-text)] font-medium tabular-nums',
+                            'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent'
+                          )}
+                          autoFocus
+                        />
+                        <select
+                          value={editUnit}
+                          onChange={(e) => setEditUnit(e.target.value)}
+                          disabled={isLoadingUnits}
+                          aria-label="Đơn vị"
+                          className={cn(
+                            'h-10 min-w-0 rounded-[var(--radius-md)] px-2',
+                            'border border-[var(--color-border)] bg-[var(--color-surface)]',
+                            'text-sm text-[var(--color-text)] font-medium',
+                            'focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] focus:border-transparent',
+                            isLoadingUnits && 'cursor-wait opacity-60'
+                          )}
+                        >
+                          {availableUnits.map((unit) => (
+                            <option key={unit.value} value={unit.value}>{unit.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <p className="text-[10px] leading-4 text-[var(--color-text-muted)]">
+                        Số lượng không được tự động quy đổi khi đổi đơn vị.
+                      </p>
+                      {editError && (
+                        <p className="text-xs leading-4 text-red-600" role="alert">
+                          {editError}
+                        </p>
+                      )}
+                      <div className="flex justify-end gap-1.5">
+                        <Button
+                          size="sm"
+                          variant="primary"
+                          onClick={() => handleSaveEdit(variant)}
+                          isLoading={isUpdating}
+                          disabled={isLoadingUnits}
+                          className="h-10 w-10 p-0"
+                          aria-label={`Lưu ${getUnitLabel(variant)}`}
+                        >
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleCancelEdit}
+                          disabled={isUpdating}
+                          className="h-10 w-10 p-0"
+                          aria-label={`Hủy ${getUnitLabel(variant)}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
                   ) : (
                     <>
                       <div className="min-w-0 flex-1">
