@@ -4,6 +4,8 @@ import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ExplorePage } from './ExplorePage'
 
+const useRecipesInfiniteMock = vi.fn()
+
 vi.mock('framer-motion', () => ({
   motion: {
     div: ({ children, ...props }) => <div {...props}>{children}</div>,
@@ -29,13 +31,7 @@ vi.mock('gsap/ScrollTrigger', () => ({
 }))
 
 vi.mock('@/hooks/useRecipes', () => ({
-  useRecipesInfinite: () => ({
-    data: { pages: [{ data: { results: [] } }] },
-    isLoading: false,
-    fetchNextPage: vi.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-  }),
+  useRecipesInfinite: (params) => useRecipesInfiniteMock(params),
 }))
 
 vi.mock('@/api/authApi', () => ({
@@ -94,7 +90,31 @@ function renderExplore(initialEntry) {
 }
 
 describe('ExplorePage search tabs', () => {
+  it('maps popular sort to popular_score ordering', () => {
+    useRecipesInfiniteMock.mockReturnValue({
+      data: { pages: [{ data: { results: [] } }] },
+      isLoading: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    })
+
+    renderExplore('/explore?sort=popular')
+
+    expect(useRecipesInfiniteMock).toHaveBeenCalledWith(
+      expect.objectContaining({ ordering: '-popular_score' })
+    )
+  })
+
   it('keeps the recipes tab selected when a search query is present', async () => {
+    useRecipesInfiniteMock.mockReturnValue({
+      data: { pages: [{ data: { results: [] } }] },
+      isLoading: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    })
+
     renderExplore('/explore?q=pho&tab=all')
 
     fireEvent.click(screen.getByRole('button', { name: 'Công thức' }))

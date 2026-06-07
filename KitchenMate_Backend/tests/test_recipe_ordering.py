@@ -74,3 +74,25 @@ def test_recipe_list_orders_by_save_count_desc():
 
     assert response.status_code == 200
     assert recipe_titles(response)[:2] == ['Bun bo Hue dac biet', 'Trung chien hanh']
+
+
+@pytest.mark.django_db
+def test_recipe_list_orders_by_popular_score_desc():
+    owner = make_user('owner-popular@example.com')
+    liker = make_user('liker@example.com')
+    saver_one = make_user('popular-saver-one@example.com')
+    now = timezone.now()
+    most_popular = make_public_recipe(owner, 'Lau thai hai san', now - timezone.timedelta(days=2))
+    less_popular = make_public_recipe(owner, 'Dau hu sot ca chua', now - timezone.timedelta(days=1))
+
+    favorites = Collection.objects.create(user=liker, name='Yeu thich', is_favorites=True)
+    saver_one_collection = Collection.objects.create(user=saver_one, name='Mon ngon moi ngay')
+
+    CollectionRecipe.objects.create(collection=favorites, recipe=most_popular)
+    CollectionRecipe.objects.create(collection=saver_one_collection, recipe=most_popular)
+    CollectionRecipe.objects.create(collection=saver_one_collection, recipe=less_popular)
+
+    response = APIClient().get('/api/recipes/', {'ordering': '-popular_score'})
+
+    assert response.status_code == 200
+    assert recipe_titles(response)[:2] == ['Lau thai hai san', 'Dau hu sot ca chua']

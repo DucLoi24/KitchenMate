@@ -1,7 +1,7 @@
 """
 Views cho recipes app.
 """
-from django.db.models import F, Avg, Count, Exists, OuterRef
+from django.db.models import F, Avg, Count, Exists, OuterRef, ExpressionWrapper, IntegerField
 from django.db.models.functions import Coalesce
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -26,7 +26,7 @@ class RecipeViewSet(viewsets.GenericViewSet):
     """
     filter_backends = [DjangoFilterBackend, OrderingFilter]
     filterset_class = RecipeFilter
-    ordering_fields = ['created_at', 'save_count', 'avg_rating']
+    ordering_fields = ['created_at', 'save_count', 'avg_rating', 'popular_score']
     ordering = ['-created_at']
 
     def retrieve(self, request, pk=None, slug=None):
@@ -89,11 +89,16 @@ class RecipeViewSet(viewsets.GenericViewSet):
                     filter=Q(saved_in_collections__collection__is_favorites=True),
                     distinct=True
                 ),
-                # save_count: số user DUY NHẤT đã thêm vào collections KHÔNG phải "Yêu thích"
+                # save_count: số lần recipe được lưu trong collections KHÔNG phải "Yêu thích"
                 save_count=Count(
                     'saved_in_collections__collection',
                     filter=Q(saved_in_collections__collection__is_favorites=False),
                     distinct=True
+                ),
+            ).annotate(
+                popular_score=ExpressionWrapper(
+                    F('like_count') + F('save_count'),
+                    output_field=IntegerField(),
                 ),
             )
             # Annotate is_favorited and is_in_collection if user is authenticated

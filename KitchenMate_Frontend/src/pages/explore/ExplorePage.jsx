@@ -112,7 +112,7 @@ export function ExplorePage() {
     // Map sort to API ordering
     const orderingMap = {
       newest: '-created_at',
-      popular: '-save_count',
+      popular: '-popular_score',
       rating: '-avg_rating',
     }
     if (sort) params.ordering = orderingMap[sort]

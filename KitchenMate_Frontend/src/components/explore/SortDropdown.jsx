@@ -5,7 +5,7 @@ import { cn } from '@/utils'
 
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Mới nhất', ordering: '-created_at' },
-  { value: 'popular', label: 'Phổ biến', ordering: '-save_count' },
+  { value: 'popular', label: 'Phổ biến', ordering: '-popular_score' },
   { value: 'rating', label: 'Đánh giá cao', ordering: '-avg_rating' },
 ]
 
