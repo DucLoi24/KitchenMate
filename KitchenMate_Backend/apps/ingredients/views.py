@@ -1,6 +1,7 @@
 """
 Views cho ingredients app.
 """
+import re
 import unicodedata
 
 from rest_framework import viewsets, mixins, status
@@ -23,6 +24,42 @@ def normalize_search_text(value):
         if unicodedata.category(char) != 'Mn'
     )
     return without_marks.replace('đ', 'd')
+
+
+def tokenize_search_text(value):
+    """Tách text đã normalize thành các từ, giữ nguyên dấu nối bên trong từ."""
+    normalized = normalize_search_text(value)
+    tokens = []
+    for raw_token in normalized.split():
+        token = re.sub(r'^[^a-z0-9]+|[^a-z0-9]+$', '', raw_token)
+        if token:
+            tokens.append(token)
+    return tokens
+
+
+def rank_ingredient_match(query, ingredient_name):
+    """
+    Trả về điểm ưu tiên khi ingredient khớp query, hoặc None nếu không khớp.
+
+    Ưu tiên:
+    0. Tên đầy đủ bắt đầu bằng query
+    1. Một token bắt đầu bằng query
+    """
+    normalized_query = normalize_search_text(query).strip()
+    if not normalized_query:
+        return None
+
+    normalized_name = normalize_search_text(ingredient_name)
+    tokens = tokenize_search_text(ingredient_name)
+
+    if normalized_name.startswith(normalized_query):
+        return (0, len(tokens), len(normalized_name))
+
+    for token in tokens:
+        if token.startswith(normalized_query):
+            return (1, len(token), len(tokens), len(normalized_name))
+
+    return None
 
 
 class UnitViewSet(viewsets.GenericViewSet,
@@ -175,14 +212,15 @@ class IngredientViewSet(viewsets.GenericViewSet,
         q = request.query_params.get('q', '').strip()
         if not q:
             return Response({'success': True, 'data': []})
-        normalized_query = normalize_search_text(q)
-        results = []
         candidates = Ingredient.objects.filter(status='APPROVED').order_by('name')
+        ranked_results = []
         for ingredient in candidates:
-            if normalized_query in normalize_search_text(ingredient.name):
-                results.append(ingredient)
-                if len(results) == 10:
-                    break
+            rank = rank_ingredient_match(q, ingredient.name)
+            if rank is not None:
+                ranked_results.append((rank, ingredient.name, ingredient))
+
+        ranked_results.sort(key=lambda item: (item[0], normalize_search_text(item[1])))
+        results = [ingredient for _, _, ingredient in ranked_results[:10]]
         return Response({'success': True, 'data': IngredientSerializer(results, many=True).data})
 
     @action(detail=True, methods=['get', 'patch'], url_path='units')

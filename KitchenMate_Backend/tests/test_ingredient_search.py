@@ -189,6 +189,67 @@ def test_search_matches_vietnamese_names_without_accents(db):
 
 
 @pytest.mark.django_db
+def test_search_ot_does_not_match_partial_syllables_inside_other_words(db):
+    """
+    GET /api/ingredients/search/?q=ot chỉ nên ưu tiên họ "ớt", không match nhầm "bột", "ngọt", "rốt".
+    """
+    client = APIClient()
+    expected = [
+        Ingredient.objects.create(name='Ớt search exact', category='SPICE', status='APPROVED'),
+        Ingredient.objects.create(name='Ớt bột search exact', category='SPICE', status='APPROVED'),
+    ]
+    noise = [
+        Ingredient.objects.create(name='Bột mì search noise', category='OTHER', status='APPROVED'),
+        Ingredient.objects.create(name='Mì chính (Bột ngọt) search noise', category='OTHER', status='APPROVED'),
+        Ingredient.objects.create(name='Cà rốt search noise', category='VEG', status='APPROVED'),
+    ]
+
+    response = client.get('/api/ingredients/search/?q=Ớt')
+    assert response.status_code == 200
+
+    names = [r['name'] for r in response.json().get('data', [])]
+    assert expected[0].name in names
+    assert expected[1].name in names
+    for item in noise:
+        assert item.name not in names
+
+    for ing in expected + noise:
+        ing.delete()
+
+
+@pytest.mark.django_db
+def test_search_ot_prioritizes_exact_word_family_before_other_matches(db):
+    """
+    Kết quả cho "ớt" phải đưa các nguyên liệu bắt đầu bằng "ớt" lên đầu danh sách.
+    """
+    client = APIClient()
+    expected_names = [
+        'Ớt alpha priority',
+        'Ớt bột priority',
+        'Ớt hiểm priority',
+    ]
+    created = [
+        Ingredient.objects.create(name=name, category='SPICE', status='APPROVED')
+        for name in expected_names
+    ]
+    noise = [
+        Ingredient.objects.create(name='Bột canh priority noise', category='OTHER', status='APPROVED'),
+        Ingredient.objects.create(name='Cải ngọt priority noise', category='VEG', status='APPROVED'),
+    ]
+
+    response = client.get('/api/ingredients/search/?q=ot')
+    assert response.status_code == 200
+
+    names = [r['name'] for r in response.json().get('data', [])]
+    assert set(names[:3]) == set(expected_names)
+    for item in noise:
+        assert item.name not in names[:3]
+
+    for ing in created + noise:
+        ing.delete()
+
+
+@pytest.mark.django_db
 def test_search_nonexistent_returns_empty(db):
     """
     GET /api/ingredients/search/?q=xyz_khong_ton_tai → HTTP 200 với data=[].
