@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowLeft, Trash2, RefreshCw, Bookmark, Heart } from 'lucide-react'
+import { ArrowLeft, Trash2, RefreshCw, Bookmark, Heart, ArrowRight } from 'lucide-react'
 import { toast } from 'react-hot-toast'
 import { Button } from '@/components/ui/Button'
 import { RecipeCard } from '@/components/recipe/RecipeCard'
+import { cn } from '@/utils'
 import { socialApi } from '@/api/socialApi'
 
 // Skeleton loading
@@ -100,6 +101,63 @@ function DeleteConfirmDialog({ isOpen, collectionName, onConfirm, onCancel }) {
   )
 }
 
+function CollectionRecipeListItem({ recipe, onOpen }) {
+  const savedAtLabel = recipe.added_at
+    ? new Intl.DateTimeFormat('vi-VN', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      }).format(new Date(recipe.added_at))
+    : null
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{ duration: 0.24 }}
+      onClick={() => onOpen(recipe.id)}
+      className={cn(
+        'group flex items-center gap-5 rounded-[var(--radius-lg)] border border-[var(--color-border)] bg-[var(--color-surface)] p-4',
+        'shadow-[var(--shadow-sm)] transition-all duration-[var(--transition-base)] hover:shadow-[var(--shadow-md)] cursor-pointer'
+      )}
+    >
+      <div className="h-24 w-32 overflow-hidden rounded-[var(--radius-md)] bg-[var(--color-background-alt)] flex-shrink-0">
+        {recipe.thumbnail ? (
+          <img
+            src={recipe.thumbnail}
+            alt={recipe.title}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center">
+            <Bookmark className="h-8 w-8 text-[var(--color-text-muted)]" />
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1">
+        <p className="mb-2 text-xs font-medium uppercase tracking-[0.18em] text-[var(--color-text-muted)]">
+          Công thức đã lưu
+        </p>
+        <h3 className="font-display text-xl font-semibold leading-snug text-[var(--color-text)] line-clamp-2">
+          {recipe.title}
+        </h3>
+        <p className="mt-2 text-sm text-[var(--color-text-secondary)]">
+          {savedAtLabel ? `Đã lưu vào danh sách ngày ${savedAtLabel}` : 'Đã lưu trong bộ sưu tập của bạn'}
+        </p>
+      </div>
+
+      <div className="hidden flex-shrink-0 items-center lg:flex">
+        <Button variant="outline" size="sm">
+          Xem công thức
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
+    </motion.article>
+  )
+}
+
 export function CollectionDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -178,6 +236,7 @@ export function CollectionDetailPage() {
     title: cr.recipe_title || 'Công thức',
     thumbnail_url: cr.recipe_thumbnail || null,
     thumbnail: cr.recipe_thumbnail || null,
+    added_at: cr.added_at || null,
     is_favorited: isFavorites,
     is_in_collection: true,
   })) || []
@@ -227,16 +286,30 @@ export function CollectionDetailPage() {
 
       {/* Recipe grid */}
       {recipes.length > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-          {recipes.map(recipe => (
-            <RecipeCard
-              key={recipe.id}
-              recipe={recipe}
-              showFavoriteButton
-              onClick={() => navigate(`/recipe/${recipe.id}`)}
-            />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-2 gap-4 p-4 sm:grid-cols-3 lg:hidden">
+            {recipes.map(recipe => (
+              <RecipeCard
+                key={recipe.id}
+                recipe={recipe}
+                showFavoriteButton
+                onClick={() => navigate(`/recipe/${recipe.id}`)}
+              />
+            ))}
+          </div>
+
+          <div className="hidden p-4 lg:block">
+            <div className="space-y-4">
+              {recipes.map(recipe => (
+                <CollectionRecipeListItem
+                  key={recipe.id}
+                  recipe={recipe}
+                  onOpen={(recipeId) => navigate(`/recipe/${recipeId}`)}
+                />
+              ))}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Delete confirmation dialog */}
