@@ -107,7 +107,7 @@ function CollectionCard({ collection, onDelete }) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const isFavorites = collection.is_favorites
 
-  const thumbnails = collection.collection_recipes?.slice(0, 3) || []
+  const thumbnails = collection.collection_recipes?.slice(0, 4) || []
 
   const handleDelete = async () => {
     try {
@@ -153,7 +153,7 @@ function CollectionCard({ collection, onDelete }) {
                     )}
                   </div>
                 ))}
-                {thumbnails.length < 3 && Array.from({ length: 3 - thumbnails.length }).map((_, i) => (
+                {thumbnails.length < 4 && Array.from({ length: 4 - thumbnails.length }).map((_, i) => (
                   <div key={`empty-${i}`} className="bg-[var(--color-background-alt)]" />
                 ))}
               </div>
