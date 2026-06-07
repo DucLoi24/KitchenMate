@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { PublicProfilePage } from './PublicProfilePage'
 
 vi.mock('framer-motion', () => ({
@@ -76,14 +77,24 @@ describe('PublicProfilePage', () => {
     })
   })
 
-  it('renders public recipes without crashing when avg_rating is null', async () => {
-    render(
-      <MemoryRouter initialEntries={['/profile/user-1']}>
-        <Routes>
-          <Route path="/profile/:userId" element={<PublicProfilePage />} />
-        </Routes>
-      </MemoryRouter>
+  function renderPage() {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/profile/user-1']}>
+          <Routes>
+            <Route path="/profile/:userId" element={<PublicProfilePage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     )
+  }
+
+  it('renders public recipes without crashing when avg_rating is null', async () => {
+    renderPage()
 
     expect(await screen.findByText('Mon chua co danh gia')).toBeInTheDocument()
     await waitFor(() => {
@@ -106,13 +117,7 @@ describe('PublicProfilePage', () => {
       },
     })
 
-    render(
-      <MemoryRouter initialEntries={['/profile/user-1']}>
-        <Routes>
-          <Route path="/profile/:userId" element={<PublicProfilePage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+    renderPage()
 
     expect(await screen.findByRole('button', { name: /Đã theo dõi/i })).toBeInTheDocument()
     expect(screen.getByText('7')).toBeInTheDocument()
@@ -127,13 +132,7 @@ describe('PublicProfilePage', () => {
       data: { is_following: true },
     })
 
-    render(
-      <MemoryRouter initialEntries={['/profile/user-1']}>
-        <Routes>
-          <Route path="/profile/:userId" element={<PublicProfilePage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+    renderPage()
 
     fireEvent.click(await screen.findByRole('button', { name: /^Theo dõi$/i }))
 

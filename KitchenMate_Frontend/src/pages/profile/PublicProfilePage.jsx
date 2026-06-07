@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useParams, Link } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { User, Calendar, BookOpen, ArrowLeft, Settings, UserPlus, UserCheck, Flag, Star } from 'lucide-react'
 import { useAuth } from '@/components/auth/useAuth'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -36,6 +37,7 @@ const difficultyConfig = {
 export function PublicProfilePage() {
   const { userId } = useParams()
   const { user: currentUser } = useAuth()
+  const queryClient = useQueryClient()
   const [profile, setProfile] = useState(null)
   const [stats, setStats] = useState(null)
   const [recipes, setRecipes] = useState([])
@@ -85,6 +87,7 @@ export function PublicProfilePage() {
       } else {
         await authApi.unfollowUser(userId)
       }
+      await queryClient.invalidateQueries({ queryKey: ['user-search'] })
       setIsFollowing(nextIsFollowing)
       setStats(prev => ({
         ...prev,

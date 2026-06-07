@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, User, UserCheck, UserPlus, Users } from 'lucide-react'
 import { authApi } from '@/api/authApi'
 import { useAuth } from '@/components/auth/useAuth'
@@ -32,6 +33,7 @@ function getEmptyText(followType) {
 export function FollowListPage() {
   const { userId, followType } = useParams()
   const { user: currentUser } = useAuth()
+  const queryClient = useQueryClient()
   const [profile, setProfile] = useState(null)
   const [users, setUsers] = useState([])
   const [pageInfo, setPageInfo] = useState({ count: 0, next: null, previous: null })
@@ -82,6 +84,7 @@ export function FollowListPage() {
       } else {
         await authApi.unfollowUser(targetUser.id)
       }
+      await queryClient.invalidateQueries({ queryKey: ['user-search'] })
       setUsers(prev => prev.map(user => (
         user.id === targetUser.id
           ? {

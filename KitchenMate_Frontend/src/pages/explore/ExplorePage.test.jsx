@@ -1,10 +1,19 @@
-import { describe, it, expect, vi } from 'vitest'
+import { beforeEach, describe, it, expect, vi } from 'vitest'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ExplorePage } from './ExplorePage'
 
 const useRecipesInfiniteMock = vi.fn()
+const mockCurrentUser = vi.hoisted(() => ({ value: null }))
+const mockAuthApi = vi.hoisted(() => ({
+  searchUsers: vi.fn().mockResolvedValue({
+    success: true,
+    data: { count: 0, next: null, previous: null, results: [] },
+  }),
+  followUser: vi.fn(),
+  unfollowUser: vi.fn(),
+}))
 
 vi.mock('framer-motion', () => ({
   motion: {
@@ -35,18 +44,11 @@ vi.mock('@/hooks/useRecipes', () => ({
 }))
 
 vi.mock('@/api/authApi', () => ({
-  authApi: {
-    searchUsers: vi.fn().mockResolvedValue({
-      success: true,
-      data: { count: 0, next: null, previous: null, results: [] },
-    }),
-    followUser: vi.fn(),
-    unfollowUser: vi.fn(),
-  },
+  authApi: mockAuthApi,
 }))
 
 vi.mock('@/components/auth/useAuth', () => ({
-  useAuth: () => ({ user: null }),
+  useAuth: () => ({ user: mockCurrentUser.value }),
 }))
 
 vi.mock('@/components/explore', () => ({
@@ -70,6 +72,29 @@ function renderExplore(initialEntry) {
     defaultOptions: { queries: { retry: false } },
   })
 
+  return {
+    queryClient,
+    ...render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <Routes>
+            <Route
+              path="/explore"
+              element={(
+                <>
+                  <ExplorePage />
+                  <LocationProbe />
+                </>
+              )}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    ),
+  }
+}
+
+function renderExploreWithClient(initialEntry, queryClient) {
   return render(
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[initialEntry]}>
@@ -90,6 +115,11 @@ function renderExplore(initialEntry) {
 }
 
 describe('ExplorePage search tabs', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    mockCurrentUser.value = null
+  })
+
   it('maps popular sort to popular_score ordering', () => {
     useRecipesInfiniteMock.mockReturnValue({
       data: { pages: [{ data: { results: [] } }] },
@@ -121,6 +151,54 @@ describe('ExplorePage search tabs', () => {
 
     await waitFor(() => {
       expect(screen.getByTestId('location')).toHaveTextContent('/explore?q=pho&tab=recipes')
+    })
+  })
+
+  it('refetches user search when the authenticated viewer changes', async () => {
+    useRecipesInfiniteMock.mockReturnValue({
+      data: { pages: [{ data: { results: [] } }] },
+      isLoading: false,
+      fetchNextPage: vi.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+    })
+
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: {
+          retry: false,
+          staleTime: Number.POSITIVE_INFINITY,
+        },
+      },
+    })
+
+    const initialRender = renderExploreWithClient('/explore?q=chef&tab=users', queryClient)
+
+    await waitFor(() => {
+      expect(mockAuthApi.searchUsers).toHaveBeenCalledTimes(1)
+    })
+
+    mockCurrentUser.value = { id: 'viewer-1' }
+    initialRender.rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/explore?q=chef&tab=users']}>
+          <Routes>
+            <Route
+              path="/explore"
+              element={(
+                <>
+                  <ExplorePage />
+                  <LocationProbe />
+                </>
+              )}
+            />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    )
+
+    await waitFor(() => {
+      expect(mockAuthApi.searchUsers).toHaveBeenCalledTimes(2)
     })
   })
 })

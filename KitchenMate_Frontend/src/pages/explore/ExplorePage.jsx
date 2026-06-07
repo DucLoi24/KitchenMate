@@ -156,11 +156,12 @@ export function ExplorePage() {
 
   const shouldSearchUsers = Boolean(search && (activeTab === 'all' || activeTab === 'users'))
   const userPageSize = activeTab === 'all' ? 4 : 12
+  const userSearchViewerKey = currentUser?.id || currentUser?.uuid || 'guest'
   const {
     data: userSearchData,
     isLoading: isUserSearchLoading,
   } = useQuery({
-    queryKey: ['user-search', search, userPage, userPageSize],
+    queryKey: ['user-search', userSearchViewerKey, search, userPage, userPageSize],
     queryFn: () => authApi.searchUsers({
       q: search,
       page: activeTab === 'users' ? userPage : 1,

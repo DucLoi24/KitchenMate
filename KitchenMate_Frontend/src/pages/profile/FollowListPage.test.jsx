@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { FollowListPage } from './FollowListPage'
 
 vi.mock('framer-motion', () => ({
@@ -59,14 +60,24 @@ describe('FollowListPage', () => {
     })
   })
 
-  it('renders a public followers list for a profile', async () => {
-    render(
-      <MemoryRouter initialEntries={['/profile/chef-1/followers']}>
-        <Routes>
-          <Route path="/profile/:userId/:followType" element={<FollowListPage />} />
-        </Routes>
-      </MemoryRouter>
+  function renderPage(initialEntry) {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={[initialEntry]}>
+          <Routes>
+            <Route path="/profile/:userId/:followType" element={<FollowListPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
     )
+  }
+
+  it('renders a public followers list for a profile', async () => {
+    renderPage('/profile/chef-1/followers')
 
     expect(await screen.findByText('Người theo dõi')).toBeInTheDocument()
     expect(screen.getByText('Dau bep Bep Nha')).toBeInTheDocument()
@@ -95,13 +106,7 @@ describe('FollowListPage', () => {
       },
     })
 
-    render(
-      <MemoryRouter initialEntries={['/profile/chef-1/following']}>
-        <Routes>
-          <Route path="/profile/:userId/:followType" element={<FollowListPage />} />
-        </Routes>
-      </MemoryRouter>
-    )
+    renderPage('/profile/chef-1/following')
 
     expect(await screen.findByText('Đang theo dõi')).toBeInTheDocument()
     expect(screen.getByText('Dau bep dang theo doi')).toBeInTheDocument()
