@@ -255,121 +255,122 @@ function IngredientList({ ingredients, onAddToShoppingList, shoppingIngredients 
 
   if (!ingredients?.length) return null
 
-  return (
-    <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-6 border border-[var(--color-border)]">
-      <h2 className="font-display text-xl font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
-        <Utensils className="w-5 h-5 text-[var(--color-primary)]" />
-        Nguyên liệu
-      </h2>
-      <ul className="space-y-2">
-        {ingredients.map((ing) => {
-          // ing.ingredient is the ingredient id
-          const inShoppingList = shoppingIds.has(ing.ingredient)
-          const inPantry = pantryIds.has(ing.ingredient)
-          const isAdded = inShoppingList || inPantry
-          const unitLabel = ing.unit_display || ing.unit
-
-          return (
-            <li key={ing.id}>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-3 p-3 rounded-[var(--radius-md)] bg-[var(--color-background-alt)]">
-                  <span className="flex-1 text-[var(--color-text)]">
-                    {ing.ingredient_name}
-                  </span>
-                  <span className="text-sm text-[var(--color-text-secondary)]">
-                    {ing.quantity} {unitLabel}
-                  </span>
-                </div>
-                {!isAdded && (
-                  <button
-                    onClick={() => handleStartAdd(ing)}
-                    className="p-2 rounded-full hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)] transition-colors flex-shrink-0"
-                    title="Thêm vào danh sách đi chợ"
-                  >
-                    <ShoppingBasket className="w-5 h-5" />
-                  </button>
-                )}
-                {isAdded && (
-                  <span className="px-2 py-1 text-xs text-[var(--color-secondary)] bg-[var(--color-secondary)]/10 rounded-full">
-                    {inShoppingList ? 'Đã thêm vào đi chợ' : 'Có trong tủ lạnh'}
-                  </span>
-                )}
-              </div>
-            </li>
-          )
-        })}
-      </ul>
-
-      {/* Add ingredient popup */}
-      <AnimatePresence>
-        {addingIngredient && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm"
-              onClick={handleCancelAdd}
+  const addToShoppingPopup = addingIngredient ? createPortal(
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm"
+        onClick={handleCancelAdd}
+      />
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+        className="fixed inset-x-0 bottom-0 z-[110] rounded-t-[2rem] bg-[var(--color-surface)] p-6 pb-8 shadow-[var(--shadow-xl)]"
+      >
+        <div className="mx-auto mb-4 h-1 w-12 rounded-full bg-[var(--color-border)]" />
+        <h3 className="mb-4 text-center font-display text-lg font-semibold text-[var(--color-text)]">
+          Thêm vào danh sách đi chợ
+        </h3>
+        <div className="mb-4 rounded-[var(--radius-lg)] bg-[var(--color-background-alt)] p-4">
+          <p className="font-medium text-[var(--color-text)]">{addingIngredient.ingredient_name}</p>
+        </div>
+        <div className="mb-4 grid grid-cols-2 gap-3">
+          <div>
+            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">Số lượng</label>
+            <input
+              type="number"
+              value={editQuantity}
+              onChange={(e) => setEditQuantity(e.target.value)}
+              min="0.1"
+              step="0.1"
+              className="h-12 w-full rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+              autoFocus
             />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="fixed bottom-0 left-0 right-0 z-50 bg-[var(--color-surface)] rounded-t-[2rem] p-6 pb-8 shadow-[var(--shadow-xl)]"
+          </div>
+          <div>
+            <label className="mb-1 block text-sm text-[var(--color-text-secondary)]">Đơn vị</label>
+            <select
+              value={editUnit}
+              onChange={(e) => setEditUnit(e.target.value)}
+              disabled={isLoadingUnits || availableUnits.length === 0}
+              className="h-12 w-full cursor-pointer rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] px-4 text-center text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <div className="w-12 h-1 bg-[var(--color-border)] rounded-full mx-auto mb-4" />
-              <h3 className="font-display text-lg font-semibold text-[var(--color-text)] mb-4 text-center">
-                Thêm vào danh sách đi chợ
-              </h3>
-              <div className="bg-[var(--color-background-alt)] rounded-[var(--radius-lg)] p-4 mb-4">
-                <p className="font-medium text-[var(--color-text)]">{addingIngredient.ingredient_name}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div>
-                  <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Số lượng</label>
-                  <input
-                    type="number"
-                    value={editQuantity}
-                    onChange={(e) => setEditQuantity(e.target.value)}
-                    min="0.1"
-                    step="0.1"
-                    className="w-full h-12 px-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-center text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
-                    autoFocus
-                  />
+              {isLoadingUnits ? (
+                <option value="">Đang tải đơn vị...</option>
+              ) : availableUnits.length === 0 ? (
+                <option value="">Chưa có đơn vị</option>
+              ) : (
+                availableUnits.map((u) => (
+                  <option key={u.value} value={u.value}>{u.label}</option>
+                ))
+              )}
+            </select>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <Button variant="outline" className="h-12 flex-1" onClick={handleCancelAdd}>
+            Hủy
+          </Button>
+          <Button variant="primary" className="h-12 flex-1" onClick={handleConfirmAdd} disabled={!editUnit || isLoadingUnits}>
+            Thêm
+          </Button>
+        </div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  ) : null
+
+  return (
+    <>
+      <div className="bg-[var(--color-surface)] rounded-[var(--radius-lg)] p-6 border border-[var(--color-border)]">
+        <h2 className="font-display text-xl font-semibold text-[var(--color-text)] mb-4 flex items-center gap-2">
+          <Utensils className="w-5 h-5 text-[var(--color-primary)]" />
+        Nguyên liệu
+        </h2>
+        <ul className="space-y-2">
+          {ingredients.map((ing) => {
+            // ing.ingredient is the ingredient id
+            const inShoppingList = shoppingIds.has(ing.ingredient)
+            const inPantry = pantryIds.has(ing.ingredient)
+            const isAdded = inShoppingList || inPantry
+            const unitLabel = ing.unit_display || ing.unit
+
+            return (
+              <li key={ing.id}>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-3 p-3 rounded-[var(--radius-md)] bg-[var(--color-background-alt)]">
+                    <span className="flex-1 text-[var(--color-text)]">
+                      {ing.ingredient_name}
+                    </span>
+                    <span className="text-sm text-[var(--color-text-secondary)]">
+                      {ing.quantity} {unitLabel}
+                    </span>
+                  </div>
+                  {!isAdded && (
+                    <button
+                      onClick={() => handleStartAdd(ing)}
+                      className="p-2 rounded-full hover:bg-[var(--color-accent)]/20 text-[var(--color-accent)] transition-colors flex-shrink-0"
+                      title="Thêm vào danh sách đi chợ"
+                    >
+                      <ShoppingBasket className="w-5 h-5" />
+                    </button>
+                  )}
+                  {isAdded && (
+                    <span className="px-2 py-1 text-xs text-[var(--color-secondary)] bg-[var(--color-secondary)]/10 rounded-full">
+                      {inShoppingList ? 'Đã thêm vào đi chợ' : 'Có trong tủ lạnh'}
+                    </span>
+                  )}
                 </div>
-                <div>
-                  <label className="block text-sm text-[var(--color-text-secondary)] mb-1">Đơn vị</label>
-                  <select
-                    value={editUnit}
-                    onChange={(e) => setEditUnit(e.target.value)}
-                    disabled={isLoadingUnits || availableUnits.length === 0}
-                    className="w-full h-12 px-4 rounded-[var(--radius-md)] border border-[var(--color-border)] bg-[var(--color-surface)] text-center text-lg focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isLoadingUnits ? (
-                      <option value="">Đang tải đơn vị...</option>
-                    ) : availableUnits.length === 0 ? (
-                      <option value="">Chưa có đơn vị</option>
-                    ) : (
-                      availableUnits.map((u) => (
-                        <option key={u.value} value={u.value}>{u.label}</option>
-                      ))
-                    )}
-                  </select>
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <Button variant="outline" className="flex-1 h-12" onClick={handleCancelAdd}>
-                  Hủy
-                </Button>
-                <Button variant="primary" className="flex-1 h-12" onClick={handleConfirmAdd} disabled={!editUnit || isLoadingUnits}>
-                  Thêm
-                </Button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+      {addToShoppingPopup}
+    </>
   )
 }
 
